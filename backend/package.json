@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
-  },
+    "start": "node app.js",
+    "server": "nodemon app.js"
+}
+
+  ,
   "keywords": [],
   "author": "",
   "license": "ISC",
