@@ -4,19 +4,22 @@ const express = require('express');
 const connectDB = require('./config/db');
 const logger = require('./middleware/logger');
 const authRoutes = require('./routes/auth');
-const app = express();
-
+const appointmentRoutes = require('./routes/appointments'); // Routen für Termine
+const auth = require('./middleware/authMiddleware');
 const cors = require('cors');
-app.use(cors({
-origin: 'http://localhost:8080',  // Deine Frontend-URL
-methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-allowedHeaders: ['Content-Type', 'Authorization'],
-credentials: true  // Damit Cookies und Anmeldeinformationen gesendet werden können
-}));
 
+const app = express();
 
 // Verbindung zur Datenbank
 connectDB();
+
+// CORS-Einstellungen
+app.use(cors({
+    origin: 'http://localhost:8080',  // Deine Frontend-URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true  // Damit Cookies und Anmeldeinformationen gesendet werden können
+}));
 
 // Middleware (für JSON und Logger)
 app.use(express.json());
@@ -28,19 +31,16 @@ app.get('/', (req, res) => res.send('API läuft'));
 // Auth-Routen
 app.use('/api/auth', authRoutes); // Authentifizierungsrouten
 
-// Starte den Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server läuft auf Port ${PORT}`);
-});
-
-const auth = require('./middleware/authMiddleware');
+// Termin-Routen
+app.use('/api/appointments', appointmentRoutes); // Terminrouten einbinden
 
 // Geschützte Route
 app.get('/api/protected', auth, (req, res) => {
     res.json({ msg: 'Dies ist eine geschützte Route', user: req.user });
-  });
-  
-  
+});
 
-  
+// Starte den Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server läuft auf Port ${PORT}`);
+});

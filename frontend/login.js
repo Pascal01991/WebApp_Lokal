@@ -14,17 +14,16 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify({ email, password }),
          });
           
+        const data = await response.json();
   
-      const data = await response.json();
-  
-      if (response.ok) {
-        document.getElementById('message').textContent = 'Login erfolgreich! Token: ' + data.token;
-        localStorage.setItem('token', data.token); // Speichert den Token im lokalen Speicher
-      } else {
-        document.getElementById('message').textContent = 'Login fehlgeschlagen: ' + data.msg;
-      }
+        if (response.ok) {
+            document.getElementById('message').textContent = 'Login erfolgreich! Token: ' + data.token;
+            localStorage.setItem('token', data.token); // Speichert den Token im lokalen Speicher
+        } else {
+            document.getElementById('message').textContent = 'Login fehlgeschlagen: ' + data.msg;
+        }
     } catch (err) {
-      document.getElementById('message').textContent = 'Fehler: ' + err.message;
+        document.getElementById('message').textContent = 'Fehler: ' + err.message;
     }
   });
   
