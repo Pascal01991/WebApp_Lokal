@@ -1,0 +1,14 @@
+{
+  "name": "webapp",
+  "version": "1.0.0",
+  "description": "Projekt mit Frontend und Backend",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && node app.js",
+    "client": "cd frontend && live-server --port=8080"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "concurrently": "^9.0.1"
+  }
+}

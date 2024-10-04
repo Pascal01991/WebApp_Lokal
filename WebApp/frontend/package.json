@@ -1,0 +1,11 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "Frontend für das WebApp-Projekt",
+  "scripts": {
+    "start": "live-server --port=8080"
+  },
+  "dependencies": {
+    "live-server": "^1.2.1"
+  }
+}

@@ -1,0 +1,5 @@
+# Ignoriere node_modules (Installierte Pakete)
+node_modules/
+
+# Ignoriere die .env-Datei (Enthält sensible Daten)
+.env
