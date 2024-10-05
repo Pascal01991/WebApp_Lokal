@@ -65,5 +65,45 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     loadAppointments();
 };
 
-
-   
+gapi.client.calendar.freebusy.query({
+    timeMin: '2024-10-09T09:00:00-07:00',  // Startzeit
+    timeMax: '2024-10-09T17:00:00-07:00',  // Endzeit
+    items: [{ id: 'primary' }]
+  }).then(function (response) {
+    var busyTimes = response.result.calendars.primary.busy;
+    // Hier die freien Slots berechnen
+    var freeSlots = berechneFreieSlots(busyTimes);
+    zeigeFreieSlotsImKalender(freeSlots);
+  });
+  function bucheTermin(startTime, endTime) {
+    var event = {
+      summary: 'Gebuchter Termin',
+      start: {
+        dateTime: startTime,
+        timeZone: 'Europe/Berlin'
+      },
+      end: {
+        dateTime: endTime,
+        timeZone: 'Europe/Berlin'
+      }
+    };
+  
+    gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: event
+    }).then(function (event) {
+      alert('Termin gebucht: ' + event.htmlLink);
+    });
+  }
+  
+  function zeigeFreieSlotsImKalender(freeSlots) {
+    var events = freeSlots.map(slot => {
+        return {
+            title: 'Freier Slot',
+            start: slot.startTime,
+            end: slot.endTime,
+            color: 'green' // Freie Slots grün markieren
+        };
+    });
+    calendar.addEventSource(events);
+}
