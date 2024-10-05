@@ -1,10 +1,16 @@
 document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
     e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
-  
+
+    // Variablen definieren
     const title = document.getElementById('title').value;
     const date = document.getElementById('date').value;
     const description = document.getElementById('description').value;
-  
+
+    // Ausgabe zur Überprüfung
+    console.log("Frontend: Title:", title);
+    console.log("Frontend: Date:", date);
+    console.log("Frontend: Description:", description);
+
     try {
         const response = await fetch('http://localhost:5000/api/appointments', {
             method: 'POST',
@@ -14,7 +20,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
             },
             body: JSON.stringify({ title, date, description })
         });
-  
+
         if (response.ok) {
             alert('Termin erfolgreich hinzugefügt!');
         } else {
@@ -23,7 +29,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     } catch (err) {
         alert('Fehler: ' + err.message);
     }
-  });
+});
   
   // Termine abrufen und anzeigen
   async function loadAppointments() {
@@ -59,4 +65,5 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     loadAppointments();
 };
 
-  
+
+   
