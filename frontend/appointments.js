@@ -5,11 +5,21 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     const title = document.getElementById('title').value;
     const date = document.getElementById('date').value;
     const description = document.getElementById('description').value;
+    const Vorname = document.getElementById('Vorname').value;
+    const Nachname = document.getElementById('Nachname').value;
+    const Telefon = document.getElementById('Telefon').value;
+    const Mail = document.getElementById('Mail').value;
+    const Dienstleistung = document.getElementById('Dienstleistung').value;
 
     // Ausgabe zur Überprüfung
     console.log("Frontend: Title:", title);
     console.log("Frontend: Date:", date);
     console.log("Frontend: Description:", description);
+    console.log("Frontend: Vorname:", Vorname);
+    console.log("Frontend: Nachname:", Nachname);
+    console.log("Frontend: Telefon:", Telefon);
+    console.log("Frontend: Mail:", Mail);
+    console.log("Frontend: Dienstleistung:", Dienstleistung);
 
     try {
         const response = await fetch('http://localhost:5000/api/appointments', {
@@ -18,11 +28,12 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ title, date, description })
+            body: JSON.stringify({ title, date, description, Vorname, Nachname, Telefon, Mail, Dienstleistung})
         });
 
         if (response.ok) {
             alert('Termin erfolgreich hinzugefügt!');
+            loadAppointments();  // Termine neu laden
         } else {
             alert('Fehler beim Hinzufügen des Termins');
         }
@@ -31,26 +42,22 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     }
 });
   
-  // Termine abrufen und anzeigen
-  async function loadAppointments() {
+// Globale Variable, um die geladenen Termine zu speichern
+let allAppointments = [];
+
+// Termine abrufen und anzeigen
+async function loadAppointments() {
     try {
         const response = await fetch('http://localhost:5000/api/appointments', {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
-  
+
         if (response.ok) {
-            const appointments = await response.json();
-            console.log(appointments); // Debugging-Log
-            const appointmentsList = document.getElementById('appointmentsList');
-            appointmentsList.innerHTML = appointments.map(app => `
-                <div>
-                    <h3>${app.title}</h3>
-                    <p>${new Date(app.date).toLocaleString()}</p>
-                    <p>${app.description}</p>
-                </div>
-            `).join('');
+            allAppointments = await response.json(); // Termine global speichern
+            console.log(allAppointments); // Debugging-Log
+            displayAppointments(allAppointments); // Alle Termine anzeigen
         } else {
             alert('Fehler beim Laden der Termine');
             console.error('Fehler beim Laden der Termine');
@@ -58,12 +65,131 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     } catch (err) {
         alert('Fehler: ' + err.message);
     }
-  }
+}
+
+// Termine in der Liste anzeigen
+function displayAppointments(appointments) {
+    const appointmentsList = document.getElementById('appointmentsList');
+    appointmentsList.innerHTML = appointments.map(app => `
+        <div id="EinzelnerTermin">
+            <h3>${app.title}</h3>
+            <p>${new Date(app.date).toLocaleString()}</p>
+            <p>${app.description}</p>
+            <p>${app.Vorname}</p>
+            <p>${app.Nachname}</p>
+            <p>${app.Telefon}</p>
+            <p>${app.Mail}</p>
+            <p>${app.Dienstleistung}</p>
+            <button onclick="editAppointment('${app._id}')">Bearbeiten</button>
+            <button onclick="deleteAppointment('${app._id}')">Löschen</button>
+        </div>
+        <br>
+    `).join('');
+}
+
+// Echtzeit-Suche basierend auf dem Titel der Termine
+function filterAppointments() {
+    const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
+    const filteredAppointments = allAppointments.filter(app => 
+        app.title && app.title.toLowerCase().includes(searchTerm) // Sicherstellen, dass der Titel existiert
+    );
+    displayAppointments(filteredAppointments); // Gefilterte Ergebnisse anzeigen
+}
+
+
+// Event-Listener für die Suche hinzufügen
+document.getElementById('searchTitel').addEventListener('input', filterAppointments);
   
   // Termine laden, wenn das Dashboard geladen wird
   window.onload = function() {
     loadAppointments();
 };
+
+//Button für Löschen des Termins
+async function deleteAppointment(appointmentId) {
+    const confirmation = confirm("Möchtest du diesen Termin wirklich löschen?");
+    if (!confirmation) return;
+    console.log("Appointment ID to delete: ", appointmentId);
+
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            alert('Termin erfolgreich gelöscht');
+            loadAppointments();  // Termine neu laden
+        } else {
+            alert('Fehler beim Löschen des Termins');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+
+//Button für Bearbeiten des Termins
+async function editAppointment(appointmentId) {
+    const appointment = allAppointments.find(app => app._id === appointmentId);
+    if (!appointment) {
+        alert('Termin nicht gefunden');
+        return;
+    }
+
+    // Lade die bestehenden Daten in das Formular
+    document.getElementById('title').value = appointment.title;
+    document.getElementById('date').value = new Date(appointment.date).toISOString().split('T')[0];
+    document.getElementById('description').value = appointment.description;
+    document.getElementById('Vorname').value = appointment.Vorname;
+    document.getElementById('Nachname').value = appointment.Nachname;
+    document.getElementById('Telefon').value = appointment.Telefon;
+    document.getElementById('Mail').value = appointment.Mail;
+    document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
+
+    // Verändere den Submit-Button, um die Änderungen zu speichern
+    const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+    submitButton.onclick = async function (e) {
+        e.preventDefault();
+        const updatedAppointment = {
+            title: document.getElementById('title').value,
+            date: document.getElementById('date').value,
+            description: document.getElementById('description').value,
+            Vorname: document.getElementById('Vorname').value,
+            Nachname: document.getElementById('Nachname').value,
+            Telefon: document.getElementById('Telefon').value,
+            Mail: document.getElementById('Mail').value,
+            Dienstleistung: document.getElementById('Dienstleistung').value,
+        };
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedAppointment)
+            });
+
+            if (response.ok) {
+                alert('Termin erfolgreich aktualisiert');
+                loadAppointments();  // Termine neu laden
+                submitButton.innerText = "Termin hinzufügen";
+                submitButton.onclick = null;  // Zurücksetzen auf die ursprüngliche Funktion
+            } else {
+                alert('Fehler beim Aktualisieren des Termins');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    };
+}
 
 
    

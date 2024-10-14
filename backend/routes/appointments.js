@@ -20,17 +20,19 @@ router.post('/', async (req, res) => {
     try {
         console.log("POST Request empfangen:", req.body);  // Prüfen, ob die Daten korrekt empfangen werden
 
-        const { title, date, description } = req.body;
+        const { title, date, description, Vorname, Nachname, Telefon, Mail, Dienstleistung } = req.body;
 
         // Überprüfen, ob die Felder vorhanden sind
         if (!title || !date || !description) {
             return res.status(400).json({ msg: "Fehlende Felder: Titel, Datum oder Beschreibung" });
         }
 
-        const newAppointment = new Appointment({ title, date, description });
+        const newAppointment = new Appointment({ title, date, description, Vorname, Nachname, Telefon, Mail, Dienstleistung });
         await newAppointment.save();
 
         console.log("Neuer Termin gespeichert:", newAppointment);  // Prüfen, ob der Termin korrekt gespeichert wird
+        console.log("POST Request empfangen:", req.body);
+        console.log("Schema: ", Appointment.schema.paths);  // Zeigt alle Felder im Schema an
 
         res.status(201).json(newAppointment);
     } catch (err) {
@@ -38,6 +40,40 @@ router.post('/', async (req, res) => {
         res.status(500).json({ msg: 'Fehler beim Hinzufügen des Termins', error: err.message });
     }
 });
+
+
+//Route für Löschen Button
+router.delete('/:id', async (req, res) => {
+    try {
+        console.log("Löschanfrage erhalten für ID: ", req.params.id);
+        const appointment = await Appointment.findByIdAndDelete(req.params.id);
+        if (!appointment) {
+            console.log(`Kein Termin gefunden für ID: ${req.params.id}`);
+            return res.status(404).json({ msg: 'Termin nicht gefunden' });
+        }
+        res.json({ msg: 'Termin gelöscht' });
+    } catch (err) {
+        console.error("Fehler beim Löschen des Termins:", err.message);
+        console.error("Stack Trace:", err.stack); // Stacktrace für genauere Fehlerdetails
+        console.error("Request Params:", req.params); // Zeige die Parameter des Requests
+        console.error("Request Headers:", req.headers); // Zeige die Header des Requests
+        res.status(500).json({ msg: 'Fehler beim Löschen des Termins', error: err.message });
+    }
+});
+
+//Route für Bearbeiten Button
+router.put('/:id', async (req, res) => {
+    try {
+        const updatedAppointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updatedAppointment) {
+            return res.status(404).json({ msg: 'Termin nicht gefunden' });
+        }
+        res.json(updatedAppointment);
+    } catch (err) {
+        res.status(500).json({ msg: 'Fehler beim Aktualisieren des Termins', error: err.message });
+    }
+});
+
 
 
 module.exports = router;
