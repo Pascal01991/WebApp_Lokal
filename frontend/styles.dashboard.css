@@ -1,0 +1,39 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #000000;
+  color: rgb(100, 129, 129);
+  display: flex;
+  flex-direction: column;  /* Ordne Inhalte vertikal an */
+  justify-content: flex-start;  /* Beginne oben */
+  align-items: center;  /* Zentriere die Elemente horizontal */
+  height: 100vh;
+  margin: 0;
+}
+
+#Formular {
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  margin-bottom: 20px;  /* Abstand zwischen Formular und Liste */
+}
+
+#Liste {
+  width: 100%;
+  max-width: 600px;
+  background-color: #59595934;
+  color: white;
+  border: #007bff solid 1px;
+  border-radius: 8px;
+  padding: 15px;
+}
+#EinzelnerTermin {
+  width: 100%;
+  max-width: 500px;
+  background-color: #59595934;
+  color: white;
+  border: #007bff solid 1px;
+  border-radius: 8px;
+  padding: 15px;
+}

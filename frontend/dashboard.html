@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+<link rel="stylesheet" href="styles.dashboard.css">
+</head>
+<body>
+    <!-- dashboard.html -->
+<div id="Formular"><h2>Neuen Termin hinzufügen</h2>
+<form id="appointmentForm">
+    <input type="text" id="Vorname" placeholder="Vorname" required>
+    <input type="text" id="Nachname" placeholder="Nachname" required>
+    <input type="text" id="Telefon" placeholder="Telefon" required>
+    <input type="text" id="Mail" placeholder="Mail" required>
+    <input type="text" id="Dienstleistung" placeholder="Dienstleitung" required>
+    <input type="text" id="title" placeholder="Titel" required>
+    <input type="date" id="date" required>
+    <textarea id="description" placeholder="Beschreibung"></textarea>
+    <button type="submit">Termin hinzufügen</button>
+</form>
+</div>
+<div id="Liste">
+    <h2>Termine</h2>
+    <form id="AppointmentSearch">
+        <input type="text" id="searchTitel" placeholder="Suchbegriff">
+    </form>
+<ul id="appointmentsList"></ul>
+
+</div>
+</body>
+<script src="appointments.js"></script>
+</html>
