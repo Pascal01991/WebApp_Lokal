@@ -1,0 +1,172 @@
+/* Basic reset for padding and margin */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+/* Settings Button */
+.settings-button {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+.settings-button button {
+    font-size: 24px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.settings-button button:hover {
+    background-color: #388E3C;
+}
+
+/* Modal (settings window) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; 
+    z-index: 1; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border-radius: 8px;
+}
+
+/* Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover, .close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Main calendar container */
+.calendar-container {
+    width: 80%;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+/* Calendar header (days of the week) */
+.calendar-header {
+    display: grid;
+    grid-template-columns: 1fr repeat(7, 1fr);
+    background-color: #4CAF50;
+    color: white;
+}
+
+.day-header {
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
+    border-right: 1px solid #388E3C;
+}
+
+.day-header:last-child {
+    border-right: none;
+}
+
+.empty-header {
+    background-color: transparent;
+}
+
+/* Body of the calendar with hour slots */
+.calendar-body {
+    display: grid;
+    grid-template-columns: 1fr repeat(7, 1fr);
+    grid-auto-rows: 50px;
+}
+
+/* Each row represents an hour */
+.calendar-row {
+    display: contents;
+}
+
+/* Hour labels */
+.hour-cell {
+    background-color: #fafafa;
+    text-align: right;
+    padding-right: 10px;
+    border-bottom: 1px solid #ddd;
+    line-height: 50px;
+    color: #666;
+    font-weight: bold;
+}
+
+/* Cells for each day and hour */
+.day-cell {
+    position: relative;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    background-color: #fff;
+}
+
+.day-cell:hover {
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+/* Event styling */
+.appointment {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    background-color: #e0f7fa;
+    border: 1px solid #006064;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 12px;
+    color: #004d40;
+}
+
+.appointment h4 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.appointment p {
+    margin: 2px 0;
+}
+
+/* Remove last border on Sunday */
+.calendar-row div:last-child {
+    border-right: none;
+}

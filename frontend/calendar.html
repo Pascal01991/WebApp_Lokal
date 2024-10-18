@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week View Calendar</title>
+    <link rel="stylesheet" href="calendar.css">
+</head>
+<body>
+    <!-- Settings Button -->
+    <div class="settings-button">
+        <button id="settingsBtn">&#9881;</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Kalendereinstellungen</h3>
+            <label for="startHour">Startzeit (z.B. 09:00):</label>
+            <input type="number" id="startHour" value="9" min="0" max="23">
+            <br>
+            <label for="endHour">Endzeit (z.B. 19:00):</label>
+            <input type="number" id="endHour" value="19" min="0" max="23">
+            <br>
+            <button id="applySettings">Übernehmen</button>
+        </div>
+    </div>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="empty-header"></div>
+            <div class="day-header">Monday</div>
+            <div class="day-header">Tuesday</div>
+            <div class="day-header">Wednesday</div>
+            <div class="day-header">Thursday</div>
+            <div class="day-header">Friday</div>
+            <div class="day-header">Saturday</div>
+            <div class="day-header">Sunday</div>
+        </div>
+        <div class="calendar-body" id="calendarBody"></div>
+    </div>
+
+    <script src="calendar.js"></script>
+</body>
+</html>

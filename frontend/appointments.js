@@ -2,8 +2,8 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
 
     // Variablen definieren
-    const title = document.getElementById('title').value;
-    const date = document.getElementById('date').value;
+    const duration = document.getElementById('duration').value;
+    const dateTime = document.getElementById('dateTime').value;
     const description = document.getElementById('description').value;
     const Vorname = document.getElementById('Vorname').value;
     const Nachname = document.getElementById('Nachname').value;
@@ -12,8 +12,8 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     const Dienstleistung = document.getElementById('Dienstleistung').value;
 
     // Ausgabe zur Überprüfung
-    console.log("Frontend: Title:", title);
-    console.log("Frontend: Date:", date);
+    console.log("Frontend: duration:", duration);
+    console.log("Frontend: dateTime:", dateTime);
     console.log("Frontend: Description:", description);
     console.log("Frontend: Vorname:", Vorname);
     console.log("Frontend: Nachname:", Nachname);
@@ -28,7 +28,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ title, date, description, Vorname, Nachname, Telefon, Mail, Dienstleistung})
+            body: JSON.stringify({ duration, dateTime, description, Vorname, Nachname, Telefon, Mail, Dienstleistung})
         });
 
         if (response.ok) {
@@ -72,8 +72,8 @@ function displayAppointments(appointments) {
     const appointmentsList = document.getElementById('appointmentsList');
     appointmentsList.innerHTML = appointments.map(app => `
         <div id="EinzelnerTermin">
-            <h3>${app.title}</h3>
-            <p>${new Date(app.date).toLocaleString()}</p>
+            <h3>${app.duration}</h3>
+            <p>${new Date(app.dateTime).toLocaleString()}</p> <!-- Datum inkl. Uhrzeit -->
             <p>${app.description}</p>
             <p>${app.Vorname}</p>
             <p>${app.Nachname}</p>
@@ -86,13 +86,31 @@ function displayAppointments(appointments) {
         <br>
     `).join('');
 }
-
+/*
 // Echtzeit-Suche basierend auf dem Titel der Termine
 function filterAppointments() {
     const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
     const filteredAppointments = allAppointments.filter(app => 
         app.title && app.title.toLowerCase().includes(searchTerm) // Sicherstellen, dass der Titel existiert
     );
+    displayAppointments(filteredAppointments); // Gefilterte Ergebnisse anzeigen
+}
+*/
+// Echtzeit-Suche basierend auf dem Personenbezogen daten der Termine
+function filterAppointments() {
+    const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
+    const filteredAppointments = allAppointments.filter(app => 
+   {
+            const searchTermLowerCase = searchTerm.toLowerCase();
+        
+            return (
+                (app.Vorname && app.Vorname.toLowerCase().includes(searchTermLowerCase)) ||
+                (app.Nachname && app.Nachname.toLowerCase().includes(searchTermLowerCase)) ||
+                (app.Telefon && app.Telefon.toLowerCase().includes(searchTermLowerCase)) ||
+                (app.Mail && app.Mail.toLowerCase().includes(searchTermLowerCase))
+            );
+        });
+        
     displayAppointments(filteredAppointments); // Gefilterte Ergebnisse anzeigen
 }
 
@@ -142,8 +160,8 @@ async function editAppointment(appointmentId) {
     }
 
     // Lade die bestehenden Daten in das Formular
-    document.getElementById('title').value = appointment.title;
-    document.getElementById('date').value = new Date(appointment.date).toISOString().split('T')[0];
+    document.getElementById('duration').value = appointment.duration;
+    document.getElementById('dateTime').value = new Date(appointment.dateTime).toISOString().slice(0, 16); // Für 'datetime-local'
     document.getElementById('description').value = appointment.description;
     document.getElementById('Vorname').value = appointment.Vorname;
     document.getElementById('Nachname').value = appointment.Nachname;
@@ -157,8 +175,8 @@ async function editAppointment(appointmentId) {
     submitButton.onclick = async function (e) {
         e.preventDefault();
         const updatedAppointment = {
-            title: document.getElementById('title').value,
-            date: document.getElementById('date').value,
+            duration: document.getElementById('duration').value, // Leerzeichen entfernt
+            dateTime: document.getElementById('dateTime').value,
             description: document.getElementById('description').value,
             Vorname: document.getElementById('Vorname').value,
             Nachname: document.getElementById('Nachname').value,
@@ -190,6 +208,7 @@ async function editAppointment(appointmentId) {
         }
     };
 }
+
 
 
    
