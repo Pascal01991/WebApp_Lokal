@@ -1,3 +1,124 @@
+
+//Kalender CHATGPT:
+// Globale Variablen
+let currentDate = new Date();
+let allAppointmentsCalendar = [];
+
+// Funktion zum Rendern des Kalenders
+function renderCalendar() {
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = ''; // Vorherigen Inhalt löschen
+
+    // Startdatum (Montag) der aktuellen Woche erhalten
+    const startOfWeek = getStartOfWeek(currentDate);
+
+    // Tagesüberschriften erstellen
+    calendar.appendChild(document.createElement('div')); // Leere Ecke für die Zeitspalte
+    for (let i = 0; i < 7; i++) {
+        const day = new Date(startOfWeek);
+        day.setDate(startOfWeek.getDate() + i);
+        const dayHeader = document.createElement('div');
+        dayHeader.classList.add('day-header');
+        dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
+        calendar.appendChild(dayHeader);
+    }
+
+    // Zeitslots erstellen
+    for (let hour = 8; hour <= 19; hour++) {
+        // Zeitlabel
+        const timeLabel = document.createElement('div');
+        timeLabel.classList.add('time-slot');
+        timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
+        calendar.appendChild(timeLabel);
+
+        // Stundenfelder für jeden Tag
+        for (let i = 0; i < 7; i++) {
+            const hourCell = document.createElement('div');
+            hourCell.classList.add('hour-cell');
+            hourCell.dataset.dayIndex = i;
+            hourCell.dataset.hour = hour;
+            calendar.appendChild(hourCell);
+        }
+    }
+
+    // Termine anzeigen
+    displayAppointmentsOnCalendar();
+}
+
+// Funktion, um den Start der Woche (Montag) zu erhalten
+function getStartOfWeek(date) {
+    const day = date.getDay(); // 0 (So) bis 6 (Sa)
+    const diff = (day === 0 ? -6 : 1 - day); // Anpassen, wenn Tag Sonntag ist
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() + diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+    return startOfWeek;
+}
+
+// Funktion, um den Namen des Tages zu erhalten
+function getDayName(date) {
+    const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    return days[date.getDay()];
+}
+
+// Funktion, um das Datum zu formatieren
+function formatDate(date) {
+    return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
+}
+
+
+
+// Termine im Kalender anzeigen
+function displayAppointmentsOnCalendar() {
+    const startOfWeek = getStartOfWeek(currentDate);
+
+    allAppointments.forEach(app => {
+        const appDate = new Date(app.dateTime);
+        const appEndDate = new Date(appDate.getTime() + app.duration * 60000); // Dauer in Minuten
+
+        // Überprüfen, ob der Termin in die aktuelle Woche fällt
+        if (appDate >= startOfWeek && appDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+            const dayIndex = (appDate.getDay() + 6) % 7; // Anpassen, damit Montag=0, Sonntag=6
+            const hour = appDate.getHours();
+
+            // Korrekte Zelle finden
+            const calendar = document.getElementById('calendar');
+            const cells = calendar.querySelectorAll(`.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`);
+            if (cells.length > 0) {
+                const cell = cells[0];
+
+                // Termin-Element erstellen
+                const appointmentDiv = document.createElement('div');
+                appointmentDiv.classList.add('appointment');
+
+                // Position und Höhe basierend auf Minuten berechnen
+                const topPosition = (appDate.getMinutes() / 60) * 100;
+                const durationHeight = (app.duration / 60) * 100;
+
+                appointmentDiv.style.top = topPosition + '%';
+                appointmentDiv.style.height = durationHeight + '%';
+
+                appointmentDiv.textContent = `${app.Vorname} ${app.Nachname} (${app.Dienstleistung})`;
+
+                cell.appendChild(appointmentDiv);
+            }
+        }
+    });
+}
+
+// Event-Listener für die Wochennavigation
+document.getElementById('prevWeek').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() - 7);
+    renderCalendar();
+});
+
+document.getElementById('nextWeek').addEventListener('click', () => {
+    currentDate.setDate(currentDate.getDate() + 7);
+    renderCalendar();
+});
+
+
+
 document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
     e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
 
@@ -67,13 +188,6 @@ async function loadAppointments() {
         alert('Fehler: ' + err.message);
     }
 }
-// Termine laden und anzeigen
-
-
-
-
-
-
 
 // Termine in der Liste anzeigen
 function displayAppointments(appointments) {
@@ -238,125 +352,5 @@ async function editAppointment(appointmentId) {
 
 
 
-
-
-
-//Kalender CHATGPT:
-// Globale Variablen
-let currentDate = new Date();
-let allAppointmentsCalendar = [];
-
-// Funktion zum Rendern des Kalenders
-function renderCalendar() {
-    const calendar = document.getElementById('calendar');
-    calendar.innerHTML = ''; // Vorherigen Inhalt löschen
-
-    // Startdatum (Montag) der aktuellen Woche erhalten
-    const startOfWeek = getStartOfWeek(currentDate);
-
-    // Tagesüberschriften erstellen
-    calendar.appendChild(document.createElement('div')); // Leere Ecke für die Zeitspalte
-    for (let i = 0; i < 7; i++) {
-        const day = new Date(startOfWeek);
-        day.setDate(startOfWeek.getDate() + i);
-        const dayHeader = document.createElement('div');
-        dayHeader.classList.add('day-header');
-        dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
-        calendar.appendChild(dayHeader);
-    }
-
-    // Zeitslots erstellen
-    for (let hour = 8; hour <= 19; hour++) {
-        // Zeitlabel
-        const timeLabel = document.createElement('div');
-        timeLabel.classList.add('time-slot');
-        timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
-        calendar.appendChild(timeLabel);
-
-        // Stundenfelder für jeden Tag
-        for (let i = 0; i < 7; i++) {
-            const hourCell = document.createElement('div');
-            hourCell.classList.add('hour-cell');
-            hourCell.dataset.dayIndex = i;
-            hourCell.dataset.hour = hour;
-            calendar.appendChild(hourCell);
-        }
-    }
-
-    // Termine anzeigen
-    displayAppointmentsOnCalendar();
-}
-
-// Funktion, um den Start der Woche (Montag) zu erhalten
-function getStartOfWeek(date) {
-    const day = date.getDay(); // 0 (So) bis 6 (Sa)
-    const diff = (day === 0 ? -6 : 1 - day); // Anpassen, wenn Tag Sonntag ist
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() + diff);
-    startOfWeek.setHours(0, 0, 0, 0);
-    return startOfWeek;
-}
-
-// Funktion, um den Namen des Tages zu erhalten
-function getDayName(date) {
-    const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-    return days[date.getDay()];
-}
-
-// Funktion, um das Datum zu formatieren
-function formatDate(date) {
-    return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
-}
-
-
-
-// Termine im Kalender anzeigen
-function displayAppointmentsOnCalendar() {
-    const startOfWeek = getStartOfWeek(currentDate);
-
-    allAppointments.forEach(app => {
-        const appDate = new Date(app.dateTime);
-        const appEndDate = new Date(appDate.getTime() + app.duration * 60000); // Dauer in Minuten
-
-        // Überprüfen, ob der Termin in die aktuelle Woche fällt
-        if (appDate >= startOfWeek && appDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
-            const dayIndex = (appDate.getDay() + 6) % 7; // Anpassen, damit Montag=0, Sonntag=6
-            const hour = appDate.getHours();
-
-            // Korrekte Zelle finden
-            const calendar = document.getElementById('calendar');
-            const cells = calendar.querySelectorAll(`.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`);
-            if (cells.length > 0) {
-                const cell = cells[0];
-
-                // Termin-Element erstellen
-                const appointmentDiv = document.createElement('div');
-                appointmentDiv.classList.add('appointment');
-
-                // Position und Höhe basierend auf Minuten berechnen
-                const topPosition = (appDate.getMinutes() / 60) * 100;
-                const durationHeight = (app.duration / 60) * 100;
-
-                appointmentDiv.style.top = topPosition + '%';
-                appointmentDiv.style.height = durationHeight + '%';
-
-                appointmentDiv.textContent = `${app.Vorname} ${app.Nachname} (${app.Dienstleistung})`;
-
-                cell.appendChild(appointmentDiv);
-            }
-        }
-    });
-}
-
-// Event-Listener für die Wochennavigation
-document.getElementById('prevWeek').addEventListener('click', () => {
-    currentDate.setDate(currentDate.getDate() - 7);
-    renderCalendar();
-});
-
-document.getElementById('nextWeek').addEventListener('click', () => {
-    currentDate.setDate(currentDate.getDate() + 7);
-    renderCalendar();
-});
 
 
