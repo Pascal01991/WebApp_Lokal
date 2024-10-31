@@ -1,15 +1,22 @@
-
+/* Kalenderbereich und -navigation */
 #week-navigation {
-  margin-bottom: 10px;
+  margin-bottom: 0px; /* Abstand unterhalb der Navigation */
 }
-#week-navigation button {
-  margin-right: 5px;
-}
+
 #calendar {
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
   border: 1px solid #ccc;
+  width: 100%;
+  max-width: 900px; /* Begrenze die maximale Breite des Kalenders */
+  margin: 20px auto; /* Zentriert den Kalender */
+  padding: 10px; /* Zusätzlicher Abstand um den Kalenderinhalt */
+  box-sizing: border-box;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .time-slot {
   border-bottom: 1px solid #ccc;
   height: 60px;
@@ -18,6 +25,7 @@
   text-align: center;
   background-color: #f9f9f9;
 }
+
 .day-header {
   border-bottom: 1px solid #ccc;
   text-align: center;
@@ -25,6 +33,7 @@
   background-color: #e6e6e6;
   box-sizing: border-box;
 }
+
 .hour-cell {
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #ccc;
@@ -32,6 +41,7 @@
   height: 60px;
   box-sizing: border-box;
 }
+
 .appointment {
   background-color: #add8e6;
   position: absolute;
@@ -44,17 +54,17 @@
   box-sizing: border-box;
 }
 
-
+/* Body und allgemeines Layout */
 body {
   font-family: Arial, sans-serif;
   background-color: #000000;
   color: rgb(100, 129, 129);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
-  height: 100vh;
+  padding: 20px 10px; /* Zusätzlicher Padding für seitliche Ränder */
   margin: 0;
+  box-sizing: border-box;
 }
 
 #Formular {
@@ -63,6 +73,7 @@ body {
   padding: 20px;
   background-color: #1a1a1a;
   border-radius: 8px;
+  margin-top: 20px;
   margin-bottom: 20px;
   display: flex;
   flex-wrap: wrap;
@@ -70,6 +81,9 @@ body {
   justify-content: space-between;
 }
 
+
+
+/* Formularstile */
 .form-row {
   display: flex;
   width: 100%;
@@ -117,9 +131,10 @@ input[type="datetime-local"] {
   border-radius: 5px;
 }
 
+/* Liste der Termine */
 #Liste {
   width: 100%;
-  max-width: 850px; /* Vergrößert die maximale Breite, um Platz für zwei nebeneinander liegende Bereiche zu schaffen */
+  max-width: 850px;
   background-color: #000000;
   color: white;
   border-radius: 10px;
@@ -131,27 +146,27 @@ input[type="datetime-local"] {
 #EinzelnerTermin {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap; /* Erlaube Umbruch, falls der Platz nicht ausreicht */
+  flex-wrap: wrap;
   gap: 10px;
   width: 100%;
-  max-width: 850px; /* Maximale Breite festlegen */
+  max-width: 850px;
   background-color: #000000;
   color: white;
   border:rgb(204, 204, 204);
   border-radius: 10px;
   padding: 15px;
   box-sizing: border-box;
-  justify-content: space-between; /* Elemente mit gleichem Abstand verteilen */
+  justify-content: space-between;
 }
 
 #TerminBereichTermin, #TerminBereichPersonalien {
-  flex: 1 1 48%; /* Die Boxen sollen je 48% der Breite einnehmen, damit sie nebeneinander passen */
+  flex: 1 1 48%;
   background-color: #59595934;
   color: white;
   border-radius: 10px;
   padding: 20px;
   box-sizing: border-box;
-  min-width: 300px; /* Mindesbreite, damit die Boxen nicht zu schmal werden */
+  min-width: 300px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -172,11 +187,15 @@ button:hover {
 /* Media Query für kleinere Bildschirme */
 @media (max-width: 768px) {
   #EinzelnerTermin {
-    flex-direction: column; /* Bei kleinen Bildschirmen werden die Bereiche untereinander angezeigt */
+    flex-direction: column;
   }
 
   #TerminBereichTermin, #TerminBereichPersonalien {
-    flex: 1 1 100%; /* Volle Breite bei kleineren Bildschirmen */
-    min-width: 100%; /* Verhindert seitliches Scrollen */
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  #calendar {
+    padding: 5px; /* Weniger Padding für kleine Bildschirme */
   }
 }
