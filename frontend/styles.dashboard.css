@@ -3,9 +3,9 @@ body {
   background-color: #000000;
   color: rgb(100, 129, 129);
   display: flex;
-  flex-direction: column;  /* Ordne Inhalte vertikal an */
-  justify-content: flex-start;  /* Beginne oben */
-  align-items: center;  /* Zentriere die Elemente horizontal */
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   height: 100vh;
   margin: 0;
 }
@@ -16,24 +16,120 @@ body {
   padding: 20px;
   background-color: #1a1a1a;
   border-radius: 8px;
-  margin-bottom: 20px;  /* Abstand zwischen Formular und Liste */
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: space-between;
+}
+
+.form-row {
+  display: flex;
+  width: 100%;
+  gap: 15px;
+}
+
+.form-row > div {
+  flex: 1;
+}
+
+textarea {
+  width: 100%;
+  resize: none;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #333;
+  color: #fff;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+input[type="datetime-local"] {
+  width: calc(100% - 20px);
+  padding: 10px;
+  border-radius: 5px;
 }
 
 #Liste {
   width: 100%;
-  max-width: 600px;
-  background-color: #59595934;
+  max-width: 850px; /* Vergrößert die maximale Breite, um Platz für zwei nebeneinander liegende Bereiche zu schaffen */
+  background-color: #000000;
   color: white;
-  border: #007bff solid 1px;
-  border-radius: 8px;
-  padding: 15px;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 #EinzelnerTermin {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* Erlaube Umbruch, falls der Platz nicht ausreicht */
+  gap: 10px;
   width: 100%;
-  max-width: 500px;
+  max-width: 850px; /* Maximale Breite festlegen */
+  background-color: #000000;
+  color: white;
+  border:rgb(204, 204, 204);
+  border-radius: 10px;
+  padding: 15px;
+  box-sizing: border-box;
+  justify-content: space-between; /* Elemente mit gleichem Abstand verteilen */
+}
+
+#TerminBereichTermin, #TerminBereichPersonalien {
+  flex: 1 1 48%; /* Die Boxen sollen je 48% der Breite einnehmen, damit sie nebeneinander passen */
   background-color: #59595934;
   color: white;
-  border: #007bff solid 1px;
-  border-radius: 8px;
-  padding: 15px;
+  border-radius: 10px;
+  padding: 20px;
+  box-sizing: border-box;
+  min-width: 300px; /* Mindesbreite, damit die Boxen nicht zu schmal werden */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button {
+  background-color: #383630;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Media Query für kleinere Bildschirme */
+@media (max-width: 768px) {
+  #EinzelnerTermin {
+    flex-direction: column; /* Bei kleinen Bildschirmen werden die Bereiche untereinander angezeigt */
+  }
+
+  #TerminBereichTermin, #TerminBereichPersonalien {
+    flex: 1 1 100%; /* Volle Breite bei kleineren Bildschirmen */
+    min-width: 100%; /* Verhindert seitliches Scrollen */
+  }
 }

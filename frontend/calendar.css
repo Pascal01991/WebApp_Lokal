@@ -170,3 +170,38 @@ body {
 .calendar-row div:last-child {
     border-right: none;
 }
+/* Week Navigation Buttons */
+.week-navigation {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin: 20px auto;
+    align-items: center;
+}
+
+.week-navigation button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.week-navigation button:hover {
+    background-color: #388E3C;
+}
+
+#currentWeek {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Calendar header (dates added) */
+.date-header {
+    display: block;
+    font-size: 14px;
+    margin-top: 5px;
+    color: #666;
+}

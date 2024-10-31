@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="calendar.css">
 </head>
 <body>
+
+    <!-- Week Navigation Buttons -->
+    <div class="week-navigation">
+        <button id="prevWeekBtn">&larr; Vorherige Woche</button>
+        <span id="currentWeek"></span>
+        <button id="nextWeekBtn">Nächste Woche &rarr;</button>
+    </div>
+
     <!-- Settings Button -->
     <div class="settings-button">
         <button id="settingsBtn">&#9881;</button>
@@ -28,15 +36,15 @@
     </div>
 
     <div class="calendar-container">
-        <div class="calendar-header">
+        <div class="calendar-header" id="calendarHeader">
             <div class="empty-header"></div>
-            <div class="day-header">Monday</div>
-            <div class="day-header">Tuesday</div>
-            <div class="day-header">Wednesday</div>
-            <div class="day-header">Thursday</div>
-            <div class="day-header">Friday</div>
-            <div class="day-header">Saturday</div>
-            <div class="day-header">Sunday</div>
+            <div class="day-header">Monday <span class="date-header"></span></div>
+            <div class="day-header">Tuesday <span class="date-header"></span></div>
+            <div class="day-header">Wednesday <span class="date-header"></span></div>
+            <div class="day-header">Thursday <span class="date-header"></span></div>
+            <div class="day-header">Friday <span class="date-header"></span></div>
+            <div class="day-header">Saturday <span class="date-header"></span></div>
+            <div class="day-header">Sunday <span class="date-header"></span></div>
         </div>
         <div class="calendar-body" id="calendarBody"></div>
     </div>

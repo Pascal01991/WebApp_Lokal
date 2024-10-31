@@ -8,21 +8,33 @@
 </head>
 <body>
     <!-- dashboard.html -->
-<div id="Formular"><h2>Neuen Termin hinzufügen</h2>
-<form id="appointmentForm">
-    <input type="text" id="Vorname" placeholder="Vorname" required>
-    <input type="text" id="Nachname" placeholder="Nachname" required>
-    <input type="text" id="Telefon" placeholder="Telefon" required>
-    <input type="text" id="Mail" placeholder="Mail" required>
-    <input type="text" id="Dienstleistung" placeholder="Dienstleitung" required>
-    <input type="text" id="duration" placeholder="Dauert" required>
-    <input type="datetime-local" id="dateTime" name="dateTime" required>
-    <textarea id="description" placeholder="Beschreibung"></textarea>
-    <button type="submit">Termin hinzufügen</button>
-</form>
-</div>
+
+
+    <form id="appointmentForm">
+        <div class="form-row">
+          <div><input type="text" id="Vorname" placeholder="Vorname"></div>
+          <div><input type="text" id="Nachname" placeholder="Nachname"></div>
+          <div><input type="text" id="Telefon" placeholder="Telefon"></div>
+        </div>
+        
+        <div class="form-row">
+          <div><input type="email" id="Mail" placeholder="Mail"></div>
+          <div><input type="text" id="Dienstleistung" placeholder="Dienstleistung"></div>
+          <div><input type="number" id="duration" placeholder="Dauert"></div>
+        </div>
+        
+        <div class="form-row">
+          <div><textarea id="description" placeholder="Beschreibung"></textarea></div>
+        </div>
+      
+        <div class="form-row">
+          <div><input type="datetime-local" id="dateTime"></div>
+          <div><button type="submit">Termin hinzufügen</button></div>
+        </div>
+      </form>
+      
 <div id="Liste">
-    <h2>Termine</h2>
+        <h2>Termine</h2>
     <form id="AppointmentSearch">
         <input type="text" id="searchTitel" placeholder="Suchbegriff">
     </form>

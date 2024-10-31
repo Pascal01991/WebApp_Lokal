@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wochenkalender mit Stundenraster und Terminen</title>
+    <style>
+        /* Grundlegendes CSS für den Wochenkalender */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: #4a90e2;
+        }
+        .week-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .time-slots {
+            flex: 0 0 80px;
+            text-align: right;
+            padding-right: 10px;
+        }
+        .time-slots div {
+            height: 60px;
+            line-height: 60px;
+            color: #4a90e2;
+        }
+        .calendar {
+            display: flex;
+        }
+        .week {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+        .day {
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            position: relative;
+            height: 780px;
+        }
+        .day h2 {
+            margin: 0;
+            color: #4a90e2;
+            font-size: 18px;
+            text-align: center;
+        }
+        .appointments {
+            position: relative;
+            height: 720px; /* 12 Stunden * 60px */
+            overflow-y: auto;
+        }
+        .appointment {
+            position: absolute;
+            left: 10%;
+            width: 80%;
+            background-color: #bbdefb;
+            border-radius: 4px;
+            padding: 5px;
+            color: #333;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .appointment-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .appointment-form select,
+        .appointment-form input,
+        .appointment-form button {
+            padding: 8px;
+            font-size: 14px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Wochen-Navigation -->
+        <div class="week-nav">
+            <button onclick="changeWeek(-1)">Vorherige Woche</button>
+            <h1 id="current-week">Kalenderwoche</h1>
+            <button onclick="changeWeek(1)">Nächste Woche</button>
+        </div>
+
+        <!-- Kalenderansicht -->
+        <div class="calendar">
+            <!-- Zeitenspalte links -->
+            <div class="time-slots">
+                <!-- Stundenanzeige von 08:00 bis 19:00 Uhr -->
+                <div>08:00</div>
+                <div>09:00</div>
+                <div>10:00</div>
+                <div>11:00</div>
+                <div>12:00</div>
+                <div>13:00</div>
+                <div>14:00</div>
+                <div>15:00</div>
+                <div>16:00</div>
+                <div>17:00</div>
+                <div>18:00</div>
+                <div>19:00</div>
+            </div>
+
+            <!-- Tage der Woche -->
+            <div class="week">
+                <div class="day" id="monday">
+                    <h2>Montag</h2>
+                    <div class="appointments"></div>
+                </div>
+                <div class="day" id="tuesday">
+                    <h2>Dienstag</h2>
+                    <div class="appointments"></div>
+                </div>
+                <div class="day" id="wednesday">
+                    <h2>Mittwoch</h2>
+                    <div class="appointments"></div>
+                </div>
+                <div class="day" id="thursday">
+                    <h2>Donnerstag</h2>
+                    <div class="appointments"></div>
+                </div>
+                <div class="day" id="friday">
+                    <h2>Freitag</h2>
+                    <div class="appointments"></div>
+                </div>
+                <div class="day" id="saturday">
+                    <h2>Samstag</h2>
+                    <div class="appointments"></div>
+                </div>
+                <div class="day" id="sunday">
+                    <h2>Sonntag</h2>
+                    <div class="appointments"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formular zur Hinzufügung eines Termins -->
+        <div class="appointment-form">
+            <select id="day-select">
+                <option value="monday">Montag</option>
+                <option value="tuesday">Dienstag</option>
+                <option value="wednesday">Mittwoch</option>
+                <option value="thursday">Donnerstag</option>
+                <option value="friday">Freitag</option>
+                <option value="saturday">Samstag</option>
+                <option value="sunday">Sonntag</option>
+            </select>
+            <input type="text" id="appointment-title" placeholder="Termin Titel">
+            <input type="text" id="appointment-description" placeholder="Beschreibung">
+            <input type="time" id="appointment-time" placeholder="Uhrzeit">
+            <button onclick="addAppointment()">Hinzufügen</button>
+        </div>
+    </div>
+    <div >
+        <ul id="appointmentsList"></ul>
+    </div>
+
+    <script>
+
+
+        // Aktuelles Datum und Woche
+        let currentDate = new Date();
+
+        // Funktion zum Setzen der aktuellen Woche
+        function updateWeekDisplay() {
+            document.getElementById("current-week").innerText = 
+                `Kalenderwoche ${getWeekNumber(currentDate)}`;
+        }
+
+        // Funktion zum Ändern der Woche
+        function changeWeek(weekOffset) {
+            currentDate.setDate(currentDate.getDate() + weekOffset * 7);
+            updateWeekDisplay();
+            clearAppointments(); // Termine zurücksetzen für die neue Woche
+        }
+
+        // Funktion zur Berechnung der Kalenderwoche
+        function getWeekNumber(d) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+        }
+
+        // Funktion zum Hinzufügen eines Termins
+        function addAppointment() {
+            // Werte aus dem Formular abfragen
+            const day = document.getElementById("day-select").value;
+            const title = document.getElementById("appointment-title").value;
+            const description = document.getElementById("appointment-description").value;
+            const time = document.getElementById("appointment-time").value;
+
+            // Eingabefelder validieren
+            if (title === "" || time === "") {
+                alert("Bitte einen Titel und eine Uhrzeit eingeben.");
+                return;
+            }
+
+            // Berechnung der Position in Pixeln basierend auf der Zeit
+            const hour = parseInt(time.split(":")[0]) - 8;
+            const minute = parseInt(time.split(":")[1]);
+            const topPosition = (hour * 60 + minute) * 1.0; // Pixelposition in der Tagesansicht
+
+            // Terminobjekt erstellen
+            const appointment = document.createElement("div");
+            appointment.classList.add("appointment");
+            appointment.style.top = `${topPosition}px`;
+            appointment.innerHTML = `<strong>${title}</strong><br>${description}<br>${time}`;
+
+            // Termin zum gewählten Tag hinzufügen
+            document.getElementById(day).querySelector(".appointments").appendChild(appointment);
+
+            // Formular zurücksetzen
+            document.getElementById("appointment-title").value = "";
+            document.getElementById("appointment-description").value = "";
+            document.getElementById("appointment-time").value = "";
+        }
+
+        // Funktion zum Zurücksetzen der Termine (für neue Woche)
+        function clearAppointments() {
+            document.querySelectorAll(".appointments").forEach(appContainer => appContainer.innerHTML = "");
+        }
+
+        // Initiale Anzeige der Woche
+        updateWeekDisplay();
+
+// Globale Variable, um die geladenen Termine zu speichern
+let allAppointments = [];
+
+// Termine abrufen und anzeigen
+async function loadAppointments() {
+    try {
+        const response = await fetch('http://localhost:5000/api/appointments', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (response.ok) {
+            allAppointments = await response.json(); // Termine global speichern
+            console.log(allAppointments); // Debugging-Log
+            displayAppointments(allAppointments); // Alle Termine anzeigen
+        } else {
+            alert('Fehler beim Laden der Termine');
+            console.error('Fehler beim Laden der Termine');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+// Termine in der Liste anzeigen
+function displayAppointments(appointments) {
+    const appointmentsList = document.getElementById('appointmentsList');
+    appointmentsList.innerHTML = appointments.map(app => `
+        <div id="EinzelnerTermin">
+        <div id="TerminBereichPersonalien">
+            <h3>${app.Vorname} ${app.Nachname}</h3>
+            <p>${app.Telefon}</p>
+            <p>${app.Mail}</p>
+            <button onclick="editAppointment('${app._id}')">Bearbeiten</button>
+        </div>
+        <div id="TerminBereichTermin">
+            <h3>${new Date(app.dateTime).toLocaleString()}</h3> <!-- Datum inkl. Uhrzeit -->    
+            <p>${app.Dienstleistung}</p>
+            <p>${app.description}</p>
+            <p>${app.duration}</p>
+            <button onclick="editAppointment('${app._id}')">Bearbeiten</button>
+            <button onclick="deleteAppointment('${app._id}')">Löschen</button>
+        </div>
+        </div>
+        <br>
+    `).join('');
+}
+
+    </script>
+
+</body>
+</html>

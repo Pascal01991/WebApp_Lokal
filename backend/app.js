@@ -15,10 +15,12 @@ connectDB();
 
 // CORS-Einstellungen
 app.use(cors({
-    origin: 'http://localhost:8080',  // Deine Frontend-URL
+    origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],  // Deine Frontend-URL
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true  // Damit Cookies und Anmeldeinformationen gesendet werden können
+    credentials: true,  // Damit Cookies und Anmeldeinformationen gesendet werden können
+    preflightContinue: false,
+    optionsSuccessStatus: 204  // Erfolgreiche OPTIONS-Anfrage wird mit 204 beantwortet (keine Inhalte)
 }));
 
 // Middleware (für JSON und Logger)
