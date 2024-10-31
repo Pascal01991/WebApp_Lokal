@@ -57,7 +57,8 @@ async function loadAppointments() {
         if (response.ok) {
             allAppointments = await response.json(); // Termine global speichern
             console.log(allAppointments); // Debugging-Log
-            displayAppointments(allAppointments); // Alle Termine anzeigen
+            displayAppointments(allAppointments); // Alle Termine anzeigen in der Liste
+            renderCalendar(); // Kalender nach dem Laden der Termine rendern im Kalender
         } else {
             alert('Fehler beim Laden der Termine');
             console.error('Fehler beim Laden der Termine');
@@ -66,6 +67,13 @@ async function loadAppointments() {
         alert('Fehler: ' + err.message);
     }
 }
+// Termine laden und anzeigen
+
+
+
+
+
+
 
 // Termine in der Liste anzeigen
 function displayAppointments(appointments) {
@@ -215,6 +223,24 @@ async function editAppointment(appointmentId) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //Kalender CHATGPT:
 // Globale Variablen
 let currentDate = new Date();
@@ -282,33 +308,13 @@ function formatDate(date) {
     return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
 }
 
-// Termine laden und anzeigen
-async function loadAppointments() {
-    try {
-        const response = await fetch('http://localhost:5000/api/appointments', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
 
-        if (response.ok) {
-            allAppointmentsCalendar = await response.json(); // Termine global speichern
-            console.log(allAppointmentsCalendar); // Debugging-Log
-            renderCalendar(); // Kalender nach dem Laden der Termine rendern
-        } else {
-            alert('Fehler beim Laden der Termine');
-            console.error('Fehler beim Laden der Termine');
-        }
-    } catch (err) {
-        alert('Fehler: ' + err.message);
-    }
-}
 
 // Termine im Kalender anzeigen
 function displayAppointmentsOnCalendar() {
     const startOfWeek = getStartOfWeek(currentDate);
 
-    allAppointmentsCalendar.forEach(app => {
+    allAppointments.forEach(app => {
         const appDate = new Date(app.dateTime);
         const appEndDate = new Date(appDate.getTime() + app.duration * 60000); // Dauer in Minuten
 
@@ -353,7 +359,4 @@ document.getElementById('nextWeek').addEventListener('click', () => {
     renderCalendar();
 });
 
-// Initiales Laden
-window.onload = function() {
-    loadAppointments();
-};
+

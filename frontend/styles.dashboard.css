@@ -1,3 +1,50 @@
+
+#week-navigation {
+  margin-bottom: 10px;
+}
+#week-navigation button {
+  margin-right: 5px;
+}
+#calendar {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr);
+  border: 1px solid #ccc;
+}
+.time-slot {
+  border-bottom: 1px solid #ccc;
+  height: 60px;
+  padding: 5px;
+  box-sizing: border-box;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+.day-header {
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  padding: 5px;
+  background-color: #e6e6e6;
+  box-sizing: border-box;
+}
+.hour-cell {
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  position: relative;
+  height: 60px;
+  box-sizing: border-box;
+}
+.appointment {
+  background-color: #add8e6;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 2px;
+  font-size: 12px;
+  border: 1px solid #888;
+  box-sizing: border-box;
+}
+
+
 body {
   font-family: Arial, sans-serif;
   background-color: #000000;
