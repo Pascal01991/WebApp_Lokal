@@ -125,7 +125,7 @@ document.getElementById('nextWeek').addEventListener('click', () => {
 document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
     e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
 
-    // Variablen definieren
+    // Variablen definieren:
     const duration = document.getElementById('duration').value;
     const dateTime = document.getElementById('dateTime').value;
     const description = document.getElementById('description').value;
