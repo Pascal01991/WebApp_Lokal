@@ -103,10 +103,42 @@
       </section>
   
   
-      <section id="customer-management-section">
-          <h2>Kundenverwaltung</h2>
-          <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
-      </section>
+       <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
+       <section id="customer-management-section">
+        <h2>Kundenverwaltung</h2>
+         <div id="kundenFormular">
+          <h2>Neuen Kunden hinzufügen</h2>
+          <form id="clientForm">
+              <div class="form-row">
+                  <input type="text" id="Vorname" placeholder="Vorname" required>
+                  <input type="text" id="Nachname" placeholder="Nachname" required>
+              </div>
+              <div class="form-row">
+                  <input type="text" id="Strasse" placeholder="Strasse" required>
+                  <input type="text" id="Hausnummer" placeholder="Hausnummer" required>
+              </div>
+              <div class="form-row">
+                  <input type="text" id="Postleitzahl" placeholder="Postleitzahl" required>
+                  <input type="text" id="Ort" placeholder="Ort" required>
+              </div>
+              <div class="form-row">
+                  <input type="text" id="Telefon" placeholder="Telefon" required>
+                  <input type="email" id="Mail" placeholder="E-Mail" required>
+              </div>
+              <div class="form-row">
+                  <input type="number" id="Kundennummer" placeholder="Kundennummer" required>
+                  <button type="submit">Kunden hinzufügen</button>
+              </div>
+          </form>
+      </div>
+  
+      <div id="kundenListe">
+          <h2>Kunden</h2>
+          <input type="text" id="searchClient" placeholder="Kunden suchen">
+          <div id="clientsList"></div>
+      </div>
+  
+    </section>
 
       <section id="accounting-section">
           <h2>Buchhaltung</h2>

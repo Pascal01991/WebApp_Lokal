@@ -7,6 +7,8 @@ const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments'); // Routen für Termine
 const auth = require('./middleware/authMiddleware');
 const cors = require('cors');
+const clientRoutes = require('./routes/clients');
+
 
 const app = express();
 
@@ -35,6 +37,9 @@ app.use('/api/auth', authRoutes); // Authentifizierungsrouten
 
 // Termin-Routen
 app.use('/api/appointments', appointmentRoutes); // Terminrouten einbinden
+
+// Client-Routen hinzufügen
+app.use('/api/clients', clientRoutes);
 
 // Geschützte Route
 app.get('/api/protected', auth, (req, res) => {

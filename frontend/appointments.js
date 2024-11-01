@@ -247,10 +247,7 @@ function filterAppointments() {
 // Event-Listener für die Suche hinzufügen
 document.getElementById('searchTitel').addEventListener('input', filterAppointments);
   
-  // Termine laden, wenn das Dashboard geladen wird
-  window.onload = function() {
-    loadAppointments();
-};
+ 
 
 //Button für Löschen des Termins
 async function deleteAppointment(appointmentId) {
@@ -337,6 +334,165 @@ async function editAppointment(appointmentId) {
         }
     };
 }
+
+
+
+//CLIENT-MANAGEMENT
+// Event Listener für das Kundenformular
+document.getElementById('clientForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Kundeninformationen abrufen
+    const Vorname = document.getElementById('Vorname').value;
+    const Nachname = document.getElementById('Nachname').value;
+    const Strasse = document.getElementById('Strasse').value;
+    const Hausnummer = document.getElementById('Hausnummer').value;
+    const Postleitzahl = document.getElementById('Postleitzahl').value;
+    const Ort = document.getElementById('Ort').value;
+    const Telefon = document.getElementById('Telefon').value;
+    const Mail = document.getElementById('Mail').value;
+    const Kundennummer = document.getElementById('Kundennummer').value;
+
+    try {
+        const response = await fetch('http://localhost:5000/api/clients', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ Vorname, Nachname, Strasse, Hausnummer, Postleitzahl, Ort, Telefon, Mail, Kundennummer })
+        });
+
+        if (response.ok) {
+            alert('Kunde erfolgreich hinzugefügt!');
+            loadClients();  // Kundenliste neu laden
+        } else {
+            alert('Fehler beim Hinzufügen des Kunden');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+});
+
+// Globale Variable für die Kundenliste
+let allClients = [];
+
+// Funktion zum Laden aller Kunden
+async function loadClients() {
+    try {
+        const response = await fetch('http://localhost:5000/api/clients');
+        if (response.ok) {
+            allClients = await response.json();
+            displayClients(allClients);
+        } else {
+            alert('Fehler beim Laden der Kunden');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+// Funktion zum Anzeigen der Kundenliste
+function displayClients(clients) {
+    const clientsList = document.getElementById('clientsList');
+    clientsList.innerHTML = clients.map(client => `
+        <div class="client-card">
+            <h3>${client.Vorname} ${client.Nachname}</h3>
+            <p>${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}</p>
+            <p>Telefon: ${client.Telefon}</p>
+            <p>Email: ${client.Mail}</p>
+            <p>Kundennummer: ${client.Kundennummer}</p>
+            <button onclick="editClient('${client._id}')">Bearbeiten</button>
+            <button onclick="deleteClient('${client._id}')">Löschen</button>
+        </div>
+    `).join('');
+}
+
+// Kunden bearbeiten
+async function editClient(clientId) {
+    const client = allClients.find(c => c._id === clientId);
+    if (!client) return alert('Kunde nicht gefunden');
+
+    document.getElementById('Vorname').value = client.Vorname;
+    document.getElementById('Nachname').value = client.Nachname;
+    document.getElementById('Strasse').value = client.Strasse;
+    document.getElementById('Hausnummer').value = client.Hausnummer;
+    document.getElementById('Postleitzahl').value = client.Postleitzahl;
+    document.getElementById('Ort').value = client.Ort;
+    document.getElementById('Telefon').value = client.Telefon;
+    document.getElementById('Mail').value = client.Mail;
+    document.getElementById('Kundennummer').value = client.Kundennummer;
+
+    const submitButton = document.querySelector('#clientForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+    submitButton.onclick = async function (e) {
+        e.preventDefault();
+        const updatedClient = {
+            Vorname: document.getElementById('Vorname').value,
+            Nachname: document.getElementById('Nachname').value,
+            Strasse: document.getElementById('Strasse').value,
+            Hausnummer: document.getElementById('Hausnummer').value,
+            Postleitzahl: document.getElementById('Postleitzahl').value,
+            Ort: document.getElementById('Ort').value,
+            Telefon: document.getElementById('Telefon').value,
+            Mail: document.getElementById('Mail').value,
+            Kundennummer: document.getElementById('Kundennummer').value,
+        };
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/clients/${clientId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedClient)
+            });
+
+            if (response.ok) {
+                alert('Kunde erfolgreich aktualisiert');
+                loadClients();
+                submitButton.innerText = "Kunden hinzufügen";
+                submitButton.onclick = null;
+            } else {
+                alert('Fehler beim Aktualisieren des Kunden');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    };
+}
+
+// Kunden löschen
+async function deleteClient(clientId) {
+    if (!confirm("Möchtest du diesen Kunden wirklich löschen?")) return;
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/clients/${clientId}`, { method: 'DELETE' });
+        if (response.ok) {
+            alert('Kunde erfolgreich gelöscht');
+            loadClients();
+        } else {
+            alert('Fehler beim Löschen des Kunden');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+// Suchfunktion für Kunden
+document.getElementById('searchClient').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const filteredClients = allClients.filter(client =>
+        client.Vorname.toLowerCase().includes(searchTerm) ||
+        client.Nachname.toLowerCase().includes(searchTerm) ||
+        client.Telefon.toLowerCase().includes(searchTerm) ||
+        client.Mail.toLowerCase().includes(searchTerm)
+    );
+    displayClients(filteredClients);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAppointments();
+    loadClients();
+});
+
 
 
 
