@@ -5,11 +5,24 @@ const Client = require('../models/clientModel');
 // Erstelle einen neuen Client
 router.post('/', async (req, res) => {
     try {
-        console.log('Empfangene Daten:', req.body);  // Eingehende Daten anzeigen
-        const newClient = new Client(req.body);
+        // Finde den höchsten Wert der Kundennummer
+        const lastClient = await Client.findOne().sort({ Kundennummer: -1 });
+
+        // Wenn Kunden existieren, erhöhe die höchste Kundennummer um eins, andernfalls beginne bei 0
+        const nextKundennummer = lastClient ? lastClient.Kundennummer + 1 : 0;
+
+        // Neuen Kunden mit automatischer Kundennummer erstellen
+        const newClient = new Client({ 
+            ...req.body, 
+            Kundennummer: nextKundennummer 
+        });
+        
+        // Speichere den Kunden in der Datenbank
         await newClient.save();
+
         res.status(201).json(newClient);
     } catch (error) {
+        console.error('Fehler beim Erstellen des Clients:', error);
         res.status(500).json({ error: 'Fehler beim Erstellen des Clients' });
     }
 });

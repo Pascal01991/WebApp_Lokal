@@ -351,7 +351,7 @@ document.getElementById('clientForm').addEventListener('submit', async function(
     const Ort = document.getElementById('Ort').value;
     const Telefon = document.getElementById('Telefon').value;
     const Mail = document.getElementById('Mail').value;
-    const Kundennummer = document.getElementById('Kundennummer').value;
+    
 
     try {
         const response = await fetch('http://localhost:5000/api/clients', {
@@ -359,7 +359,7 @@ document.getElementById('clientForm').addEventListener('submit', async function(
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ Vorname, Nachname, Strasse, Hausnummer, Postleitzahl, Ort, Telefon, Mail, Kundennummer })
+            body: JSON.stringify({ Vorname, Nachname, Strasse, Hausnummer, Postleitzahl, Ort, Telefon, Mail })
         });
 
         if (response.ok) {
@@ -400,7 +400,7 @@ function displayClients(clients) {
             <p>${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}</p>
             <p>Telefon: ${client.Telefon}</p>
             <p>Email: ${client.Mail}</p>
-            <p>Kundennummer: ${client.Kundennummer}</p>
+            <p>Kundennummer: ${String(client.Kundennummer).padStart(6, '0')}</p> <!-- Formatierte Kundennummer -->
             <button onclick="editClient('${client._id}')">Bearbeiten</button>
             <button onclick="deleteClient('${client._id}')">Löschen</button>
         </div>
