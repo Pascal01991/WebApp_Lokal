@@ -2,22 +2,22 @@
 :root {
   --theme-color: #3498db; /* Standard-Themenfarbe */
   --background-light: #ffffff;
-  --background-medium: #f0f0f0;
-  --background-dark: #d0d0d0;
+  --background-medium: #ac6b6b;
+  --background-dark: #161515;
   --text-color: #000000;
 }
 
 body.dark-mode {
   --background-light: #1e1e1e;
   --background-medium: #2c2c2c;
-  --background-dark: #3c3c3c;
+  --background-dark: #534444;
   --text-color: #ffffff;
 }
 
 /* Body und allgemeines Layout */
 body {
   font-family: Arial, sans-serif;
-  background-color: #000000;
+  background-color: var(--background-dark);
   color: rgb(255, 255, 255);
   display: flex;
   flex-direction: column;
@@ -38,7 +38,7 @@ html {
   left: 0;
   height: 100vh;
   width: 200px;
-  background-color:var(--background-medium);
+  background-color:var(--background-medium); 
   padding-top: 20px;
   display: flex;
   flex-direction: column;
