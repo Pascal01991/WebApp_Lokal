@@ -20,14 +20,14 @@ router.post('/', async (req, res) => {
     try {
         console.log("POST Request empfangen:", req.body);  // Prüfen, ob die Daten korrekt empfangen werden
 
-        const { duration, dateTime, description, Vorname, Nachname, Telefon, Mail, Dienstleistung } = req.body;
+        const { duration, dateTime, description, VornameAppointment, NachnameAppointment, TelefonAppointment, MailAppointment, Dienstleistung } = req.body;
 
         // Überprüfen, ob die Felder vorhanden sind
         if (!duration || !dateTime || !description) {
             return res.status(400).json({ msg: "Fehlende Felder: Titel, Datum oder Beschreibung" });
         }
 
-        const newAppointment = new Appointment({ duration, dateTime, description, Vorname, Nachname, Telefon, Mail, Dienstleistung });
+        const newAppointment = new Appointment({ duration, dateTime, description, VornameAppointment, NachnameAppointment, TelefonAppointment, MailAppointment, Dienstleistung });
         await newAppointment.save();
 
         console.log("Neuer Termin gespeichert:", newAppointment);  // Prüfen, ob der Termin korrekt gespeichert wird

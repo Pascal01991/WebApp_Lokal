@@ -15,19 +15,19 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    Vorname: {
+    VornameAppointment: {
         type: String,
         required: true,
     },
-    Nachname: {
+    NachnameAppointment: {
         type: String,
         required: true,
     },
-    Telefon: {
+    TelefonAppointment: {
         type: String,
         required: true,
     },
-    Mail: {
+    MailAppointment: {
         type: String,
         required: true,
     },
