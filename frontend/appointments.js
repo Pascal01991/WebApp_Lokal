@@ -101,7 +101,7 @@ function displayAppointmentsOnCalendar() {
                 appointmentDiv.style.top = topPosition + '%';
                 appointmentDiv.style.height = durationHeight + '%';
 
-                appointmentDiv.textContent = `${app.VornameAppointment} ${app.NachnameAppointment} (${app.Dienstleistung})`;
+                appointmentDiv.textContent = `${app.KundennummerzumTermin} ${app.NachnameAppointment} (${app.Dienstleistung})`;
 
                 cell.appendChild(appointmentDiv);
             }
@@ -129,7 +129,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     const duration = document.getElementById('duration').value;
     const dateTime = document.getElementById('dateTime').value;
     const description = document.getElementById('description').value;
-    const VornameAppointment = document.getElementById('VornameAppointment').value;
+    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
     const NachnameAppointment = document.getElementById('NachnameAppointment').value;
     const TelefonAppointment = document.getElementById('TelefonAppointment').value;
     const MailAppointment = document.getElementById('MailAppointment').value;
@@ -139,7 +139,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     console.log("Frontend: duration:", duration);
     console.log("Frontend: dateTime:", dateTime);
     console.log("Frontend: Description:", description);
-    console.log("Frontend: VornameAppointment:", VornameAppointment);
+    console.log("Frontend: KundennummerzumTermin:", KundennummerzumTermin);
     console.log("Frontend: NachnameAppointment:", NachnameAppointment);
     console.log("Frontend: TelefonAppointment:", TelefonAppointment);
     console.log("Frontend: MailAppointment:", MailAppointment);
@@ -152,7 +152,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ duration, dateTime, description, VornameAppointment, NachnameAppointment, TelefonAppointment, MailAppointment, Dienstleistung})
+            body: JSON.stringify({ duration, dateTime, description, KundennummerzumTermin, NachnameAppointment, TelefonAppointment, MailAppointment, Dienstleistung})
         });
 
         if (response.ok) {
@@ -198,7 +198,7 @@ function displayAppointments(appointments) {
     appointmentsList.innerHTML = appointments.map(app => `
         <div id="EinzelnerTermin">
         <div id="TerminBereichPersonalien">
-            <h3>${app.VornameAppointment} ${app.NachnameAppointment}</h3>
+            <h3>${app.KundennummerzumTermin} ${app.NachnameAppointment}</h3>
             <p>${app.TelefonAppointment}</p>
             <p>${app.MailAppointment}</p>
             <button onclick="editAppointment('${app._id}')">Bearbeiten</button>
@@ -233,7 +233,7 @@ function filterAppointments() {
             const searchTermLowerCase = searchTerm.toLowerCase();
         
             return (
-                (app.VornameAppointment && app.VornameAppointment.toLowerCase().includes(searchTermLowerCase)) ||
+                (app.KundennummerzumTermin && app.KundennummerzumTermin.toLowerCase().includes(searchTermLowerCase)) ||
                 (app.NachnameAppointment && app.NachnameAppointment.toLowerCase().includes(searchTermLowerCase)) ||
                 (app.TelefonAppointment && app.TelefonAppointment.toLowerCase().includes(searchTermLowerCase)) ||
                 (app.MailAppointment && app.MailAppointment.toLowerCase().includes(searchTermLowerCase))
@@ -289,7 +289,7 @@ async function editAppointment(appointmentId) {
     document.getElementById('duration').value = appointment.duration;
     document.getElementById('dateTime').value = new Date(appointment.dateTime).toISOString().slice(0, 16); // Für 'datetime-local'
     document.getElementById('description').value = appointment.description;
-    document.getElementById('VornameAppointment').value = appointment.VornameAppointment;
+    document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin;
     document.getElementById('NachnameAppointment').value = appointment.NachnameAppointment;
     document.getElementById('TelefonAppointment').value = appointment.TelefonAppointment;
     document.getElementById('MailAppointment').value = appointment.MailAppointment;
@@ -304,7 +304,7 @@ async function editAppointment(appointmentId) {
             duration: document.getElementById('duration').value, // Leerzeichen entfernt
             dateTime: document.getElementById('dateTime').value,
             description: document.getElementById('description').value,
-            VornameAppointment: document.getElementById('VornameAppointment').value,
+            KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
             NachnameAppointment: document.getElementById('NachnameAppointment').value,
             TelefonAppointment: document.getElementById('TelefonAppointment').value,
             MailAppointment: document.getElementById('MailAppointment').value,

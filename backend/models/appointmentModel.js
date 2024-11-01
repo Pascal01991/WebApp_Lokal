@@ -15,7 +15,7 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    VornameAppointment: {
+    KundennummerzumTermin: {
         type: String,
         required: true,
     },
