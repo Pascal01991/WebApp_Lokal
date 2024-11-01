@@ -66,7 +66,12 @@
       <section id="appointment-management-section">
         <h2>Terminverwaltung</h2>
         
-   
+        <div id="customer-search">
+          <button id="newCustomerBtn">Neuer Kunde</button>
+          <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
+          <div id="searchResults"></div>
+      </div>
+      
 
         <form id="appointmentForm">
             <div class="form-row">
@@ -171,8 +176,19 @@
 
               <button type="button" onclick="updateCalendarSettings()">Einstellungen speichern</button>
           </form>
-        </div>
+          
+                    </div>
+            <!-- Farbwahl für das Thema -->
+            <div class="form-row">
+              <label for="themeColor">Themenfarbe:</label>
+              <input type="color" id="themeColor" name="themeColor" value="#3498db">
+            </div>
 
+            <!-- Schalter für Tag-Nacht-Modus -->
+            <div class="form-row">
+              <label for="darkModeToggle">Nachtmodus:</label>
+              <input type="checkbox" id="darkModeToggle">
+            </div>
       </section>
 
 </div>

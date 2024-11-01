@@ -1,3 +1,19 @@
+
+:root {
+  --theme-color: #3498db; /* Standard-Themenfarbe */
+  --background-light: #ffffff;
+  --background-medium: #f0f0f0;
+  --background-dark: #d0d0d0;
+  --text-color: #000000;
+}
+
+body.dark-mode {
+  --background-light: #1e1e1e;
+  --background-medium: #2c2c2c;
+  --background-dark: #3c3c3c;
+  --text-color: #ffffff;
+}
+
 /* Body und allgemeines Layout */
 body {
   font-family: Arial, sans-serif;
@@ -22,7 +38,7 @@ html {
   left: 0;
   height: 100vh;
   width: 200px;
-  background-color: #333;
+  background-color:var(--background-medium);
   padding-top: 20px;
   display: flex;
   flex-direction: column;
@@ -66,7 +82,7 @@ html {
 
 /* Hauptinhalt und Abstand zur Sidebar */
 #main-content {
-  margin-left: 220px; /* Platz für die Sidebar schaffen */
+  margin-left: 420px; /* Platz für die Sidebar schaffen */
   padding: 20px;
   box-sizing: border-box;
 }
@@ -118,7 +134,7 @@ html {
 }
 
 .appointment {
-  background-color: #3555e7;
+  background-color:  var(--theme-color); 
   position: absolute;
   left: 0;
   right: 0;
@@ -260,4 +276,23 @@ button:hover {
   #calendar {
     padding: 5px; /* Weniger Padding für kleine Bildschirme */
   }
+}
+/*Design für Kundensuche innerhalb Terminverwaltung*/
+#searchResults {
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: rgb(153, 60, 60);
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+}
+
+.search-result-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background-color: #f0f0f0;
 }

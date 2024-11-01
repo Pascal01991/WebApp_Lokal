@@ -494,7 +494,110 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+//Kundensuche innerhalb der Terminverwaltung:
+// Filtered search results for customer search
+let searchResults = [];
 
+// Event-Listener für die Kunden-Suche
+document.getElementById('searchCustomerInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+
+    // Zeige die besten 5 Ergebnisse an
+    searchResults = allClients
+        .filter(client => 
+            client.Vorname.toLowerCase().includes(searchTerm) ||
+            client.Nachname.toLowerCase().includes(searchTerm) ||
+            client.Ort.toLowerCase().includes(searchTerm) ||
+            client.Telefon.toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 5); // nur die besten 5 Ergebnisse
+    
+    displaySearchResults();
+});
+
+// Funktion zum Anzeigen der Suchergebnisse
+function displaySearchResults() {
+    const searchResultsContainer = document.getElementById('searchResults');
+    searchResultsContainer.innerHTML = ''; // Vorherige Ergebnisse löschen
+
+    if (searchResults.length === 0) return; // Falls keine Ergebnisse
+
+    searchResults.forEach(client => {
+        const resultItem = document.createElement('div');
+        resultItem.classList.add('search-result-item');
+        resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
+        
+        // Klickbare Suchergebnisse
+        resultItem.addEventListener('click', () => {
+            document.getElementById('KundennummerzumTermin').value = String(client.Kundennummer).padStart(6, '0'); // Kundennummer formatieren
+            searchResultsContainer.innerHTML = ''; // Suchergebnisse leeren
+            document.getElementById('searchCustomerInput').value = ''; // Suchfeld zurücksetzen
+        });
+
+        searchResultsContainer.appendChild(resultItem);
+    });
+}
+
+// Kundenliste laden und Suchfeld initialisieren beim Start
+document.addEventListener('DOMContentLoaded', function() {
+    loadAppointments();
+    loadClients();  // AllClients wird hier geladen
+});
+
+
+
+
+
+
+//FARBAUSWAHL THEMA DESIGN DARKMODE
+// Funktion zum Aktualisieren der Themenfarbe
+function updateThemeColor(color) {
+    document.documentElement.style.setProperty('--theme-color', color);
+    // Optional: Speichere die Farbe in localStorage
+    localStorage.setItem('themeColor', color);
+}
+
+// Funktion zum Umschalten des Tag-Nacht-Modus
+function toggleDarkMode(isDark) {
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    // Optional: Speichere den Modus in localStorage
+    localStorage.setItem('darkMode', isDark);
+}
+
+// Event-Listener für die Farbwahl
+document.getElementById('themeColor').addEventListener('input', function() {
+    updateThemeColor(this.value);
+});
+
+// Event-Listener für den Tag-Nacht-Schalter
+document.getElementById('darkModeToggle').addEventListener('change', function() {
+    toggleDarkMode(this.checked);
+});
+
+// Funktion zum Laden der gespeicherten Einstellungen
+function loadThemeSettings() {
+    const savedColor = localStorage.getItem('themeColor');
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    
+    if (savedColor) {
+        updateThemeColor(savedColor);
+        document.getElementById('themeColor').value = savedColor;
+    }
+    
+    if (savedDarkMode) {
+        toggleDarkMode(true);
+        document.getElementById('darkModeToggle').checked = true;
+    }
+}
+
+// Lade die Einstellungen beim Laden der Seite
+document.addEventListener('DOMContentLoaded', function() {
+    loadThemeSettings();
+});
 
 
 
