@@ -1,3 +1,77 @@
+/* Body und allgemeines Layout */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #000000;
+  color: rgb(255, 255, 255);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 10px; /* Zusätzlicher Padding für seitliche Ränder */
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sidebar Styling */
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 200px;
+  background-color: #333;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Entfernt die Unterstreichung von Links in der Sidebar */
+#sidebar a {
+  text-decoration: none;
+  color: white /* Behält die Textfarbe des Eltern-Elements bei */
+}
+
+
+.sidebar-button {
+  width: 100%;
+  padding: 15px 10px;
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  max-width: 180px;
+}
+
+.sidebar-button:hover {
+  background-color: #555;
+}
+
+.sidebar-button .icon {
+  margin-right: 10px;
+  font-size: 20px; /* Größeres Icon */
+}
+
+.sidebar-button .text {
+  flex: 1;
+}
+
+
+/* Hauptinhalt und Abstand zur Sidebar */
+#main-content {
+  margin-left: 220px; /* Platz für die Sidebar schaffen */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+
 /* Kalenderbereich und -navigation */
 #week-navigation {
   margin-bottom: 0px; /* Abstand unterhalb der Navigation */
@@ -19,18 +93,19 @@
 
 .time-slot {
   border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
   height: 60px;
   padding: 5px;
   box-sizing: border-box;
   text-align: center;
-  background-color: #f9f9f9;
+  background-color:  #1a1a1a;
 }
 
 .day-header {
   border-bottom: 1px solid #ccc;
   text-align: center;
   padding: 5px;
-  background-color: #e6e6e6;
+  background-color:  #1a1a1a;
   box-sizing: border-box;
 }
 
@@ -43,7 +118,7 @@
 }
 
 .appointment {
-  background-color: #add8e6;
+  background-color: #3555e7;
   position: absolute;
   left: 0;
   right: 0;
@@ -51,19 +126,6 @@
   padding: 2px;
   font-size: 12px;
   border: 1px solid #888;
-  box-sizing: border-box;
-}
-
-/* Body und allgemeines Layout */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #000000;
-  color: rgb(100, 129, 129);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 10px; /* Zusätzlicher Padding für seitliche Ränder */
-  margin: 0;
   box-sizing: border-box;
 }
 

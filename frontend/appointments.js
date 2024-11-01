@@ -1,3 +1,6 @@
+//Einstellungen
+//Kalender-Einstellungen
+
 
 //Kalender CHATGPT:
 // Globale Variablen
@@ -23,7 +26,7 @@ function renderCalendar() {
         calendar.appendChild(dayHeader);
     }
 
-    // Zeitslots erstellen
+    // Zeitslots erstellen 
     for (let hour = 8; hour <= 19; hour++) {
         // Zeitlabel
         const timeLabel = document.createElement('div');

@@ -7,48 +7,146 @@
 <link rel="stylesheet" href="styles.dashboard.css">
 </head>
 <body>
-    <!-- dashboard.html -->
-    <div id="week-navigation">
-      <button id="prevWeek">Vorherige Woche</button>
-      <button id="nextWeek">Nächste Woche</button>
-  </div>
-  <div id="calendar"></div>
-  <form id="appointmentForm">
-      <div class="form-row">
-        <div><input type="text" id="Vorname" placeholder="Vorname"></div>
-        <div><input type="text" id="Nachname" placeholder="Nachname"></div>
-        <div><input type="text" id="Telefon" placeholder="Telefon"></div>
-      </div>
 
-    <form id="appointmentForm">
-        <div class="form-row">
-          <div><input type="text" id="Vorname" placeholder="Vorname"></div>
-          <div><input type="text" id="Nachname" placeholder="Nachname"></div>
-          <div><input type="text" id="Telefon" placeholder="Telefon"></div>
+   <!-- Sidebar für die Navigation -->
+  <div id="sidebar">
+    <a href="#home-section" class="sidebar-button">
+      <span class="icon">🏠</span>
+      <span class="text">Home</span>
+    </a>
+    <a href="#calendar-section" class="sidebar-button">
+        <span class="icon">📅</span>
+        <span class="text">Kalender</span>
+    </a>
+    <a href="#appointment-management-section" class="sidebar-button">
+        <span class="icon">🗒️</span>
+        <span class="text">Terminverwaltung</span>
+    </a>
+    <a href="#customer-management-section" class="sidebar-button">
+        <span class="icon">🧍</span>
+        <span class="text">Kundenverwaltung</span>
+    </a>
+    <a href="#accounting-section" class="sidebar-button">
+        <span class="icon">💼</span>
+        <span class="text">Buchhaltung</span>
+    </a>
+    <a href="#settings-section" class="sidebar-button">
+        <span class="icon">⚙️</span>
+        <span class="text">Einstellungen</span>
+    </a>
+    <a href="#logout-section" class="sidebar-button">
+        <span class="icon">🔒</span>
+        <span class="text">Logout</span>
+    </a>
+  </div>
+
+  <!-- maincontent dashboard.html -->
+<div id="main-content">
+
+      <!-- Inhalt des Home-Abschnitts -->
+      <section id="home-section">
+          <h2>Home</h2>
+          
+      </section>
+
+      <!-- Inhalt des Kalender-Abschnitts -->
+      <section id="calendar-section">
+        <h2>Kalender</h2>
+            
+        <div id="week-navigation">
+            <button id="prevWeek">Vorherige Woche</button>
+            <button id="nextWeek">Nächste Woche</button>
         </div>
+
+        <div id="calendar"></div>
+        <form id="appointmentForm">
+            <div class="form-row">
+              <div><input type="text" id="Vorname" placeholder="Vorname"></div>
+              <div><input type="text" id="Nachname" placeholder="Nachname"></div>
+              <div><input type="text" id="Telefon" placeholder="Telefon"></div>
+          </div>
+      </section>
+
+      <!-- Inhalt des Terminverwaltungs-Abschnitts -->
+      <section id="appointment-management-section">
+        <h2>Terminverwaltung</h2>
         
-        <div class="form-row">
-          <div><input type="email" id="Mail" placeholder="Mail"></div>
-          <div><input type="text" id="Dienstleistung" placeholder="Dienstleistung"></div>
-          <div><input type="number" id="duration" placeholder="Dauert"></div>
+   
+
+        <form id="appointmentForm">
+            <div class="form-row">
+              <div><input type="text" id="Vorname" placeholder="Vorname"></div>
+              <div><input type="text" id="Nachname" placeholder="Nachname"></div>
+              <div><input type="text" id="Telefon" placeholder="Telefon"></div>
+            </div>
+            
+            <div class="form-row">
+              <div><input type="email" id="Mail" placeholder="Mail"></div>
+              <div><input type="text" id="Dienstleistung" placeholder="Dienstleistung"></div>
+              <div><input type="number" id="duration" placeholder="Dauert"></div>
+            </div>
+            
+            <div class="form-row">
+              <div><textarea id="description" placeholder="Beschreibung"></textarea></div>
+            </div>
+          
+            <div class="form-row">
+              <div><input type="datetime-local" id="dateTime"></div>
+              <div><button type="submit">Termin hinzufügen</button></div>
+            </div>
+        </form>
+          
+        <div id="Liste">
+                <h2>Termine</h2>
+            <form id="AppointmentSearch">
+                <input type="text" id="searchTitel" placeholder="Suchbegriff">
+            </form>
+            
+            <ul id="appointmentsList"></ul>
+
         </div>
-        
-        <div class="form-row">
-          <div><textarea id="description" placeholder="Beschreibung"></textarea></div>
+      </section>
+  
+  
+      <section id="customer-management-section">
+          <h2>Kundenverwaltung</h2>
+          <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
+      </section>
+
+      <section id="accounting-section">
+          <h2>Buchhaltung</h2>
+          <!-- Inhalt des Buchhaltungs-Abschnitts -->
+      </section>
+
+      <!-- Inhalt des Einstellungen-Abschnitts -->
+      <section id="settings-section">
+          <h2>Einstellungen</h2>
+        <!-- Einstellungsbereich für Zeitslots und Wochentage -->
+        <div id="settings-section">
+          <h2>Einstellungen für Zeitslots und Wochentage</h2>
+          <form id="calendar-settings-form">
+              <!-- Zeitslots definieren -->
+              <label for="start-hour">Startzeit:</label>
+              <input type="number" id="start-hour" min="0" max="23" value="8">
+
+              <label for="end-hour">Endzeit:</label>
+              <input type="number" id="end-hour" min="1" max="23" value="19">
+
+              <!-- Wochentage auswählen -->
+              <h3>Anzuzeigende Tage</h3>
+              <label><input type="checkbox" class="day-checkbox" value="1" checked> Montag</label>
+              <label><input type="checkbox" class="day-checkbox" value="2" checked> Dienstag</label>
+              <label><input type="checkbox" class="day-checkbox" value="3" checked> Mittwoch</label>
+              <label><input type="checkbox" class="day-checkbox" value="4" checked> Donnerstag</label>
+              <label><input type="checkbox" class="day-checkbox" value="5" checked> Freitag</label>
+              <label><input type="checkbox" class="day-checkbox" value="6"> Samstag</label>
+              <label><input type="checkbox" class="day-checkbox" value="0"> Sonntag</label>
+
+              <button type="button" onclick="updateCalendarSettings()">Einstellungen speichern</button>
+          </form>
         </div>
-      
-        <div class="form-row">
-          <div><input type="datetime-local" id="dateTime"></div>
-          <div><button type="submit">Termin hinzufügen</button></div>
-        </div>
-      </form>
-      
-<div id="Liste">
-        <h2>Termine</h2>
-    <form id="AppointmentSearch">
-        <input type="text" id="searchTitel" placeholder="Suchbegriff">
-    </form>
-<ul id="appointmentsList"></ul>
+
+      </section>
 
 </div>
 </body>
