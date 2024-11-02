@@ -396,16 +396,22 @@ function displayClients(clients) {
     const clientsList = document.getElementById('clientsList');
     clientsList.innerHTML = clients.map(client => `
         <div class="client-card">
-            <h3>${client.Vorname} ${client.Nachname}</h3>
-            <p>${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}</p>
-            <p>Telefon: ${client.Telefon}</p>
-            <p>Email: ${client.Mail}</p>
-            <p>Kundennummer: ${String(client.Kundennummer).padStart(6, '0')}</p> <!-- Formatierte Kundennummer -->
-            <button onclick="editClient('${client._id}')">Bearbeiten</button>
-            <button onclick="deleteClient('${client._id}')">Löschen</button>
+            <span class="client-info">${client.Vorname} ${client.Nachname}</span>
+            <span class="client-info">${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}</span>
+            <span class="client-info">${client.Telefon}, ${client.Mail}</span>
+            <div class="client-actions">
+                <button onclick="editClient('${client._id}')" class="action-btn edit-btn" title="Bearbeiten">
+                    ✏️
+                </button>
+                <button onclick="deleteClient('${client._id}')" class="action-btn delete-btn" title="Löschen">
+                    🗑️
+                </button>
+            </div>
         </div>
     `).join('');
 }
+
+
 
 // Kunden bearbeiten
 async function editClient(clientId) {

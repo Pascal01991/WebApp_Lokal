@@ -137,10 +137,15 @@
           </form>
       </div>
   
-      <div id="kundenListe">
-          <h2>Kunden</h2>
-          <input type="text" id="searchClient" placeholder="Kunden suchen">
-          <div id="clientsList"></div>
+ 
+          <!-- Kundenliste im Kundenverwaltungs-Abschnitt -->
+<div id="kundenListe">
+  <h2>Kunden</h2>
+  <input type="text" id="searchClient" placeholder="Kunden suchen">
+  <!-- Kundenliste in einem scrollbaren Container -->
+  <div id="clientsList" class="scrollable-list"></div>
+</div>
+
       </div>
   
     </section>
@@ -176,7 +181,7 @@
 
               <button type="button" onclick="updateCalendarSettings()">Einstellungen speichern</button>
           </form>
-          
+
                     </div>
             <!-- Farbwahl für das Thema -->
             <div class="form-row">
