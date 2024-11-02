@@ -1,16 +1,15 @@
-
 :root {
-  --theme-color: #3498db; /* Standard-Themenfarbe */
-  --background-light: #ffffff;
-  --background-medium: #ac6b6b;
-  --background-dark: #161515;
+  --theme-color: #24144b; /* Standard-Themenfarbe */
+  --background-light: #5c5b5b;
+  --background-medium: #e2e2e2;
+  --background-dark: #ffffff;
   --text-color: #000000;
 }
 
 body.dark-mode {
-  --background-light: #1e1e1e;
-  --background-medium: #2c2c2c;
-  --background-dark: #534444;
+  --background-light: #3b3b3b;
+  --background-medium: #141414;
+  --background-dark: #000000;
   --text-color: #ffffff;
 }
 
@@ -18,7 +17,7 @@ body.dark-mode {
 body {
   font-family: Arial, sans-serif;
   background-color: var(--background-dark);
-  color: rgb(255, 255, 255);
+  color: var(--text-color);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,14 +49,14 @@ html {
 /* Entfernt die Unterstreichung von Links in der Sidebar */
 #sidebar a {
   text-decoration: none;
-  color: white /* Behält die Textfarbe des Eltern-Elements bei */
+  color: var(--text-color);
 }
 
 
 .sidebar-button {
   width: 100%;
   padding: 15px 10px;
-  color: #fff;
+  color: #e74545;
   font-size: 16px;
   display: flex;
   align-items: center;
@@ -67,7 +66,7 @@ html {
 }
 
 .sidebar-button:hover {
-  background-color: #555;
+  background-color: var(--background-light);
 }
 
 .sidebar-button .icon {
@@ -82,7 +81,7 @@ html {
 
 /* Hauptinhalt und Abstand zur Sidebar */
 #main-content {
-  margin-left: 420px; /* Platz für die Sidebar schaffen */
+  margin-left: 220px; /* Platz für die Sidebar schaffen */
   padding: 20px;
   box-sizing: border-box;
 }
@@ -98,11 +97,11 @@ html {
   grid-template-columns: 80px repeat(7, 1fr);
   border: 1px solid #ccc;
   width: 100%;
-  max-width: 900px; /* Begrenze die maximale Breite des Kalenders */
+  max-width: 1100px; /* Begrenze die maximale Breite des Kalenders */
   margin: 20px auto; /* Zentriert den Kalender */
   padding: 10px; /* Zusätzlicher Abstand um den Kalenderinhalt */
   box-sizing: border-box;
-  background-color: #1a1a1a;
+  background-color: var(--background-medium);
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -114,34 +113,35 @@ html {
   padding: 5px;
   box-sizing: border-box;
   text-align: center;
-  background-color:  #1a1a1a;
+  background-color:  var(--background-medium);
 }
 
 .day-header {
   border-bottom: 1px solid #ccc;
   text-align: center;
   padding: 5px;
-  background-color:  #1a1a1a;
+  background-color: var(--background-medium);
   box-sizing: border-box;
 }
 
 .hour-cell {
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  border-bottom: 1px solid var(--background-light);
+  border-right: 1px solid var(--background-light);
   position: relative;
   height: 60px;
   box-sizing: border-box;
 }
 
 .appointment {
-  background-color:  var(--theme-color); 
+  background-color: var(--theme-color); 
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
   padding: 2px;
   font-size: 12px;
-  border: 1px solid #888;
+  border: 1px solid var(--background-dark);
+  border-radius: 5px;
   box-sizing: border-box;
 }
 
@@ -149,7 +149,7 @@ html {
   width: 100%;
   max-width: 600px;
   padding: 20px;
-  background-color: #1a1a1a;
+  background-color: var(--background-medium);
   border-radius: 8px;
   margin-top: 20px;
   margin-bottom: 20px;
@@ -185,23 +185,20 @@ input, select, textarea {
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #ccc;
-  background-color: #333;
+  background-color: var(--background-medium);
   color: #fff;
 }
 
 button {
   padding: 10px 20px;
   background-color: #007bff;
-  color: white;
+  color: var(--text-color);
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-button:hover {
-  background-color: #0056b3;
-}
 
 input[type="datetime-local"] {
   width: calc(100% - 20px);
@@ -213,8 +210,8 @@ input[type="datetime-local"] {
 #Liste {
   width: 100%;
   max-width: 850px;
-  background-color: #000000;
-  color: white;
+  background-color: var(--background-dark);
+  color: var(--text-color);
   border-radius: 10px;
   padding: 20px;
   margin-bottom: 20px;
@@ -228,10 +225,10 @@ input[type="datetime-local"] {
   gap: 10px;
   width: 100%;
   max-width: 850px;
-  background-color: #000000;
-  color: white;
+  background-color: var(--background-medium);
+  color: var(--text-color);
   border:rgb(204, 204, 204);
-  border-radius: 10px;
+  border-radius: 30px;
   padding: 15px;
   box-sizing: border-box;
   justify-content: space-between;
@@ -240,7 +237,7 @@ input[type="datetime-local"] {
 #TerminBereichTermin, #TerminBereichPersonalien {
   flex: 1 1 48%;
   background-color: #59595934;
-  color: white;
+  color: var(--text-color);
   border-radius: 10px;
   padding: 20px;
   box-sizing: border-box;
@@ -249,7 +246,7 @@ input[type="datetime-local"] {
 }
 
 button {
-  background-color: #383630;
+  background-color: var(--background-light);
   color: white;
   border: none;
   padding: 10px;
@@ -259,7 +256,7 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: var(--theme-color); 
 }
 
 /* Media Query für kleinere Bildschirme */
@@ -282,7 +279,7 @@ button:hover {
   border: 1px solid #ccc;
   max-height: 150px;
   overflow-y: auto;
-  background-color: rgb(153, 60, 60);
+  background-color: var(--background-dark);
   position: absolute;
   z-index: 10;
   width: 100%;
@@ -296,3 +293,5 @@ button:hover {
 .search-result-item:hover {
   background-color: #f0f0f0;
 }
+
+
