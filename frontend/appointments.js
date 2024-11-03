@@ -562,10 +562,12 @@ function displaySearchResults() {
         
         // Klickbare Suchergebnisse
         resultItem.addEventListener('click', () => {
-            document.getElementById('KundennummerzumTermin').value = Number(client.Kundennummer).padStart(6, '0'); // Kundennummer formatieren
-            searchResultsContainer.innerHTML = ''; // Suchergebnisse leeren
-            document.getElementById('searchCustomerInput').value = ''; // Suchfeld zurücksetzen
-        });
+        // Kundennummer formatieren: erst zu String konvertieren, dann `padStart` verwenden
+        document.getElementById('KundennummerzumTermin').value = String(client.Kundennummer).padStart(6, '0'); 
+        searchResultsContainer.innerHTML = ''; // Suchergebnisse leeren
+        document.getElementById('searchCustomerInput').value = ''; // Suchfeld zurücksetzen
+    });
+
 
         searchResultsContainer.appendChild(resultItem);
     });
