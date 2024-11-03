@@ -101,7 +101,7 @@ function displayAppointmentsOnCalendar() {
                 appointmentDiv.style.top = topPosition + '%';
                 appointmentDiv.style.height = durationHeight + '%';
 
-                appointmentDiv.textContent = `${app.KundennummerzumTermin} ${app.NachnameAppointment} (${app.Dienstleistung})`;
+                appointmentDiv.textContent = `${app.KundennummerzumTermin} ${app.Preis} (${app.Dienstleistung})`;
 
                 cell.appendChild(appointmentDiv);
             }
@@ -133,8 +133,8 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     const dateTime = document.getElementById('dateTime').value;
     const description = document.getElementById('description').value;
     const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
-    const NachnameAppointment = document.getElementById('NachnameAppointment').value;
-    const TelefonAppointment = document.getElementById('TelefonAppointment').value;
+    const Preis = document.getElementById('Preis').value;
+    const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
     const MailAppointment = document.getElementById('MailAppointment').value;
     const Dienstleistung = document.getElementById('Dienstleistung').value;
 
@@ -143,8 +143,8 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     console.log("Frontend: dateTime:", dateTime);
     console.log("Frontend: Description:", description);
     console.log("Frontend: KundennummerzumTermin:", KundennummerzumTermin);
-    console.log("Frontend: NachnameAppointment:", NachnameAppointment);
-    console.log("Frontend: TelefonAppointment:", TelefonAppointment);
+    console.log("Frontend: Preis:", Preis);
+    console.log("Frontend: Abrechnungsstatus:", Abrechnungsstatus);
     console.log("Frontend: MailAppointment:", MailAppointment);
     console.log("Frontend: Dienstleistung:", Dienstleistung);
 
@@ -155,7 +155,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ duration, dateTime, description, KundennummerzumTermin, NachnameAppointment, TelefonAppointment, MailAppointment, Dienstleistung})
+            body: JSON.stringify({ duration, dateTime, description, KundennummerzumTermin, Preis, Abrechnungsstatus, MailAppointment, Dienstleistung})
         });
 
         if (response.ok) {
@@ -222,9 +222,8 @@ async function displayAppointments(appointments) {
                 </div>
                 <!-- Spalte C: Weitere Details -->
                 <div class="termin-info">
-                    <div>${app.NachnameAppointment}</div> <!-- C1 -->
-                    <div>${app.TelefonAppointment}</div> <!-- C2 -->
-                    <div>${app.MailAppointment}</div> <!-- C3 -->
+                    <div>Preis: ${app.Preis || "nicht angegeben"}</div> <!-- C1 -->
+                    <div>Status: ${app.Abrechnungsstatus || "nicht angegeben"}</div> <!-- C2 -->
                 </div>
                 <!-- Spalte D: Aktionen -->
                 <div class="termin-actions">
@@ -239,7 +238,6 @@ async function displayAppointments(appointments) {
         `;
     }).join('');
 }
-
 
 
 
@@ -312,14 +310,13 @@ async function editAppointment(appointmentId) {
     }
 
     // Lade die bestehenden Daten in das Formular
-    document.getElementById('duration').value = appointment.duration;
-    document.getElementById('dateTime').value = new Date(appointment.dateTime).toISOString().slice(0, 16); // Für 'datetime-local'
-    document.getElementById('description').value = appointment.description;
     document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin;
-    document.getElementById('NachnameAppointment').value = appointment.NachnameAppointment;
-    document.getElementById('TelefonAppointment').value = appointment.TelefonAppointment;
-    document.getElementById('MailAppointment').value = appointment.MailAppointment;
+    document.getElementById('dateTime').value = new Date(appointment.dateTime).toISOString().slice(0, 16);
+    document.getElementById('duration').value = appointment.duration;
     document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
+    document.getElementById('Preis').value = appointment.Preis;  // Preis ins Formular laden
+    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;  // Abrechnungsstatus ins Formular laden
+    document.getElementById('description').value = appointment.description;
 
     // Verändere den Submit-Button, um die Änderungen zu speichern
     const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
@@ -327,14 +324,13 @@ async function editAppointment(appointmentId) {
     submitButton.onclick = async function (e) {
         e.preventDefault();
         const updatedAppointment = {
-            duration: document.getElementById('duration').value, // Leerzeichen entfernt
-            dateTime: document.getElementById('dateTime').value,
-            description: document.getElementById('description').value,
             KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
-            NachnameAppointment: document.getElementById('NachnameAppointment').value,
-            TelefonAppointment: document.getElementById('TelefonAppointment').value,
-            MailAppointment: document.getElementById('MailAppointment').value,
+            dateTime: document.getElementById('dateTime').value,
+            duration: document.getElementById('duration').value,
             Dienstleistung: document.getElementById('Dienstleistung').value,
+            Preis: document.getElementById('Preis').value,  // Preis beim Speichern aktualisieren
+            Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,  // Abrechnungsstatus beim Speichern aktualisieren
+            description: document.getElementById('description').value,
         };
 
         try {
@@ -351,7 +347,7 @@ async function editAppointment(appointmentId) {
                 alert('Termin erfolgreich aktualisiert');
                 loadAppointments();  // Termine neu laden
                 submitButton.innerText = "Termin hinzufügen";
-                submitButton.onclick = null;  // Zurücksetzen auf die ursprüngliche Funktion
+                submitButton.onclick = null;
             } else {
                 alert('Fehler beim Aktualisieren des Termins');
             }
@@ -360,8 +356,6 @@ async function editAppointment(appointmentId) {
         }
     };
 }
-
-
 //====================================================================================================================================
 //CLIENT-MANAGEMENT
 //====================================================================================================================================
@@ -531,11 +525,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // Filtered search results for customer search
 let searchResults = [];
 
-// Event-Listener für die Kunden-Suche
+// Event-Listener für die Kunden-Suche Kundenauswahl
+// Kundensuche Logik bleibt unverändert
+
+// Kundensuche-Event-Listener für Auswahl des Kunden
 document.getElementById('searchCustomerInput').addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase();
-
-    // Zeige die besten 5 Ergebnisse an
     searchResults = allClients
         .filter(client => 
             client.Vorname.toLowerCase().includes(searchTerm) ||
@@ -543,35 +538,70 @@ document.getElementById('searchCustomerInput').addEventListener('input', functio
             client.Ort.toLowerCase().includes(searchTerm) ||
             client.Telefon.toLowerCase().includes(searchTerm)
         )
-        .slice(0, 5); // nur die besten 5 Ergebnisse
-    
+        .slice(0, 5);
     displaySearchResults();
 });
 
-// Funktion zum Anzeigen der Suchergebnisse
 function displaySearchResults() {
     const searchResultsContainer = document.getElementById('searchResults');
     searchResultsContainer.innerHTML = ''; // Vorherige Ergebnisse löschen
 
-    if (searchResults.length === 0) return; // Falls keine Ergebnisse
+    if (searchResults.length === 0) return;
 
     searchResults.forEach(client => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('search-result-item');
         resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
         
-        // Klickbare Suchergebnisse
+        // Kundendaten anzeigen und Kundennummer setzen
         resultItem.addEventListener('click', () => {
-        // Kundennummer formatieren: erst zu String konvertieren, dann `padStart` verwenden
-        document.getElementById('KundennummerzumTermin').value = String(client.Kundennummer).padStart(6, '0'); 
-        searchResultsContainer.innerHTML = ''; // Suchergebnisse leeren
-        document.getElementById('searchCustomerInput').value = ''; // Suchfeld zurücksetzen
-    });
-
+            document.getElementById('KundennummerzumTermin').value = client.Kundennummer;
+            document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
+            document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
+            document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
+            document.getElementById('KundenTelefon').textContent = client.Telefon;
+            document.getElementById('KundenMail').textContent = client.Mail;
+            searchResultsContainer.innerHTML = ''; // Ergebnisse leeren
+            document.getElementById('searchCustomerInput').value = ''; // Suchfeld zurücksetzen
+        });
 
         searchResultsContainer.appendChild(resultItem);
     });
 }
+
+// Submit-Event-Listener für das Terminformular
+document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Termin-Daten sammeln
+    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
+    const dateTime = document.getElementById('dateTime').value;
+    const duration = document.getElementById('duration').value;
+    const Dienstleistung = document.getElementById('Dienstleistung').value;
+    const Preis = document.getElementById('Preis').value;
+    const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
+    const description = document.getElementById('description').value;
+
+    try {
+        const response = await fetch('http://localhost:5000/api/appointments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ KundennummerzumTermin, dateTime, duration, Dienstleistung, Preis, Abrechnungsstatus, description })
+        });
+
+        if (response.ok) {
+            alert('Termin erfolgreich hinzugefügt!');
+            loadAppointments();
+        } else {
+            alert('Fehler beim Hinzufügen des Termins');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+});
 
 // Kundenliste laden und Suchfeld initialisieren beim Start
 document.addEventListener('DOMContentLoaded', function() {

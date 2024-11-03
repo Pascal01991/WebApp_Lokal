@@ -19,15 +19,11 @@ const appointmentSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    NachnameAppointment: {
+    Preis: {
         type: String,
         required: true,
     },
-    TelefonAppointment: {
-        type: String,
-        required: true,
-    },
-    MailAppointment: {
+    Abrechnungsstatus: {
         type: String,
         required: true,
     },
@@ -47,3 +43,5 @@ const Appointment = mongoose.model('Appointment', appointmentSchema);
 
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
+
+

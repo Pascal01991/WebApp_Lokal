@@ -172,8 +172,11 @@ KALENDER
 }
 
 /*====================================================================================================================================
-TERMINVERWALTUNG OLD SOWIE SONSTIGE BITTE AUFRÄUMEN
+TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 ==================================================================================================================================*/
+/*====================================================================================================================================
+TERMINVERWALTUNG OLD SOWIE SONSTIGE BITTE AUFRÄUMEN
+====================================================================================================================================*/
 /*Design für Kundensuche innerhalb Terminverwaltung*/
 #searchResults {
   border: 1px solid #ccc;
@@ -310,8 +313,47 @@ button:hover {
 
 
 
+
 /*====================================================================================================================================
-TERMINVERWALTUNG NEW
+TERMINVERWALTUNG FORMULAR NEW:
+====================================================================================================================================*/
+
+#TerminFormular {
+  display: flex;
+  gap: 20px;
+}
+
+.form-column {
+  flex: 1;
+}
+
+.customer-info, .appointment-details, .description {
+  background-color: var(--background-medium);
+  padding: 20px;
+  border-radius: 10px;
+  color: #fff;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-top: 10px;
+}
+
+span {
+  display: block;
+  margin-bottom: 5px;
+}
+
+
+
+
+
+
+
+
+/*====================================================================================================================================
+TERMINVERWALTUNG SCROLLBARE LISTE
 ====================================================================================================================================*/
 /* Scrollbare Terminliste */
 .scrollable-termin-list {

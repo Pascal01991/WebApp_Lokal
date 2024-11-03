@@ -66,45 +66,48 @@
       <section id="appointment-management-section">
         <h2>Terminverwaltung</h2>
         
-        <div id="customer-search">
-          <button id="newCustomerBtn">Neuer Kunde</button>
-          <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
-          <div id="searchResults"></div>
+        <div id="TerminFormular">
+          <!-- Kundensuche und Kundeninformationen -->
+          <div id="customer-search">
+              <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
+              <div id="searchResults"></div>
+          </div>
+      
+          <form id="appointmentForm">
+              <!-- Spalte A: Kundendaten -->
+              <div class="form-column customer-info">
+                  <div><label>Kundennummer:</label> <span id="KundennummerzumTerminDisplay"></span></div> <!-- A1 -->
+                  <div><label>Name:</label> <span id="KundenName"></span></div> <!-- A2 -->
+                  <div><label>Adresse:</label> <span id="KundenAdresse"></span></div> <!-- A3 -->
+                  <div><label>Telefon:</label> <span id="KundenTelefon"></span></div> <!-- A4 -->
+                  <div><label>Mail:</label> <span id="KundenMail"></span></div> <!-- A5 -->
+              </div>
+      
+              <!-- Spalte B: Termindetails -->
+              <div class="form-column appointment-details">
+                  <div><label>Datum & Uhrzeit:</label><input type="datetime-local" id="dateTime" required></div> <!-- B1 -->
+                  <div><label>Dauer:</label><input type="number" id="duration" placeholder="Dauer in Minuten" required></div> <!-- B2 -->
+                  <div><label>Dienstleistung:</label><input type="text" id="Dienstleistung" required></div> <!-- B3 -->
+                  <div><label>Preis:</label><input type="number" id="Preis" required></div> <!-- B4 -->
+                  <div><label>Abrechnungsstatus:</label><input type="text" id="Abrechnungsstatus" required></div> <!-- B5 -->
+              </div>
+      
+              <!-- Spalte C: Beschreibung -->
+              <div class="form-column description">
+                  <div><label>Beschreibung:</label><textarea id="description" required></textarea></div> <!-- C1 -->
+              </div>
+      
+              <button type="submit">Termin hinzufügen</button>
+              <!-- Verstecktes Feld zur Speicherung der Kundennummer -->
+              <input type="hidden" id="KundennummerzumTermin" />
+          </form>
       </div>
+      
       <!-- Terminliste im Terminverwaltungs-Abschnitt -->
       <div id="terminListe">
-        <h2>Termine</h2>
         <input type="text" id="searchAppointment" placeholder="Termin suchen">
         <div id="appointmentsList" class="scrollable-termin-list"></div>
       </div>
-    
-
-      
-
-        <form id="appointmentForm">
-            <div class="form-row">
-              <div><input type="text" id="KundennummerzumTermin" placeholder="KundennummerzumTermin"></div>
-              <div><input type="text" id="NachnameAppointment" placeholder="NachnameAppointment"></div>
-              <div><input type="text" id="TelefonAppointment" placeholder="TelefonAppointment"></div>
-            </div>
-            
-            <div class="form-row">
-              <div><input type="emailAppointment" id="MailAppointment" placeholder="MailAppointment"></div>
-              <div><input type="text" id="Dienstleistung" placeholder="Dienstleistung"></div>
-              <div><input type="number" id="duration" placeholder="Dauert"></div>
-            </div>
-            
-            <div class="form-row">
-              <div><textarea id="description" placeholder="Beschreibung"></textarea></div>
-            </div>
-          
-            <div class="form-row">
-              <div><input type="datetime-local" id="dateTime"></div>
-              <div><button type="submit">Termin hinzufügen</button></div>
-            </div>
-        </form>
-          
-      
     
       </section>
   
