@@ -1,3 +1,4 @@
+console.log("Testlog");
 //====================================================================================================================================
 //KALEDNER
 //====================================================================================================================================
@@ -244,27 +245,35 @@ async function displayAppointments(appointments) {
 
 
 function filterAppointments() {
-    const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
-    const filteredAppointments = allAppointments.filter(app => 
-   {
-            const searchTermLowerCase = searchTerm.toLowerCase();
-        
-            return (
-                (app.KundennummerzumTermin && app.KundennummerzumTermin.toLowerCase().includes(searchTermLowerCase)) ||
-                (app.NachnameAppointment && app.NachnameAppointment.toLowerCase().includes(searchTermLowerCase)) ||
-                (app.TelefonAppointment && app.TelefonAppointment.toLowerCase().includes(searchTermLowerCase)) ||
-                (app.MailAppointment && app.MailAppointment.toLowerCase().includes(searchTermLowerCase))
-            );
-        });
-        
+    const searchTerm = document.getElementById('searchAppointment').value.toLowerCase();
+    console.log("Filter term:", searchTerm); // Testlog
+
+    const filteredAppointments = allAppointments.filter(app => {
+        // Den zugehörigen Kunden basierend auf der Kundennummer suchen
+        const client = allClients.find(c => c.Kundennummer === app.KundennummerzumTermin);
+
+        // Überprüfen, ob eine Übereinstimmung in den Kundendaten gefunden wird
+        return (
+            (client && client.Vorname && client.Vorname.toLowerCase().includes(searchTerm)) ||
+            (client && client.Nachname && client.Nachname.toLowerCase().includes(searchTerm)) ||
+            (client && client.Strasse && client.Strasse.toLowerCase().includes(searchTerm)) ||
+            (client && client.Ort && client.Ort.toLowerCase().includes(searchTerm)) ||
+            (client && client.Telefon && client.Telefon.toLowerCase().includes(searchTerm)) ||
+            (client && client.Mail && client.Mail.toLowerCase().includes(searchTerm))
+        );
+    });
+
     displayAppointments(filteredAppointments); // Gefilterte Ergebnisse anzeigen
 }
 
 
+
 // Event-Listener für die Suche hinzufügen
-document.getElementById('searchTitel').addEventListener('input', filterAppointments);
-  
- 
+document.getElementById('searchAppointment').addEventListener('input', function () {
+    console.log("Search Input Detected"); // Testlog
+    filterAppointments();
+});
+
 
 //Button für Löschen des Termins
 async function deleteAppointment(appointmentId) {

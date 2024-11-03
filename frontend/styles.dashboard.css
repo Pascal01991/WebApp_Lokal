@@ -240,9 +240,9 @@ input[type="datetime-local"] {
 }
 
 /* Liste der Termine */
-#Liste {
+#terminListe {
   width: 100%;
-  max-width: 850px;
+  max-width: 1850px;
   background-color: var(--background-dark);
   color: var(--text-color);
   border-radius: 10px;
@@ -311,16 +311,16 @@ button:hover {
 
 
 /*====================================================================================================================================
-KUNDENVERWALTUNG NEW
+TERMINVERWALTUNG NEW
 ====================================================================================================================================*/
 /* Scrollbare Terminliste */
 .scrollable-termin-list {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
   border: 1px solid #ccc;
   padding: 10px;
   margin-top: 10px;
-  background-color: #f9f9f9;
+  background-color: var(--background-medium);
 }
 
 /* Jede Zeile für einen Termin */
