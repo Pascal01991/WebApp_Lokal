@@ -1,8 +1,7 @@
-//Einstellungen
-//Kalender-Einstellungen
+//====================================================================================================================================
+//KALEDNER
+//====================================================================================================================================
 
-
-//Kalender CHATGPT:
 // Globale Variablen
 let currentDate = new Date();
 let allAppointmentsCalendar = [];
@@ -121,6 +120,9 @@ document.getElementById('nextWeek').addEventListener('click', () => {
 });
 
 
+//====================================================================================================================================
+//TERMINVERWALTUNG
+//====================================================================================================================================
 
 document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
     e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
@@ -215,17 +217,7 @@ function displayAppointments(appointments) {
         <br>
     `).join('');
 }
-/*
-// Echtzeit-Suche basierend auf dem Titel der Termine
-function filterAppointments() {
-    const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
-    const filteredAppointments = allAppointments.filter(app => 
-        app.title && app.title.toLowerCase().includes(searchTerm) // Sicherstellen, dass der Titel existiert
-    );
-    displayAppointments(filteredAppointments); // Gefilterte Ergebnisse anzeigen
-}
-*/
-// Echtzeit-Suche basierend auf dem Personenbezogen daten der Termine
+
 function filterAppointments() {
     const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
     const filteredAppointments = allAppointments.filter(app => 
@@ -336,8 +328,9 @@ async function editAppointment(appointmentId) {
 }
 
 
-
+//====================================================================================================================================
 //CLIENT-MANAGEMENT
+//====================================================================================================================================
 // Event Listener für das Kundenformular
 document.getElementById('clientForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -553,8 +546,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
-
+//====================================================================================================================================
+//EINSTELLUNGEN
+//====================================================================================================================================
 //FARBAUSWAHL THEMA DESIGN DARKMODE
 // Funktion zum Aktualisieren der Themenfarbe
 function updateThemeColor(color) {
