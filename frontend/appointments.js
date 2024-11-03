@@ -195,28 +195,53 @@ async function loadAppointments() {
 }
 
 // Termine in der Liste anzeigen
-function displayAppointments(appointments) {
+// Funktion zur Anzeige der Terminliste mit Verweis auf Kundendaten basierend auf KundennummerzumTermin
+async function displayAppointments(appointments) {
+    const clientsResponse = await fetch('http://localhost:5000/api/clients'); // Lädt alle Kunden aus der Kunden-Datenbank
+    const clients = await clientsResponse.json();
+
     const appointmentsList = document.getElementById('appointmentsList');
-    appointmentsList.innerHTML = appointments.map(app => `
-        <div id="EinzelnerTermin">
-        <div id="TerminBereichPersonalien">
-            <h3>${app.KundennummerzumTermin} ${app.NachnameAppointment}</h3>
-            <p>${app.TelefonAppointment}</p>
-            <p>${app.MailAppointment}</p>
-            <button onclick="editAppointment('${app._id}')">Bearbeiten</button>
-        </div>
-        <div id="TerminBereichTermin">
-            <h3>${new Date(app.dateTime).toLocaleString()}</h3> <!-- Datum inkl. Uhrzeit -->    
-            <p>${app.Dienstleistung}</p>
-            <p>${app.description}</p>
-            <p>${app.duration}</p>
-            <button onclick="editAppointment('${app._id}')">Bearbeiten</button>
-            <button onclick="deleteAppointment('${app._id}')">Löschen</button>
-        </div>
-        </div>
-        <br>
-    `).join('');
+    appointmentsList.innerHTML = appointments.map(app => {
+        // Kunden basierend auf KundennummerzumTermin finden
+        const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+
+        return `
+            <div class="termin-card">
+                <!-- Spalte A: Kundendaten -->
+                <div class="termin-info">
+                    <div>${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}</div> <!-- A1 -->
+                    <div>${client ? `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}` : ""}</div> <!-- A2 -->
+                    <div>${client ? `${client.Telefon}, ${client.Mail}` : ""}</div> <!-- A3 -->
+                </div>
+                <!-- Spalte B: Termindetails -->
+                <div class="termin-info">
+                    <div>${new Date(app.dateTime).toLocaleDateString()} ${new Date(app.dateTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div> <!-- B1 -->
+                    <div>${app.Dienstleistung} (${app.duration} Min)</div> <!-- B2 -->
+                    <div>${app.description}</div> <!-- B3 -->
+                </div>
+                <!-- Spalte C: Weitere Details -->
+                <div class="termin-info">
+                    <div>${app.NachnameAppointment}</div> <!-- C1 -->
+                    <div>${app.TelefonAppointment}</div> <!-- C2 -->
+                    <div>${app.MailAppointment}</div> <!-- C3 -->
+                </div>
+                <!-- Spalte D: Aktionen -->
+                <div class="termin-actions">
+                    <button onclick="editAppointment('${app._id}')" class="action-btn edit-btn" title="Bearbeiten">
+                        ✏️
+                    </button>
+                    <button onclick="deleteAppointment('${app._id}')" class="action-btn delete-btn" title="Löschen">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
+
+
+
+
 
 function filterAppointments() {
     const searchTerm = document.getElementById('searchTitel').value.toLowerCase();
@@ -528,7 +553,7 @@ function displaySearchResults() {
         
         // Klickbare Suchergebnisse
         resultItem.addEventListener('click', () => {
-            document.getElementById('KundennummerzumTermin').value = String(client.Kundennummer).padStart(6, '0'); // Kundennummer formatieren
+            document.getElementById('KundennummerzumTermin').value = Number(client.Kundennummer).padStart(6, '0'); // Kundennummer formatieren
             searchResultsContainer.innerHTML = ''; // Suchergebnisse leeren
             document.getElementById('searchCustomerInput').value = ''; // Suchfeld zurücksetzen
         });
