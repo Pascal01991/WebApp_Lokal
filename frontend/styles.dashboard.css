@@ -222,15 +222,70 @@ KALENDER
 /*====================================================================================================================================
 TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 ==================================================================================================================================*/
-/*====================================================================================================================================
-TERMINVERWALTUNG OLD SOWIE SONSTIGE BITTE AUFRÄUMEN
-====================================================================================================================================*/
-/*Design für Kundensuche innerhalb Terminverwaltung*/
+/* Container für das Terminformular */
+#appointmentForm {
+  display: flex;
+  gap: 20px; /* Abstand zwischen den Spalten */
+  max-width: 100%;
+  box-sizing: border-box;
+  background-color: var(--background-medium);
+  height: 100%; /* Verfügbaren Platz füllen */
+}
 
-/*Formular für Termin*/
+/* Stile für die einzelnen Spalten im Formular */
+.form-column {
+  flex: 1;
+  min-width: 250px; /* Mindestbreite für jede Spalte */
+  padding: 20px;
+  border-radius: 10px;
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+}
 
-/* Suchergebnis-Container für die Kundensuche */
-/* Standardmäßig ausgeblendet */
+/* Gleichmäßige Verteilung der Inhalte innerhalb der Kundendaten- und Termindetails-Spalten */
+.customer-info > div,
+.appointment-details > div {
+  margin-bottom: 15px;
+  flex-grow: 1; /* Elemente gleichmäßig verteilen */
+}
+
+/* Maximale Nutzung der Höhe für das Beschreibungstextfeld */
+.description {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.description textarea {
+  flex-grow: 1;
+  resize: none;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: var(--background-light);
+  color: var(--text-color);
+  min-height: 100%;
+}
+
+/* Stile für das Kunden-Suchfeld */
+#customer-search {
+  position: relative;
+  margin-bottom: 15px; /* Abstand zum nächsten Element */
+}
+
+/* Responsive Anpassung für kleinere Bildschirme */
+@media (max-width: 768px) {
+  #appointmentForm {
+    flex-direction: column;
+  }
+}
+
+
+
+
+/*KUNDEN-SUCHFUNKTION FÜR TERMIN*/
+
 #searchClientForApointment {
   display: none;
   position: absolute;
@@ -264,13 +319,6 @@ TERMINVERWALTUNG OLD SOWIE SONSTIGE BITTE AUFRÄUMEN
   background-color: var(--theme-color);
   color: var(--background-dark);
 }
-
-
-
-
-
-
-
 
 
 

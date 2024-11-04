@@ -1,206 +1,208 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-<link rel="stylesheet" href="styles.dashboard.css">
-</head>
-<body>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Document</title>
+  <link rel="stylesheet" href="styles.dashboard.css">
+  </head>
+  <body>
 
-   <!-- Sidebar für die Navigation -->
-  <div id="sidebar">
-    <a href="#home-section" class="sidebar-button">
-      <span class="icon">🏠</span>
-      <span class="text">Home</span>
-    </a>
-    <a href="#calendar-section" class="sidebar-button">
-        <span class="icon">📅</span>
-        <span class="text">Kalender</span>
-    </a>
-    <a href="#appointment-management-section" class="sidebar-button">
-        <span class="icon">🗒️</span>
-        <span class="text">Terminverwaltung</span>
-    </a>
-    <a href="#customer-management-section" class="sidebar-button">
-        <span class="icon">🧍</span>
-        <span class="text">Kundenverwaltung</span>
-    </a>
-    <a href="#accounting-section" class="sidebar-button">
-        <span class="icon">💼</span>
-        <span class="text">Abrechnung</span>
-    </a>
-    <a href="#settings-section" class="sidebar-button">
-        <span class="icon">⚙️</span>
-        <span class="text">Einstellungen</span>
-    </a>
-    <a href="#logout-section" class="sidebar-button">
-        <span class="icon">🔒</span>
-        <span class="text">Logout</span>
-    </a>
+    <!-- Sidebar für die Navigation -->
+    <div id="sidebar">
+      <a href="#home-section" class="sidebar-button">
+        <span class="icon">🏠</span>
+        <span class="text">Home</span>
+      </a>
+      <a href="#calendar-section" class="sidebar-button">
+          <span class="icon">📅</span>
+          <span class="text">Kalender</span>
+      </a>
+      <a href="#appointment-management-section" class="sidebar-button">
+          <span class="icon">🗒️</span>
+          <span class="text">Terminverwaltung</span>
+      </a>
+      <a href="#customer-management-section" class="sidebar-button">
+          <span class="icon">🧍</span>
+          <span class="text">Kundenverwaltung</span>
+      </a>
+      <a href="#accounting-section" class="sidebar-button">
+          <span class="icon">💼</span>
+          <span class="text">Abrechnung</span>
+      </a>
+      <a href="#settings-section" class="sidebar-button">
+          <span class="icon">⚙️</span>
+          <span class="text">Einstellungen</span>
+      </a>
+      <a href="#logout-section" class="sidebar-button">
+          <span class="icon">🔒</span>
+          <span class="text">Logout</span>
+      </a>
+    </div>
+
+    <!-- maincontent dashboard.html -->
+  <div id="main-content">
+
+        <!-- Inhalt des Home-Abschnitts -->
+        <section id="home-section">
+            <h2>Home</h2>
+            
+        </section>
+
+        <!-- Inhalt des Kalender-Abschnitts -->
+        <section id="calendar-section">
+          <h2>Kalender</h2>
+              
+          <div id="week-navigation">
+              <button id="prevWeek">Vorherige Woche</button>
+              <button id="nextWeek">Nächste Woche</button>
+          </div>
+
+          <div id="calendar"></div>
+          
+        </section>
+
+        <!-- Inhalt des Terminverwaltungs-Abschnitts -->
+        <section id="appointment-management-section">
+          <h2>Terminverwaltung</h2>
+          
+          <div id="TerminFormular">
+            <!-- Kundensuche und Kundeninformationen -->
+            
+          
+              <form id="appointmentForm">
+                  <!-- Spalte A: Kundendaten -->
+                      <div class="form-column customer-info">
+                          <div id="customer-search">
+                          <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
+                      <div id="searchClientForApointment"></div>
+                      </div>
+                      <div><label>Kundennummer:</label> <span id="KundennummerzumTerminDisplay"></span></div> <!-- A1 -->
+                      <div><label>Name:</label> <span id="KundenName"></span></div> <!-- A2 -->
+                      <div><label>Adresse:</label> <span id="KundenAdresse"></span></div> <!-- A3 -->
+                      <div><label>Telefon:</label> <span id="KundenTelefon"></span></div> <!-- A4 -->
+                      <div><label>Mail:</label> <span id="KundenMail"></span></div> <!-- A5 -->
+                  </div>
+          
+                  <!-- Spalte B: Termindetails -->
+                  <div class="form-column appointment-details">
+                      <div><label>Datum & Uhrzeit:</label><input type="datetime-local" id="dateTime" required></div> <!-- B1 -->
+                      <div><label>Dauer:</label><input type="number" id="duration" placeholder="Dauer in Minuten" required></div> <!-- B2 -->
+                      <div><label>Dienstleistung:</label><input type="text" id="Dienstleistung" required></div> <!-- B3 -->
+                      <div><label>Preis:</label><input type="number" id="Preis" required></div> <!-- B4 -->
+                      <div><label>Abrechnungsstatus:</label><input type="text" id="Abrechnungsstatus" required></div> <!-- B5 -->
+                  </div>
+          
+                  <!-- Spalte C: Beschreibung -->
+                  <div class="form-column description">
+                      <div><label>Beschreibung:</label><textarea id="description" required></textarea></div> <!-- C1 -->
+                      <button type="submit">Termin hinzufügen</button>
+                    </div>
+          
+                  
+                  <!-- Verstecktes Feld zur Speicherung der Kundennummer -->
+                  <input type="hidden" id="KundennummerzumTermin" />
+              </form>
+        </div>
+        
+        <!-- Terminliste im Terminverwaltungs-Abschnitt -->
+        <div id="terminListe">
+          <input type="text" id="searchAppointment" placeholder="Termin suchen">
+          <div id="appointmentsList" class="scrollable-termin-list"></div>
+        </div>
+      
+        </section>
+    
+    
+        <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
+        <section id="customer-management-section">
+          <h2>Kundenverwaltung</h2>
+          <div id="kundenFormular">
+            <h2>Neuen Kunden hinzufügen</h2>
+            <form id="clientForm">
+                <div class="form-row">
+                    <input type="text" id="Vorname" placeholder="Vorname" required>
+                    <input type="text" id="Nachname" placeholder="Nachname" required>
+                </div>
+                <div class="form-row">
+                    <input type="text" id="Strasse" placeholder="Strasse" required>
+                    <input type="text" id="Hausnummer" placeholder="Hausnummer" required>
+                </div>
+                <div class="form-row">
+                    <input type="text" id="Postleitzahl" placeholder="Postleitzahl" required>
+                    <input type="text" id="Ort" placeholder="Ort" required>
+                </div>
+                <div class="form-row">
+                    <input type="text" id="Telefon" placeholder="Telefon" required>
+                    <input type="email" id="Mail" placeholder="E-Mail" required>
+                </div>
+                <div class="form-row">
+                    
+                    <button type="submit">Kunden hinzufügen</button>
+                </div>
+            </form>
+        </div>
+    
+  
+            <!-- Kundenliste im Kundenverwaltungs-Abschnitt -->
+  <div id="kundenListe">
+    <h2>Kunden</h2>
+    <input type="text" id="searchClient" placeholder="Kunden suchen">
+    <!-- Kundenliste in einem scrollbaren Container -->
+    <div id="clientsList" class="scrollable-list"></div>
   </div>
 
-  <!-- maincontent dashboard.html -->
-<div id="main-content">
-
-      <!-- Inhalt des Home-Abschnitts -->
-      <section id="home-section">
-          <h2>Home</h2>
-          
-      </section>
-
-      <!-- Inhalt des Kalender-Abschnitts -->
-      <section id="calendar-section">
-        <h2>Kalender</h2>
-            
-        <div id="week-navigation">
-            <button id="prevWeek">Vorherige Woche</button>
-            <button id="nextWeek">Nächste Woche</button>
         </div>
-
-        <div id="calendar"></div>
-        
-      </section>
-
-      <!-- Inhalt des Terminverwaltungs-Abschnitts -->
-      <section id="appointment-management-section">
-        <h2>Terminverwaltung</h2>
-        
-        <div id="TerminFormular">
-          <!-- Kundensuche und Kundeninformationen -->
-          <div id="customer-search">
-              <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
-              <div id="searchClientForApointment"></div>
-          </div>
-      
-          <form id="appointmentForm">
-              <!-- Spalte A: Kundendaten -->
-              <div class="form-column customer-info">
-                  <div><label>Kundennummer:</label> <span id="KundennummerzumTerminDisplay"></span></div> <!-- A1 -->
-                  <div><label>Name:</label> <span id="KundenName"></span></div> <!-- A2 -->
-                  <div><label>Adresse:</label> <span id="KundenAdresse"></span></div> <!-- A3 -->
-                  <div><label>Telefon:</label> <span id="KundenTelefon"></span></div> <!-- A4 -->
-                  <div><label>Mail:</label> <span id="KundenMail"></span></div> <!-- A5 -->
-              </div>
-      
-              <!-- Spalte B: Termindetails -->
-              <div class="form-column appointment-details">
-                  <div><label>Datum & Uhrzeit:</label><input type="datetime-local" id="dateTime" required></div> <!-- B1 -->
-                  <div><label>Dauer:</label><input type="number" id="duration" placeholder="Dauer in Minuten" required></div> <!-- B2 -->
-                  <div><label>Dienstleistung:</label><input type="text" id="Dienstleistung" required></div> <!-- B3 -->
-                  <div><label>Preis:</label><input type="number" id="Preis" required></div> <!-- B4 -->
-                  <div><label>Abrechnungsstatus:</label><input type="text" id="Abrechnungsstatus" required></div> <!-- B5 -->
-              </div>
-      
-              <!-- Spalte C: Beschreibung -->
-              <div class="form-column description">
-                  <div><label>Beschreibung:</label><textarea id="description" required></textarea></div> <!-- C1 -->
-              </div>
-      
-              <button type="submit">Termin hinzufügen</button>
-              <!-- Verstecktes Feld zur Speicherung der Kundennummer -->
-              <input type="hidden" id="KundennummerzumTermin" />
-          </form>
-      </div>
-      
-      <!-- Terminliste im Terminverwaltungs-Abschnitt -->
-      <div id="terminListe">
-        <input type="text" id="searchAppointment" placeholder="Termin suchen">
-        <div id="appointmentsList" class="scrollable-termin-list"></div>
-      </div>
     
       </section>
-  
-  
-       <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
-       <section id="customer-management-section">
-        <h2>Kundenverwaltung</h2>
-         <div id="kundenFormular">
-          <h2>Neuen Kunden hinzufügen</h2>
-          <form id="clientForm">
+
+        <section id="accounting-section">
+            <h2>Buchhaltung</h2>
+            <!-- Inhalt des Buchhaltungs-Abschnitts -->
+        </section>
+
+        <!-- Inhalt des Einstellungen-Abschnitts -->
+        <section id="settings-section">
+            <h2>Einstellungen</h2>
+          <!-- Einstellungsbereich für Zeitslots und Wochentage -->
+          <div id="settings-section">
+            <h2>Einstellungen für Zeitslots und Wochentage</h2>
+            <form id="calendar-settings-form">
+                <!-- Zeitslots definieren -->
+                <label for="start-hour">Startzeit:</label>
+                <input type="number" id="start-hour" min="0" max="23" value="8">
+
+                <label for="end-hour">Endzeit:</label>
+                <input type="number" id="end-hour" min="1" max="23" value="19">
+
+                <!-- Wochentage auswählen -->
+                <h3>Anzuzeigende Tage</h3>
+                <label><input type="checkbox" class="day-checkbox" value="1" checked> Montag</label>
+                <label><input type="checkbox" class="day-checkbox" value="2" checked> Dienstag</label>
+                <label><input type="checkbox" class="day-checkbox" value="3" checked> Mittwoch</label>
+                <label><input type="checkbox" class="day-checkbox" value="4" checked> Donnerstag</label>
+                <label><input type="checkbox" class="day-checkbox" value="5" checked> Freitag</label>
+                <label><input type="checkbox" class="day-checkbox" value="6"> Samstag</label>
+                <label><input type="checkbox" class="day-checkbox" value="0"> Sonntag</label>
+
+                <button type="button" onclick="updateCalendarSettings()">Einstellungen speichern</button>
+            </form>
+
+                      </div>
+              <!-- Farbwahl für das Thema -->
               <div class="form-row">
-                  <input type="text" id="Vorname" placeholder="Vorname" required>
-                  <input type="text" id="Nachname" placeholder="Nachname" required>
+                <label for="themeColor">Themenfarbe:</label>
+                <input type="color" id="themeColor" name="themeColor" value="#3498db">
               </div>
+
+              <!-- Schalter für Tag-Nacht-Modus -->
               <div class="form-row">
-                  <input type="text" id="Strasse" placeholder="Strasse" required>
-                  <input type="text" id="Hausnummer" placeholder="Hausnummer" required>
+                <label for="darkModeToggle">Nachtmodus:</label>
+                <input type="checkbox" id="darkModeToggle">
               </div>
-              <div class="form-row">
-                  <input type="text" id="Postleitzahl" placeholder="Postleitzahl" required>
-                  <input type="text" id="Ort" placeholder="Ort" required>
-              </div>
-              <div class="form-row">
-                  <input type="text" id="Telefon" placeholder="Telefon" required>
-                  <input type="email" id="Mail" placeholder="E-Mail" required>
-              </div>
-              <div class="form-row">
-                  
-                  <button type="submit">Kunden hinzufügen</button>
-              </div>
-          </form>
-      </div>
-  
- 
-          <!-- Kundenliste im Kundenverwaltungs-Abschnitt -->
-<div id="kundenListe">
-  <h2>Kunden</h2>
-  <input type="text" id="searchClient" placeholder="Kunden suchen">
-  <!-- Kundenliste in einem scrollbaren Container -->
-  <div id="clientsList" class="scrollable-list"></div>
-</div>
+        </section>
 
-      </div>
-  
-    </section>
-
-      <section id="accounting-section">
-          <h2>Buchhaltung</h2>
-          <!-- Inhalt des Buchhaltungs-Abschnitts -->
-      </section>
-
-      <!-- Inhalt des Einstellungen-Abschnitts -->
-      <section id="settings-section">
-          <h2>Einstellungen</h2>
-        <!-- Einstellungsbereich für Zeitslots und Wochentage -->
-        <div id="settings-section">
-          <h2>Einstellungen für Zeitslots und Wochentage</h2>
-          <form id="calendar-settings-form">
-              <!-- Zeitslots definieren -->
-              <label for="start-hour">Startzeit:</label>
-              <input type="number" id="start-hour" min="0" max="23" value="8">
-
-              <label for="end-hour">Endzeit:</label>
-              <input type="number" id="end-hour" min="1" max="23" value="19">
-
-              <!-- Wochentage auswählen -->
-              <h3>Anzuzeigende Tage</h3>
-              <label><input type="checkbox" class="day-checkbox" value="1" checked> Montag</label>
-              <label><input type="checkbox" class="day-checkbox" value="2" checked> Dienstag</label>
-              <label><input type="checkbox" class="day-checkbox" value="3" checked> Mittwoch</label>
-              <label><input type="checkbox" class="day-checkbox" value="4" checked> Donnerstag</label>
-              <label><input type="checkbox" class="day-checkbox" value="5" checked> Freitag</label>
-              <label><input type="checkbox" class="day-checkbox" value="6"> Samstag</label>
-              <label><input type="checkbox" class="day-checkbox" value="0"> Sonntag</label>
-
-              <button type="button" onclick="updateCalendarSettings()">Einstellungen speichern</button>
-          </form>
-
-                    </div>
-            <!-- Farbwahl für das Thema -->
-            <div class="form-row">
-              <label for="themeColor">Themenfarbe:</label>
-              <input type="color" id="themeColor" name="themeColor" value="#3498db">
-            </div>
-
-            <!-- Schalter für Tag-Nacht-Modus -->
-            <div class="form-row">
-              <label for="darkModeToggle">Nachtmodus:</label>
-              <input type="checkbox" id="darkModeToggle">
-            </div>
-      </section>
-
-</div>
-</body>
-<script src="appointments.js"></script>
-</html>
+  </div>
+  </body>
+  <script src="appointments.js"></script>
+  </html>
