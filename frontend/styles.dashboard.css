@@ -224,6 +224,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 ==================================================================================================================================*/
 
 
+
 /*Formular für bearbeitung selbst*/
 /* Container für das Terminformular */
 #appointmentForm {
@@ -233,6 +234,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   box-sizing: border-box;
   background-color: var(--background-medium);
   height: 100%; /* Verfügbaren Platz füllen */
+  margin-bottom: 30px;;
 }
 
 /* Stile für die einzelnen Spalten im Formular */
@@ -260,19 +262,36 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   flex-grow: 1;
 }
 
+/* Spalte C: Beschreibung */
+.description {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between; /* Gleiche Verteilung in der Höhe */
+  gap: 15px; /* Abstand zwischen den Elementen */
+}
+
+/* Textfeld-Stile */
 .description textarea {
   flex-grow: 1;
   resize: none;
   padding: 10px;
   height: 150px;
-  width: 340px;
   border-radius: 5px;
   border: 1px solid #ccc;
   background-color: var(--background-light);
   color: var(--text-color);
-  min-height: 100%;
-  margin-bottom: 18px;
+  margin-bottom: 15px;
 }
+
+/* Buttons innerhalb von .description */
+.description button {
+  width: 150px; /* Fixierte Breite für die Buttons */
+  align-self: center; /* Buttons zentrieren */
+  padding: 10px;
+  margin-top: 10px;
+}
+
 
 /* Stile für das Kunden-Suchfeld */
 #customer-search {
@@ -334,7 +353,7 @@ TERMINVERWALTUNG SCROLLBARE LISTE
 ====================================================================================================================================*/
 /* Scrollbare Terminliste */
 .scrollable-termin-list {
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   border: 1px solid #ccc;
   padding: 10px;

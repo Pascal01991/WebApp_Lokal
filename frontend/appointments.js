@@ -204,7 +204,6 @@
         const appointmentsList = document.getElementById('appointmentsList');
         appointmentsList.innerHTML = appointments.map(app => {
 
-//Button "NEUEN TERMIN HINZUFÜGEN"
 
 
 
@@ -277,6 +276,26 @@
         filterAppointments();
     });
 
+//Button TERMIN ERSTELLEN
+// Funktion zum Anzeigen des Formulars
+function showAppointmentForm() {
+    document.getElementById('TerminFormular').style.display = 'block';
+    document.getElementById('openAppointmentFormButton').style.display = 'none';
+}
+
+
+// Für "Termin erstellen" verwenden
+document.getElementById('openAppointmentFormButton').addEventListener('click', showAppointmentForm);
+
+
+
+// Funktion zum Ausblenden des Formulars
+document.getElementById('cancelButton').addEventListener('click', function() {
+    document.getElementById('TerminFormular').style.display = 'none';
+    document.getElementById('openAppointmentFormButton').style.display = 'inline-block'; // Button wieder anzeigen
+});
+
+
 
     //Button für Löschen des Termins
     async function deleteAppointment(appointmentId) {
@@ -327,8 +346,18 @@ function setLocalDateTimeInput(dateTimeUTC) {
     document.getElementById('dateTime').value = localDateTime;
 }
 
+// Funktion zum Bearbeiten des Termins
 
-// Button für das Bearbeiten des Termins
+
+
+
+
+
+
+
+
+
+// Für "Bearbeiten"-Button im Termin
 async function editAppointment(appointmentId) {
     const appointment = allAppointments.find(app => app._id === appointmentId);
     if (!appointment) {
@@ -336,21 +365,19 @@ async function editAppointment(appointmentId) {
         return;
     }
 
-    // Log the appointment details for troubleshooting
-    console.log("Loaded appointment details:", appointment); // Log 4
-
-    // Konvertiere und setze die UTC-Zeit des Termins ins datetime-local-Feld
-    setLocalDateTimeInput(appointment.dateTime); // Hier `appointment.dateTime` verwenden
-    
-    // Lade die bestehenden Daten in das Formular
+    // Setze die Daten ins Formular
+    setLocalDateTimeInput(appointment.dateTime);
     document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin;
     document.getElementById('duration').value = appointment.duration;
     document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
-    document.getElementById('Preis').value = appointment.Preis;  // Preis ins Formular laden
-    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;  // Abrechnungsstatus ins Formular laden
+    document.getElementById('Preis').value = appointment.Preis;
+    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;
     document.getElementById('description').value = appointment.description;
 
-    // Verändere den Submit-Button, um die Änderungen zu speichern
+    // Formular anzeigen
+    showAppointmentForm();
+
+    // Weitere Einstellungen für die Speicherung der Änderungen, z.B. Text und Funktion des Submit-Buttons
     const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
     submitButton.innerText = "Änderungen speichern";
     submitButton.onclick = async function (e) {
@@ -388,6 +415,7 @@ async function editAppointment(appointmentId) {
         }
     };
 }
+
 
     //====================================================================================================================================
     //CLIENT-MANAGEMENT
