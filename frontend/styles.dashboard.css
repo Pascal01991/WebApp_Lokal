@@ -222,6 +222,9 @@ KALENDER
 /*====================================================================================================================================
 TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 ==================================================================================================================================*/
+
+
+/*Formular für bearbeitung selbst*/
 /* Container für das Terminformular */
 #appointmentForm {
   display: flex;
@@ -261,11 +264,14 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   flex-grow: 1;
   resize: none;
   padding: 10px;
+  height: 150px;
+  width: 340px;
   border-radius: 5px;
   border: 1px solid #ccc;
   background-color: var(--background-light);
   color: var(--text-color);
   min-height: 100%;
+  margin-bottom: 18px;
 }
 
 /* Stile für das Kunden-Suchfeld */
@@ -284,6 +290,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 
 
 
+
 /*KUNDEN-SUCHFUNKTION FÜR TERMIN*/
 
 #searchClientForApointment {
@@ -291,7 +298,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   position: absolute;
   top: 100%; /* Direkt unter dem Eingabefeld */
   left: 0;
-  width: 100%;
+  width: 800px;
   max-height: 200px;
   overflow-y: auto;
   border: 1px solid #ccc;

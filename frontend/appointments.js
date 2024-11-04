@@ -203,7 +203,12 @@
 
         const appointmentsList = document.getElementById('appointmentsList');
         appointmentsList.innerHTML = appointments.map(app => {
-            // Kunden basierend auf KundennummerzumTermin finden
+
+//Button "NEUEN TERMIN HINZUFÜGEN"
+
+
+
+// Kunden basierend auf KundennummerzumTermin finden
             const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
 
             return `
@@ -299,63 +304,91 @@
             alert('Fehler: ' + err.message);
         }
     }
+// Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local
+function setLocalDateTimeInput(dateTimeUTC) {
+    console.log("Original UTC dateTime from database:", dateTimeUTC);
 
-
-    //Button für Bearbeiten des Termins
-    async function editAppointment(appointmentId) {
-        const appointment = allAppointments.find(app => app._id === appointmentId);
-        if (!appointment) {
-            alert('Termin nicht gefunden');
-            return;
-        }
-
-        // Lade die bestehenden Daten in das Formular
-        document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin;
-        document.getElementById('dateTime').value = new Date(appointment.dateTime).toISOString().slice(0, 16);
-        document.getElementById('duration').value = appointment.duration;
-        document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
-        document.getElementById('Preis').value = appointment.Preis;  // Preis ins Formular laden
-        document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;  // Abrechnungsstatus ins Formular laden
-        document.getElementById('description').value = appointment.description;
-
-        // Verändere den Submit-Button, um die Änderungen zu speichern
-        const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
-        submitButton.innerText = "Änderungen speichern";
-        submitButton.onclick = async function (e) {
-            e.preventDefault();
-            const updatedAppointment = {
-                KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
-                dateTime: document.getElementById('dateTime').value,
-                duration: document.getElementById('duration').value,
-                Dienstleistung: document.getElementById('Dienstleistung').value,
-                Preis: document.getElementById('Preis').value,  // Preis beim Speichern aktualisieren
-                Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,  // Abrechnungsstatus beim Speichern aktualisieren
-                description: document.getElementById('description').value,
-            };
-
-            try {
-                const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedAppointment)
-                });
-
-                if (response.ok) {
-                    alert('Termin erfolgreich aktualisiert');
-                    loadAppointments();  // Termine neu laden
-                    submitButton.innerText = "Termin hinzufügen";
-                    submitButton.onclick = null;
-                } else {
-                    alert('Fehler beim Aktualisieren des Termins');
-                }
-            } catch (err) {
-                alert('Fehler: ' + err.message);
-            }
-        };
+    const date = new Date(dateTimeUTC); // Das Date-Objekt wird korrekt als lokale Zeit interpretiert
+    if (isNaN(date)) {
+        console.error("Ungültiges Datum:", dateTimeUTC);
+        return;
     }
+
+    // Wir holen die lokale Zeit direkt aus den Date-Objekt-Methoden
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Monate beginnen bei 0
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    console.log("Formatted datetime for input (local time):", localDateTime); // Kontrollausgabe
+
+    document.getElementById('dateTime').value = localDateTime;
+}
+
+
+// Button für das Bearbeiten des Termins
+async function editAppointment(appointmentId) {
+    const appointment = allAppointments.find(app => app._id === appointmentId);
+    if (!appointment) {
+        alert('Termin nicht gefunden');
+        return;
+    }
+
+    // Log the appointment details for troubleshooting
+    console.log("Loaded appointment details:", appointment); // Log 4
+
+    // Konvertiere und setze die UTC-Zeit des Termins ins datetime-local-Feld
+    setLocalDateTimeInput(appointment.dateTime); // Hier `appointment.dateTime` verwenden
+    
+    // Lade die bestehenden Daten in das Formular
+    document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin;
+    document.getElementById('duration').value = appointment.duration;
+    document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
+    document.getElementById('Preis').value = appointment.Preis;  // Preis ins Formular laden
+    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;  // Abrechnungsstatus ins Formular laden
+    document.getElementById('description').value = appointment.description;
+
+    // Verändere den Submit-Button, um die Änderungen zu speichern
+    const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+    submitButton.onclick = async function (e) {
+        e.preventDefault();
+        const updatedAppointment = {
+            KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
+            dateTime: document.getElementById('dateTime').value,
+            duration: document.getElementById('duration').value,
+            Dienstleistung: document.getElementById('Dienstleistung').value,
+            Preis: document.getElementById('Preis').value,
+            Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
+            description: document.getElementById('description').value,
+        };
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedAppointment)
+            });
+
+            if (response.ok) {
+                alert('Termin erfolgreich aktualisiert');
+                loadAppointments();  // Termine neu laden
+                submitButton.innerText = "Termin hinzufügen";
+                submitButton.onclick = null;
+            } else {
+                alert('Fehler beim Aktualisieren des Termins');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    };
+}
+
     //====================================================================================================================================
     //CLIENT-MANAGEMENT
     //====================================================================================================================================
@@ -576,6 +609,28 @@
             searchResultsContainer.appendChild(resultItem);
         });
     }
+    
+    // Event-Listener für das Eingabefeld und die Escape-Taste
+    document.getElementById('searchCustomerInput').addEventListener('input', function() {
+        if (this.value.trim() === '') {
+            // Bei leerem Eingabefeld die Ergebnisse ausblenden
+            document.getElementById('searchClientForApointment').style.display = 'none';
+        } else {
+            // Hier sollten die neuen Suchergebnisse geladen und angezeigt werden
+            displaySearchResults();
+        }
+    });
+    
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            // Escape-Taste schließt das Suchergebnisfenster
+            const searchResultsContainer = document.getElementById('searchClientForApointment');
+            searchResultsContainer.style.display = 'none';
+            searchResultsContainer.innerHTML = ''; // Optional: Inhalte leeren
+            document.getElementById('searchCustomerInput').value = ''; // Optional: Eingabefeld zurücksetzen
+        }
+    });
+    
     
     // Submit-Event-Listener für das Terminformular
     document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
