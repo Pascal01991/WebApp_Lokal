@@ -37,6 +37,49 @@ html {
 }
 
 /*====================================================================================================================================
+ALLGMEINES & UNSPEZIFISCHES
+==================================================================================================================================*/
+/* ALLGEMEINE Formularstile  */
+
+
+textarea {
+  width: 100%;
+  resize: none;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: var(--background-medium);
+  color: #fff;
+}
+
+/* ALLGEMEINE Buttonstile  */
+
+
+
+button {
+  background-color: var(--background-light);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--theme-color); 
+}
+
+
+
+/*====================================================================================================================================
 SIDEBAR 
 ==================================================================================================================================*/
 #sidebar {
@@ -84,8 +127,11 @@ SIDEBAR
 .sidebar-button .text {
   flex: 1;
 }
+
+
+
 /*====================================================================================================================================
-MAINCONTEN
+MAINCONTENT
 ==================================================================================================================================*/
 
 /*Abstand zur Sidebar */
@@ -116,6 +162,8 @@ KALENDER
   background-color: var(--background-medium);
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 5px; /* Weniger Padding für kleine Bildschirme */
+
 }
 
 .time-slot {
@@ -178,172 +226,46 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 TERMINVERWALTUNG OLD SOWIE SONSTIGE BITTE AUFRÄUMEN
 ====================================================================================================================================*/
 /*Design für Kundensuche innerhalb Terminverwaltung*/
-#searchResults {
-  border: 1px solid #ccc;
-  max-height: 150px;
-  overflow-y: auto;
-  background-color: var(--background-dark);
+
+/*Formular für Termin*/
+
+/* Suchergebnis-Container für die Kundensuche */
+/* Standardmäßig ausgeblendet */
+#searchClientForApointment {
+  display: none;
   position: absolute;
-  z-index: 10;
+  top: 100%; /* Direkt unter dem Eingabefeld */
+  left: 0;
   width: 100%;
-}
-
-.search-result-item {
-  padding: 8px;
-  cursor: pointer;
-}
-
-.search-result-item:hover {
-  background-color: #f0f0f0;
-}
-
-/* Formularstile */
-.form-row {
-  display: flex;
-  width: 100%;
-  gap: 15px;
-}
-
-.form-row > div {
-  flex: 1;
-}
-
-textarea {
-  width: 100%;
-  resize: none;
-  padding: 10px;
-  border-radius: 5px;
+  max-height: 200px;
+  overflow-y: auto;
   border: 1px solid #ccc;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 10px;
   border-radius: 5px;
-  border: 1px solid #ccc;
-  background-color: var(--background-medium);
-  color: #fff;
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: var(--text-color);
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-
-input[type="datetime-local"] {
-  width: calc(100% - 20px);
-  padding: 10px;
-  border-radius: 5px;
-}
-
-/* Liste der Termine */
-#terminListe {
-  width: 100%;
-  max-width: 1850px;
-  background-color: var(--background-dark);
-  color: var(--text-color);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#EinzelnerTermin {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 10px;
-  width: 100%;
-  max-width: 850px;
-  background-color: var(--background-medium);
-  color: var(--text-color);
-  border:rgb(204, 204, 204);
-  border-radius: 30px;
-  padding: 15px;
-  box-sizing: border-box;
-  justify-content: space-between;
-}
-
-#TerminBereichTermin, #TerminBereichPersonalien {
-  flex: 1 1 48%;
-  background-color: #59595934;
-  color: var(--text-color);
-  border-radius: 10px;
-  padding: 20px;
-  box-sizing: border-box;
-  min-width: 300px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-button {
   background-color: var(--background-light);
-  color: white;
-  border: none;
+  color: var(--text-color);
+  z-index: 10;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+}
+
+/* Styling einzelner Suchergebnisse */
+#searchClientForApointment .search-result-item {
   padding: 10px;
-  border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  border-bottom: 1px solid #444;
 }
 
-button:hover {
-  background-color: var(--theme-color); 
+#searchClientForApointment .search-result-item:last-child {
+  border-bottom: none;
 }
 
-/* Media Query für kleinere Bildschirme */
-@media (max-width: 768px) {
-  #EinzelnerTermin {
-    flex-direction: column;
-  }
-
-  #TerminBereichTermin, #TerminBereichPersonalien {
-    flex: 1 1 100%;
-    min-width: 100%;
-  }
-
-  #calendar {
-    padding: 5px; /* Weniger Padding für kleine Bildschirme */
-  }
+/* Hover-Effekt für Suchergebnisse */
+#searchClientForApointment .search-result-item:hover {
+  background-color: var(--theme-color);
+  color: var(--background-dark);
 }
 
 
-
-
-/*====================================================================================================================================
-TERMINVERWALTUNG FORMULAR NEW:
-====================================================================================================================================*/
-
-#TerminFormular {
-  display: flex;
-  gap: 20px;
-}
-
-.form-column {
-  flex: 1;
-}
-
-.customer-info, .appointment-details, .description {
-  background-color: var(--background-medium);
-  padding: 20px;
-  border-radius: 10px;
-  color: #fff;
-}
-
-label {
-  font-weight: bold;
-  display: block;
-  margin-top: 10px;
-}
-
-span {
-  display: block;
-  margin-bottom: 5px;
-}
 
 
 
@@ -419,68 +341,65 @@ TERMINVERWALTUNG SCROLLBARE LISTE
   white-space: nowrap;
 }
 
-
-/*====================================================================================================================================
+/*====================================================================
 KUNDENVERWALTUNG
-====================================================================================================================================*/
-
+====================================================================*/
 
 /* Styling für die Scroll-Box */
 .scrollable-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-top: 10px;
-    background-color: var(--background-medium)
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: var(--background-medium);
 }
 
 /* Jede Zeile für einen Kunden */
 .client-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
 }
 
 /* Gleichmäßige Verteilung der Abschnitte */
 .client-info {
-    flex: 1;
-    padding: 0 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  flex: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Styling für Buttons mit Icon und Tooltip */
 .client-actions {
-    display: flex;
-    gap: 5px;
+  display: flex;
+  gap: 5px;
 }
 
 .action-btn {
-    background-color: transparent;
-    color: #333;
-    border: none;
-    padding: 5px;
-    cursor: pointer;
-    font-size: 1.2em;
-    position: relative;
-    transition: color 0.3s ease;
+  background-color: transparent;
+  color: #333;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 1.2em;
+  position: relative;
+  transition: color 0.3s ease;
 }
 
-
 .edit-btn:hover::after, .delete-btn:hover::after {
-    content: attr(title);
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: -20px;
-    background-color: var(--theme-color);
-    color: #fff;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 0.8em;
-    white-space: nowrap;
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -20px;
+  background-color: var(--theme-color);
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  white-space: nowrap;
 }
