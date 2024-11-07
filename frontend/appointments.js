@@ -1,4 +1,4 @@
-    console.log("Testlog");
+    console.log("Zeile1");
     //====================================================================================================================================
     //KALEDNER
     //====================================================================================================================================
@@ -124,6 +124,9 @@
     //====================================================================================================================================
     //TERMINVERWALTUNG
     //====================================================================================================================================
+    // Globale Variablen für die Filterzustände Terminverwaltung
+    let filterFutureActive = false;
+    let filterPastActive = false;
 
     document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
         e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
@@ -208,6 +211,7 @@
 
 
 // Kunden basierend auf KundennummerzumTermin finden
+
             const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
 
             return `
@@ -245,30 +249,49 @@
 
 
 
+function filterAppointments() {
+    const searchTerm = document.getElementById('searchAppointment').value.toLowerCase();
+    const today = new Date();
 
-    function filterAppointments() {
-        const searchTerm = document.getElementById('searchAppointment').value.toLowerCase();
-        console.log("Filter term:", searchTerm); // Testlog
+    // Zuerst: Termine nach den aktivierten Buttons filtern
+    let filteredAppointments = allAppointments.filter(app => {
+        const appDate = new Date(app.dateTime);
 
-        const filteredAppointments = allAppointments.filter(app => {
-            // Den zugehörigen Kunden basierend auf der Kundennummer suchen
-            const client = allClients.find(c => c.Kundennummer === app.KundennummerzumTermin);
+        // Wenn beide Filter inaktiv sind, alle Termine durchlassen
+        if (!filterFutureActive && !filterPastActive) return true;
 
-            // Überprüfen, ob eine Übereinstimmung in den Kundendaten gefunden wird
-            return (
-                (client && client.Vorname && client.Vorname.toLowerCase().includes(searchTerm)) ||
-                (client && client.Nachname && client.Nachname.toLowerCase().includes(searchTerm)) ||
-                (client && client.Strasse && client.Strasse.toLowerCase().includes(searchTerm)) ||
-                (client && client.Ort && client.Ort.toLowerCase().includes(searchTerm)) ||
-                (client && client.Telefon && client.Telefon.toLowerCase().includes(searchTerm)) ||
-                (client && client.Mail && client.Mail.toLowerCase().includes(searchTerm))
-            );
-        });
+        // Filterbedingungen anwenden
+        if (filterFutureActive && appDate >= today) return true;
+        if (filterPastActive && appDate < today) return true;
 
-        displayAppointments(filteredAppointments); // Gefilterte Ergebnisse anzeigen
-    }
+        return false; // Termin ausschließen, wenn keine Bedingung passt
+    });
 
+    // Zweitens: Filterung nach dem Suchbegriff innerhalb der zuvor gefilterten Ergebnisse
+    filteredAppointments = filteredAppointments.filter(app => {
+        const client = allClients.find(c => c.Kundennummer === app.KundennummerzumTermin);
 
+        // Überprüfen, ob der Suchbegriff in den Kundendaten gefunden wird
+        return (
+            (client && client.Vorname && client.Vorname.toLowerCase().includes(searchTerm)) ||
+            (client && client.Nachname && client.Nachname.toLowerCase().includes(searchTerm)) ||
+            (client && client.Strasse && client.Strasse.toLowerCase().includes(searchTerm)) ||
+            (client && client.Ort && client.Ort.toLowerCase().includes(searchTerm)) ||
+            (client && client.Telefon && client.Telefon.toLowerCase().includes(searchTerm)) ||
+            (client && client.Mail && client.Mail.toLowerCase().includes(searchTerm))
+        );
+    });
+
+    // Sortieren der Ergebnisse nach Nähe zum heutigen Datum
+    filteredAppointments.sort((a, b) => {
+        const dateA = new Date(a.dateTime);
+        const dateB = new Date(b.dateTime);
+        return Math.abs(dateA - today) - Math.abs(dateB - today);
+    });
+
+    // Gefilterte und sortierte Ergebnisse anzeigen
+    displayAppointments(filteredAppointments);
+}
 
     // Event-Listener für die Suche hinzufügen
     document.getElementById('searchAppointment').addEventListener('input', function () {
@@ -416,6 +439,183 @@ async function editAppointment(appointmentId) {
     };
 }
 
+    //Kundensuche innerhalb der Terminverwaltung:
+    // Filtered search results for customer search
+    let searchResults = [];
+
+    // Event-Listener für die Kunden-Suche Kundenauswahl
+    // Kundensuche Logik bleibt unverändert
+
+    // Kundensuche-Event-Listener für Auswahl des Kunden
+    document.getElementById('searchCustomerInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        searchResults = allClients
+            .filter(client => 
+                client.Vorname.toLowerCase().includes(searchTerm) ||
+                client.Nachname.toLowerCase().includes(searchTerm) ||
+                client.Ort.toLowerCase().includes(searchTerm) ||
+                client.Telefon.toLowerCase().includes(searchTerm)
+            )
+            .slice(0, 5);
+        displaySearchResults();
+    });
+
+
+
+
+
+// Event-Listener für den "Vergangenheit"-Filter-Button
+document.getElementById('filterPast').addEventListener('click', function () {
+    
+    filterPastActive = !filterPastActive; // Toggle-Zustand
+
+    // Klasse `.active` je nach Zustand hinzufügen oder entfernen
+    if (filterPastActive) {
+        this.classList.add('active'); // Klasse hinzufügen, um den aktiven Zustand zu zeigen
+        console.log("Filter.activ1");
+    } else {
+        this.classList.remove('active'); // Klasse entfernen, um den Zustand zurückzusetzen
+        console.log("Filter.activ2");
+    }
+    filterAppointments(); // Filterung erneut ausführen
+});
+
+// Event-Listener für den "Zukunfts"-Filter-Button
+document.getElementById('filterFuture').addEventListener('click', function () {
+    
+
+    filterFutureActive = !filterFutureActive; // Toggle-Zustand
+
+    // Klasse `.active` je nach Zustand hinzufügen oder entfernen
+    if (filterFutureActive) {
+        this.classList.add('active'); // Klasse hinzufügen, um den aktiven Zustand zu zeigen
+        
+    } else {
+        this.classList.remove('active'); // Klasse entfernen, um den Zustand zurückzusetzen
+   }
+    filterAppointments(); // Filterung erneut ausführen
+});
+
+
+// Funktion zur Anzeige der Suchergebnisse mit angewendeten Filtern und Sortierung
+function displaySearchResults() {
+    const searchResultsContainer = document.getElementById('searchClientForApointment'); // Zielcontainer
+    searchResultsContainer.innerHTML = ''; // Alte Ergebnisse löschen
+    
+    // Prüfen, ob es Ergebnisse gibt
+    if (appointmentsList.length === 0) {
+        console.log("Anzahl der Suchergebnisse:", appointmentsList.length);
+        searchResultsContainer.style.display = 'none'; // Container ausblenden, wenn keine Ergebnisse
+        return;
+    }
+    else {
+        console.log("Keine suchergebnisse Gefunden, Anzahl der Suchergebnisse:", appointmentsList.length);
+    }
+        
+    // Datum von heute für den Filtervergleich
+    const today = new Date();
+
+    // Filter und Sortieren der Suchergebnisse
+    let filteredResults = searchResults
+        .filter(client => {
+            // Wenn beide Filter deaktiviert sind, zeige alle Termine an
+            if (!filterFutureActive && !filterPastActive) return true;
+
+            const appointmentDate = new Date(client.dateTime); // Annahme: client hat dateTime-Eigenschaft
+
+            // Filter basierend auf Aktivierung
+            if (filterFutureActive && appointmentDate >= today) return true;
+            if (filterPastActive && appointmentDate < today) return true;
+
+            return false;
+        })
+        .sort((a, b) => {
+            const dateA = new Date(a.dateTime);
+            const dateB = new Date(b.dateTime);
+            return Math.abs(dateA - today) - Math.abs(dateB - today); // Sortieren nach Nähe zum heutigen Datum
+        });
+
+
+
+    // Anzeige der gefilterten und sortierten Ergebnisse
+    searchResultsContainer.style.display = 'block'; // Container anzeigen
+    filteredResults.forEach(client => {
+        const resultItem = document.createElement('div');
+        resultItem.classList.add('search-result-item');
+        resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
+
+        // Kundendaten und Auswahl-Logik
+        resultItem.addEventListener('click', () => {
+            document.getElementById('KundennummerzumTermin').value = client.Kundennummer;
+            document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
+            document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
+            document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
+            document.getElementById('KundenTelefon').textContent = client.Telefon;
+            document.getElementById('KundenMail').textContent = client.Mail;
+            searchResultsContainer.innerHTML = ''; // Ergebnisse leeren
+            searchResultsContainer.style.display = 'none'; // Container ausblenden
+            document.getElementById('searchCustomerInput').value = ''; // Eingabefeld zurücksetzen
+        });
+
+        searchResultsContainer.appendChild(resultItem);
+    });
+}
+
+    // Event-Listener für das Eingabefeld und die Escape-Taste
+    document.getElementById('searchCustomerInput').addEventListener('input', function() {
+        if (this.value.trim() === '') {
+            // Bei leerem Eingabefeld die Ergebnisse ausblenden
+            document.getElementById('searchClientForApointment').style.display = 'none';
+        } else {
+            // Hier sollten die neuen Suchergebnisse geladen und angezeigt werden
+            displaySearchResults();
+        }
+    });
+    
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            // Escape-Taste schließt das Suchergebnisfenster
+            const searchResultsContainer = document.getElementById('searchClientForApointment');
+            searchResultsContainer.style.display = 'none';
+            searchResultsContainer.innerHTML = ''; // Optional: Inhalte leeren
+            document.getElementById('searchCustomerInput').value = ''; // Optional: Eingabefeld zurücksetzen
+        }
+    });
+    
+    
+    // Submit-Event-Listener für das Terminformular
+    document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Termin-Daten sammeln
+        const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
+        const dateTime = document.getElementById('dateTime').value;
+        const duration = document.getElementById('duration').value;
+        const Dienstleistung = document.getElementById('Dienstleistung').value;
+        const Preis = document.getElementById('Preis').value;
+        const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
+        const description = document.getElementById('description').value;
+
+        try {
+            const response = await fetch('http://localhost:5000/api/appointments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ KundennummerzumTermin, dateTime, duration, Dienstleistung, Preis, Abrechnungsstatus, description })
+            });
+
+            if (response.ok) {
+                alert('Termin erfolgreich hinzugefügt!');
+                loadAppointments();
+            } else {
+                alert('Fehler beim Hinzufügen des Termins');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    });
 
     //====================================================================================================================================
     //CLIENT-MANAGEMENT
@@ -582,117 +782,6 @@ async function editAppointment(appointmentId) {
     });
 
 
-    //Kundensuche innerhalb der Terminverwaltung:
-    // Filtered search results for customer search
-    let searchResults = [];
-
-    // Event-Listener für die Kunden-Suche Kundenauswahl
-    // Kundensuche Logik bleibt unverändert
-
-    // Kundensuche-Event-Listener für Auswahl des Kunden
-    document.getElementById('searchCustomerInput').addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        searchResults = allClients
-            .filter(client => 
-                client.Vorname.toLowerCase().includes(searchTerm) ||
-                client.Nachname.toLowerCase().includes(searchTerm) ||
-                client.Ort.toLowerCase().includes(searchTerm) ||
-                client.Telefon.toLowerCase().includes(searchTerm)
-            )
-            .slice(0, 5);
-        displaySearchResults();
-    });
-
-    function displaySearchResults() {
-        const searchResultsContainer = document.getElementById('searchClientForApointment'); // Zielcontainer
-        searchResultsContainer.innerHTML = ''; // Alte Ergebnisse löschen
-    
-        // Prüfen, ob es Ergebnisse gibt
-        if (searchResults.length === 0) {
-            searchResultsContainer.style.display = 'none'; // Container ausblenden, wenn keine Ergebnisse
-            return;
-        }
-    
-        searchResultsContainer.style.display = 'block'; // Container anzeigen
-    
-        // Ergebnisse einfügen
-        searchResults.forEach(client => {
-            const resultItem = document.createElement('div');
-            resultItem.classList.add('search-result-item');
-            resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
-            
-            // Kundendaten und Auswahl-Logik
-            resultItem.addEventListener('click', () => {
-                document.getElementById('KundennummerzumTermin').value = client.Kundennummer;
-                document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
-                document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
-                document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
-                document.getElementById('KundenTelefon').textContent = client.Telefon;
-                document.getElementById('KundenMail').textContent = client.Mail;
-                searchResultsContainer.innerHTML = ''; // Ergebnisse leeren
-                searchResultsContainer.style.display = 'none'; // Container ausblenden
-                document.getElementById('searchCustomerInput').value = ''; // Eingabefeld zurücksetzen
-            });
-    
-            searchResultsContainer.appendChild(resultItem);
-        });
-    }
-    
-    // Event-Listener für das Eingabefeld und die Escape-Taste
-    document.getElementById('searchCustomerInput').addEventListener('input', function() {
-        if (this.value.trim() === '') {
-            // Bei leerem Eingabefeld die Ergebnisse ausblenden
-            document.getElementById('searchClientForApointment').style.display = 'none';
-        } else {
-            // Hier sollten die neuen Suchergebnisse geladen und angezeigt werden
-            displaySearchResults();
-        }
-    });
-    
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            // Escape-Taste schließt das Suchergebnisfenster
-            const searchResultsContainer = document.getElementById('searchClientForApointment');
-            searchResultsContainer.style.display = 'none';
-            searchResultsContainer.innerHTML = ''; // Optional: Inhalte leeren
-            document.getElementById('searchCustomerInput').value = ''; // Optional: Eingabefeld zurücksetzen
-        }
-    });
-    
-    
-    // Submit-Event-Listener für das Terminformular
-    document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        // Termin-Daten sammeln
-        const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
-        const dateTime = document.getElementById('dateTime').value;
-        const duration = document.getElementById('duration').value;
-        const Dienstleistung = document.getElementById('Dienstleistung').value;
-        const Preis = document.getElementById('Preis').value;
-        const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
-        const description = document.getElementById('description').value;
-
-        try {
-            const response = await fetch('http://localhost:5000/api/appointments', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ KundennummerzumTermin, dateTime, duration, Dienstleistung, Preis, Abrechnungsstatus, description })
-            });
-
-            if (response.ok) {
-                alert('Termin erfolgreich hinzugefügt!');
-                loadAppointments();
-            } else {
-                alert('Fehler beim Hinzufügen des Termins');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    });
 
     // Kundenliste laden und Suchfeld initialisieren beim Start
     document.addEventListener('DOMContentLoaded', function() {

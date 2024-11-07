@@ -102,8 +102,7 @@
                 <button type="button" id="cancelButton">Abbrechen</button>
                 </div>
 
-                <!-- Buttons zum Speichern und Abbrechen -->
-                
+             
 
                 <!-- Verstecktes Feld zur Speicherung der Kundennummer -->
                 
@@ -114,7 +113,13 @@
         
         <!-- Terminliste im Terminverwaltungs-Abschnitt -->
         <div id="terminListe">
+          
+        
           <input type="text" id="searchAppointment" placeholder="Termin suchen">
+          <div id="filterButtons">
+            <button id="filterFuture" class="filter-button">Termin liegt in der Zukunft</button>
+            <button id="filterPast" class="filter-button">Termin liegt in der Vergangenheit</button>
+        </div>
           <div id="appointmentsList" class="scrollable-termin-list"></div>
         </div>
       

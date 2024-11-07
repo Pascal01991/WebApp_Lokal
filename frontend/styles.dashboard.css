@@ -351,6 +351,24 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 /*====================================================================================================================================
 TERMINVERWALTUNG SCROLLBARE LISTE
 ====================================================================================================================================*/
+
+.filter-button {
+  padding: 10px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: var(--background-light);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.filter-button.active {
+  background-color: var(--theme-color); /* Aktivierter Filter */
+  color: #fff;
+}
+
+
+
 /* Scrollbare Terminliste */
 .scrollable-termin-list {
   max-height: 500px;
