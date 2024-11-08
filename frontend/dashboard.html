@@ -45,13 +45,13 @@
 
         <!-- Inhalt des Home-Abschnitts -->
         <section id="home-section">
-            <h2>Home</h2>
+            
             
         </section>
 
         <!-- Inhalt des Kalender-Abschnitts -->
         <section id="calendar-section">
-          <h2>Kalender</h2>
+          
               
           <div id="week-navigation">
               <button id="prevWeek">Vorherige Woche</button>
@@ -64,7 +64,7 @@
 
       <!-- Terminverwaltung Abschnitt -->
 <section id="appointment-management-section">
-  <h2>Terminverwaltung</h2>
+  
 
       <!-- Button zum Öffnen des Formulars -->
       <button id="openAppointmentFormButton">Termin erstellen</button>
@@ -99,7 +99,7 @@
                 <div class="form-column description">
                     <div><label>Beschreibung:</label><textarea id="description" required></textarea></div>
                     <button type="submit">Termin hinzufügen</button>
-                <button type="button" id="cancelButton">Abbrechen</button>
+                    <button type="button" id="CancelAppointmentFormButton">Abbrechen</button>
                 </div>
 
              
@@ -117,9 +117,9 @@
         
           <input type="text" id="searchAppointment" placeholder="Termin suchen">
           <div id="filterButtons">
-            <button id="filterFuture" class="filter-button">Termin liegt in der Zukunft</button>
             <button id="filterPast" class="filter-button">Termin liegt in der Vergangenheit</button>
-        </div>
+            <button id="filterFuture" class="filter-button">Termin liegt in der Zukunft</button>
+          </div>
           <div id="appointmentsList" class="scrollable-termin-list"></div>
         </div>
       
@@ -129,8 +129,8 @@
         <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
         <section id="customer-management-section">
           <h2>Kundenverwaltung</h2>
+          <button id="openClientFormButton" type="submit">Kunden anlegen</button>
           <div id="kundenFormular">
-            <h2>Neuen Kunden hinzufügen</h2>
             <form id="clientForm">
                 <div class="form-row">
                     <input type="text" id="Vorname" placeholder="Vorname" required>
@@ -149,8 +149,8 @@
                     <input type="email" id="Mail" placeholder="E-Mail" required>
                 </div>
                 <div class="form-row">
-                    
-                    <button type="submit">Kunden hinzufügen</button>
+                    <button type="submit">Kunden speichern</button>
+                    <button type="button" id="cancelClientFormButton">Abbrechen</button>
                 </div>
             </form>
         </div>

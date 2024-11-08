@@ -127,9 +127,13 @@
     // Globale Variablen für die Filterzustände Terminverwaltung
     let filterFutureActive = false;
     let filterPastActive = false;
-
+    
+    
     document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
         e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
+
+        
+        
 
         // Variablen definieren:
         const duration = document.getElementById('duration').value;
@@ -313,7 +317,7 @@ document.getElementById('openAppointmentFormButton').addEventListener('click', s
 
 
 // Funktion zum Ausblenden des Formulars
-document.getElementById('cancelButton').addEventListener('click', function() {
+document.getElementById('CancelAppointmentFormButton').addEventListener('click', function() {
     document.getElementById('TerminFormular').style.display = 'none';
     document.getElementById('openAppointmentFormButton').style.display = 'inline-block'; // Button wieder anzeigen
 });
@@ -620,6 +624,13 @@ function displaySearchResults() {
     //====================================================================================================================================
     //CLIENT-MANAGEMENT
     //====================================================================================================================================
+    
+    // Kundenformular und Terminformular beim Laden der Seite ausblenden
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('kundenFormular').style.display = 'none';
+});
+
+    
     // Event Listener für das Kundenformular
     document.getElementById('clientForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -695,8 +706,26 @@ function displaySearchResults() {
 
 
 
+
+// Button KUNDEN ANLEGEN
+function showClientForm() {
+    document.getElementById('kundenFormular').style.display = 'block';
+    document.getElementById('openClientFormButton').style.display = 'none';
+}
+// Funktion zum Ausblenden des Formulars
+document.getElementById('cancelClientFormButton').addEventListener('click', function() {
+    document.getElementById('kundenFormular').style.display = 'none';
+    document.getElementById('openClientFormButton').style.display = 'inline-block'; // Button wieder anzeigen
+});//Kunden anlegen Button zum öffnen des Formulars
+
+
+// Für "Termin erstellen" -->Formular öffnen
+document.getElementById('openClientFormButton').addEventListener('click', showClientForm);
+
+
     // Kunden bearbeiten
     async function editClient(clientId) {
+        showClientForm();    
         const client = allClients.find(c => c._id === clientId);
         if (!client) return alert('Kunde nicht gefunden');
 
@@ -708,7 +737,7 @@ function displaySearchResults() {
         document.getElementById('Ort').value = client.Ort;
         document.getElementById('Telefon').value = client.Telefon;
         document.getElementById('Mail').value = client.Mail;
-        document.getElementById('Kundennummer').value = client.Kundennummer;
+       
 
         const submitButton = document.querySelector('#clientForm button[type="submit"]');
         submitButton.innerText = "Änderungen speichern";
@@ -723,7 +752,7 @@ function displaySearchResults() {
                 Ort: document.getElementById('Ort').value,
                 Telefon: document.getElementById('Telefon').value,
                 Mail: document.getElementById('Mail').value,
-                Kundennummer: document.getElementById('Kundennummer').value,
+                
             };
 
             try {
@@ -788,7 +817,6 @@ function displaySearchResults() {
         loadAppointments();
         loadClients();  // AllClients wird hier geladen
     });
-
 
 
 
