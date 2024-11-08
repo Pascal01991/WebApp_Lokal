@@ -352,6 +352,13 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 TERMINVERWALTUNG SCROLLBARE LISTE
 ====================================================================================================================================*/
 
+#customer-management-section {
+  margin-top: 50px;
+}
+
+          
+          
+
 .filter-button {
   padding: 10px;
   margin-right: 10px;
