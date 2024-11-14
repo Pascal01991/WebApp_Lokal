@@ -7,6 +7,8 @@
     let currentDate = new Date();
     let allAppointmentsCalendar = [];
 
+    
+
     // Funktion zum Rendern des Kalenders
     function renderCalendar() {
         const calendar = document.getElementById('calendar');
@@ -72,42 +74,71 @@
 
 
     // Termine im Kalender anzeigen
-    function displayAppointmentsOnCalendar() {
-        const startOfWeek = getStartOfWeek(currentDate);
-
-        allAppointments.forEach(app => {
-            const appDate = new Date(app.dateTime);
-            const appEndDate = new Date(appDate.getTime() + app.duration * 60000); // Dauer in Minuten
-
-            // Überprüfen, ob der Termin in die aktuelle Woche fällt
-            if (appDate >= startOfWeek && appDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
-                const dayIndex = (appDate.getDay() + 6) % 7; // Anpassen, damit Montag=0, Sonntag=6
-                const hour = appDate.getHours();
-
-                // Korrekte Zelle finden
-                const calendar = document.getElementById('calendar');
-                const cells = calendar.querySelectorAll(`.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`);
-                if (cells.length > 0) {
-                    const cell = cells[0];
-
-                    // Termin-Element erstellen
-                    const appointmentDiv = document.createElement('div');
-                    appointmentDiv.classList.add('appointment');
-
-                    // Position und Höhe basierend auf Minuten berechnen
-                    const topPosition = (appDate.getMinutes() / 60) * 100;
-                    const durationHeight = (app.duration / 60) * 100;
-
-                    appointmentDiv.style.top = topPosition + '%';
-                    appointmentDiv.style.height = durationHeight + '%';
-
-                    appointmentDiv.textContent = `${app.KundennummerzumTermin} ${app.Preis} (${app.Dienstleistung})`;
-
-                    cell.appendChild(appointmentDiv);
-                }
-            }
-        });
+    // Global definierte Var
+    let clients = []; 
+        
+    // Funktion zum Laden der Clients-Daten
+    async function loadClients() {
+        const clientsResponse = await fetch('http://localhost:5000/api/clients');
+        clients = await clientsResponse.json();
     }
+    
+    // Beispiel für eine Funktion, die nach dem Laden der Clients aufgerufen wird
+    async function initializeAppointments() {
+        await loadClients(); // Zuerst Clients laden
+        displayAppointmentsOnCalendar(); // Kalender mit Terminen anzeigen
+        displayAppointments(allAppointments); // Terminliste anzeigen
+    }
+    
+// Nun kannst du auf die clients-Daten in displayAppointmentsOnCalendar zugreifen:
+async function displayAppointmentsOnCalendar() {
+    const startOfWeek = getStartOfWeek(currentDate);
+
+    const clientsResponse = await fetch('http://localhost:5000/api/clients'); // Lädt alle Kunden aus der Kunden-Datenbank
+    const clients = await clientsResponse.json();
+
+    allAppointments.forEach(app => {
+        const appDate = new Date(app.dateTime);
+        const appEndDate = new Date(appDate.getTime() + app.duration * 60000); // Dauer in Minuten
+
+        if (appDate >= startOfWeek && appDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+            const dayIndex = (appDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
+            const hour = appDate.getHours();
+
+            const calendar = document.getElementById('calendar');
+            const cells = calendar.querySelectorAll(`.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`);
+            if (cells.length > 0) {
+                const cell = cells[0];
+
+                const appointmentDiv = document.createElement('div');
+                appointmentDiv.classList.add('appointment');
+
+                const topPosition = (appDate.getMinutes() / 60) * 100;
+                const durationHeight = (app.duration / 60) * 100;
+
+                appointmentDiv.style.top = topPosition + '%';
+                appointmentDiv.style.height = durationHeight + '%';
+
+                const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+                appointmentDiv.innerHTML = `
+                    <div>   ${clientAppointment ?   `${clientAppointment.Vorname} ${clientAppointment.Nachname}
+                                                    <br>
+                                                    ${app.Preis} ${app.Dienstleistung} ` : "Kunde nicht gefunden"}</div>`;
+                cell.appendChild(appointmentDiv);
+                console.log(app.KundennummerzumTermin);
+                console.log(clients);
+                
+            }
+        }
+    });
+}
+    
+    
+    
+    
+    // Aufruf der Initialisierung, um die Daten zu laden und die Kalender- sowie Terminansichten zu aktualisieren
+    initializeAppointments();
+    
 
     // Event-Listener für die Wochennavigation
     document.getElementById('prevWeek').addEventListener('click', () => {
@@ -211,12 +242,12 @@
         const appointmentsList = document.getElementById('appointmentsList');
         appointmentsList.innerHTML = appointments.map(app => {
 
-
+            
 
 
 // Kunden basierend auf KundennummerzumTermin finden
-
-            const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+   
 
             return `
                 <div class="termin-card">
@@ -872,21 +903,5 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     document.addEventListener('DOMContentLoaded', function() {
         loadThemeSettings();
     });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

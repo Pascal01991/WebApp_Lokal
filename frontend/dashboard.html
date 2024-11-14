@@ -212,6 +212,50 @@
                 <label for="darkModeToggle">Nachtmodus:</label>
                 <input type="checkbox" id="darkModeToggle">
               </div>
+
+          <!-- Einstellungen der Arbeitszeiten -->
+          <div id="settings">
+            <h2>Einstellungen der Arbeitszeiten</h2>
+            <form id="workingHoursForm">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Wochentag</th>
+                            <th>Deaktiviert</th>
+                            <th>Startzeit Vormittag</th>
+                            <th>Endzeit Vormittag</th>
+                            <th>Startzeit Nachmittag</th>
+                            <th>Endzeit Nachmittag</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Montag -->
+                        <tr>
+                            <td>Montag</td>
+                            <td><input type="checkbox" name="monday_disabled" id="monday_disabled"></td>
+                            <td><input type="time" name="monday_morning_start" id="monday_morning_start"></td>
+                            <td><input type="time" name="monday_morning_end" id="monday_morning_end"></td>
+                            <td><input type="time" name="monday_afternoon_start" id="monday_afternoon_start"></td>
+                            <td><input type="time" name="monday_afternoon_end" id="monday_afternoon_end"></td>
+                        </tr>
+                        <!-- Dienstag -->
+                        <tr>
+                            <td>Dienstag</td>
+                            <td><input type="checkbox" name="tuesday_disabled" id="tuesday_disabled"></td>
+                            <td><input type="time" name="tuesday_morning_start" id="tuesday_morning_start"></td>
+                            <td><input type="time" name="tuesday_morning_end" id="tuesday_morning_end"></td>
+                            <td><input type="time" name="tuesday_afternoon_start" id="tuesday_afternoon_start"></td>
+                            <td><input type="time" name="tuesday_afternoon_end" id="tuesday_afternoon_end"></td>
+                        </tr>
+                        <!-- Weitere Tage (Mittwoch bis Sonntag) folgen dem gleichen Muster -->
+                        <!-- ... -->
+                    </tbody>
+                </table>
+                <button type="submit">Speichern</button>
+            </form>
+          </div>
+
+
         </section>
 
   </div>
