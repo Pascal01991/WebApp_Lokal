@@ -120,10 +120,16 @@ async function displayAppointmentsOnCalendar() {
                 appointmentDiv.style.height = durationHeight + '%';
 
                 const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-                appointmentDiv.innerHTML = `
-                    <div>   ${clientAppointment ?   `${clientAppointment.Vorname} ${clientAppointment.Nachname}
-                                                    <br>
-                                                    ${app.Preis} ${app.Dienstleistung} ` : "Kunde nicht gefunden"}</div>`;
+                appointmentDiv.innerHTML = ` 
+    <div>   
+        ${clientAppointment ? 
+            `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong> 
+            <br>
+            ${app.Preis} ${app.Dienstleistung}` 
+            : 
+            "Kunde nicht gefunden"}
+    </div>`;
+
                 cell.appendChild(appointmentDiv);
                 console.log(app.KundennummerzumTermin);
                 console.log(clients);
