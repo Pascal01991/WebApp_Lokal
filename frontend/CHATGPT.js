@@ -16,7 +16,7 @@ function renderCalendar() {
         calendar.appendChild(dayHeader);
     }
 
-    // Zeitslots erstellen
+    // Zeitslots erstellen (Für Arbeitszeit)
     let earliestTime = '24:00';
     let latestTime = '00:00';
     Object.values(workingHours).forEach(day => {

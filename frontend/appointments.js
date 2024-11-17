@@ -136,7 +136,11 @@
             for (let i = 0; i < 7; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('hour-cell');
-                cell.style.position = 'relative';
+                cell.style.position = 'relative'; // Wichtig für absolute Positionierung der Termine
+    
+                // Setze die Datenattribute
+                cell.dataset.dayIndex = i;
+                cell.dataset.hour = hour;
     
                 // Inneren Container für Slots hinzufügen
                 const cellContainer = document.createElement('div');
@@ -151,24 +155,27 @@
                     const key = `${i}-${hour}-${minute}`;
                     const slot = slotsMap[key];
     
-                    if (slot) {
-                        const slotDiv = document.createElement('div');
-                        slotDiv.classList.add('time-slot-div');
-                        slotDiv.style.position = 'absolute';
-                        slotDiv.style.top = (s * (100 / slotsPerHour)) + '%';
-                        slotDiv.style.height = (100 / slotsPerHour) + '%';
-                        slotDiv.style.left = '0';
-                        slotDiv.style.right = '0';
+                    const slotDiv = document.createElement('div');
+                    slotDiv.classList.add('time-slot-div');
+                    slotDiv.style.position = 'absolute';
+                    slotDiv.style.top = (s * (100 / slotsPerHour)) + '%';
+                    slotDiv.style.height = (100 / slotsPerHour) + '%';
+                    slotDiv.style.left = '0';
+                    slotDiv.style.right = '0';
+                    slotDiv.style.zIndex = '1'; // Slots unter den Terminen
     
+                    if (slot) {
                         if (slot.isAvailable) {
                             slotDiv.classList.add('available-slot');
                             // Event Listener hinzufügen, wenn gewünscht
                         } else {
                             slotDiv.classList.add('unavailable-slot');
                         }
-    
-                        cellContainer.appendChild(slotDiv);
+                    } else {
+                        slotDiv.classList.add('non-working-hour');
                     }
+    
+                    cellContainer.appendChild(slotDiv);
                 }
     
                 cell.appendChild(cellContainer);
@@ -179,6 +186,7 @@
         // Termine anzeigen
         displayAppointmentsOnCalendar();
     }
+    
     
     //Zeitslots für externe Buchungsplattform bereitstellen
     function getAvailableSlotsForExport() {
@@ -252,44 +260,72 @@ async function displayAppointmentsOnCalendar() {
     }
 
     allAppointments.forEach(app => {
-        const appDate = new Date(app.dateTime);
-        const appEndDate = new Date(appDate.getTime() + app.duration * 60000);
+        const appStartDate = new Date(app.dateTime);
+        const appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
 
-        if (appDate >= startOfWeek && appDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
-            const dayIndex = (appDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
-            const hour = appDate.getHours();
+        if (appStartDate >= startOfWeek && appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+            const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
 
-            // Berechne die Position des Termins
-            const appointmentTop = ((appDate.getHours() * 60 + appDate.getMinutes()) - (hour * 60)) / 60 * 100;
-            const appointmentHeight = (app.duration / 60) * 100;
+            const appointmentStartMinutes = appStartDate.getHours() * 60 + appStartDate.getMinutes();
+            const appointmentEndMinutes = appEndDate.getHours() * 60 + appEndDate.getMinutes();
 
-            // Selektiere die entsprechende Zelle
-            const cellSelector = `.hour-cell:nth-child(${(dayIndex + 2) + (hour - startHour) * 8})`;
-            const hourCell = document.querySelector(cellSelector);
+            const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
 
-            if (hourCell) {
-                const appointmentDiv = document.createElement('div');
-                appointmentDiv.classList.add('appointment');
+            // Bestimme die Stunden, die der Termin abdeckt
+            const startHour = appStartDate.getHours();
+            const endHour = appEndDate.getHours();
 
-                appointmentDiv.style.top = `${appointmentTop}%`;
-                appointmentDiv.style.height = `${appointmentHeight}%`;
+            for (let hour = startHour; hour <= endHour; hour++) {
+                const calendar = document.getElementById('calendar');
+                const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
+                const hourCell = calendar.querySelector(cellSelector);
 
-                const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-                appointmentDiv.innerHTML = `
-                    <div>
-                        ${clientAppointment ? 
-                            `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
-                            <br>
-                            ${app.Preis} ${app.Dienstleistung}`
-                            :
-                            "Kunde nicht gefunden"}
-                    </div>`;
+                if (hourCell) {
+                    const appointmentDiv = document.createElement('div');
+                    appointmentDiv.classList.add('appointment');
 
-                hourCell.appendChild(appointmentDiv);
+                    let appointmentTop, appointmentHeight;
+
+                    if (hour === startHour && hour === endHour) {
+                        // Termin beginnt und endet innerhalb derselben Stunde
+                        appointmentTop = ((appStartDate.getMinutes()) / 60) * 100;
+                        appointmentHeight = (app.duration / 60) * 100;
+                    } else if (hour === startHour) {
+                        // Termin beginnt in dieser Stunde und geht weiter
+                        appointmentTop = ((appStartDate.getMinutes()) / 60) * 100;
+                        appointmentHeight = ((60 - appStartDate.getMinutes()) / 60) * 100;
+                    } else if (hour === endHour) {
+                        // Termin endet in dieser Stunde
+                        appointmentTop = 0;
+                        appointmentHeight = ((appEndDate.getMinutes()) / 60) * 100;
+                    } else {
+                        // Termin deckt die gesamte Stunde ab
+                        appointmentTop = 0;
+                        appointmentHeight = 100;
+                    }
+
+                    appointmentDiv.style.top = `${appointmentTop}%`;
+                    appointmentDiv.style.height = `${appointmentHeight}%`;
+                    appointmentDiv.style.zIndex = '2'; // Termine über den Slots anzeigen
+
+                    const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+                    appointmentDiv.innerHTML = `
+                        <div>
+                            ${clientAppointment ? 
+                                `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
+                                <br>
+                                ${app.Preis} ${app.Dienstleistung}`
+                                :
+                                "Kunde nicht gefunden"}
+                        </div>`;
+
+                    hourCell.appendChild(appointmentDiv);
+                }
             }
         }
     });
 }
+
 
     
     
