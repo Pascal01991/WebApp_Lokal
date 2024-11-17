@@ -92,6 +92,9 @@
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = ''; // Vorherigen Inhalt löschen
     
+        const slots = generateTimeSlots();
+        updateSlotAvailability(slots, allAppointments);
+    
         // Startdatum (Montag) der aktuellen Woche erhalten
         const startOfWeek = getStartOfWeek(currentDate);
     
@@ -106,23 +109,22 @@
             calendar.appendChild(dayHeader);
         }
     
-        // Zeitslots erstellen
-        let earliestTime = '24:00';
-        let latestTime = '00:00';
-        Object.values(workingHours).forEach(day => {
-            if (day.active) {
-                if (day.morning.start && day.morning.start < earliestTime) earliestTime = day.morning.start;
-                if (day.morning.end && day.morning.end > latestTime) latestTime = day.morning.end;
-                if (day.afternoon.start && day.afternoon.start < earliestTime) earliestTime = day.afternoon.start;
-                if (day.afternoon.end && day.afternoon.end > latestTime) latestTime = day.afternoon.end;
-            }
+        // Erstelle eine Map für schnelle Slot-Suche
+        const slotsMap = {};
+        slots.forEach(slot => {
+            const key = `${slot.dayIndex}-${slot.time.getHours()}-${slot.time.getMinutes()}`;
+            slotsMap[key] = slot;
         });
     
-        // Konvertiere früheste und späteste Zeit in Stunden
-        const startHour = parseInt(earliestTime.split(':')[0]);
-        const endHour = parseInt(latestTime.split(':')[0]);
+        // Bestimme früheste und späteste Zeit
+        const allTimes = slots.map(slot => slot.time.getHours() * 60 + slot.time.getMinutes());
+        const minTime = Math.min(...allTimes);
+        const maxTime = Math.max(...allTimes);
     
-        // Erstelle Stundenzeilen
+        const startHour = Math.floor(minTime / 60);
+        const endHour = Math.ceil(maxTime / 60);
+    
+        // Erstelle Kalenderzeilen
         for (let hour = startHour; hour <= endHour; hour++) {
             // Zeitlabel erstellen
             const timeLabel = document.createElement('div');
@@ -130,46 +132,71 @@
             timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
             calendar.appendChild(timeLabel);
     
-            // Stundenfelder für jeden Tag
+            // Erstelle Zellen für jeden Tag
             for (let i = 0; i < 7; i++) {
-                const day = new Date(startOfWeek);
-                day.setDate(startOfWeek.getDate() + i);
-                const dayName = getDayName(day).toLowerCase();
+                const cell = document.createElement('div');
+                cell.classList.add('hour-cell');
+                cell.style.position = 'relative';
     
-                const hourCell = document.createElement('div');
-                hourCell.classList.add('hour-cell');
-                hourCell.style.position = 'relative';
+                // Inneren Container für Slots hinzufügen
+                const cellContainer = document.createElement('div');
+                cellContainer.style.position = 'relative';
+                cellContainer.style.height = '100%';
     
-                // Überprüfen, ob der Tag aktiv ist
-                if (workingHours[dayName].active) {
-                    // Überprüfen, ob der Slot innerhalb der Arbeitszeit liegt
-                    const slotTimeStart = new Date(day);
-                    slotTimeStart.setHours(hour, 0, 0, 0);
+                const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+                const slotsPerHour = 60 / defaultLength;
     
-                    const slotTimeEnd = new Date(day);
-                    slotTimeEnd.setHours(hour + 1, 0, 0, 0);
+                for (let s = 0; s < slotsPerHour; s++) {
+                    const minute = s * defaultLength;
+                    const key = `${i}-${hour}-${minute}`;
+                    const slot = slotsMap[key];
     
-                    const inWorkingHours = isWithinWorkingHours(slotTimeStart, workingHours[dayName]) || isWithinWorkingHours(slotTimeEnd, workingHours[dayName]);
+                    if (slot) {
+                        const slotDiv = document.createElement('div');
+                        slotDiv.classList.add('time-slot-div');
+                        slotDiv.style.position = 'absolute';
+                        slotDiv.style.top = (s * (100 / slotsPerHour)) + '%';
+                        slotDiv.style.height = (100 / slotsPerHour) + '%';
+                        slotDiv.style.left = '0';
+                        slotDiv.style.right = '0';
     
-                    if (inWorkingHours) {
-                        hourCell.classList.add('working-hour');
-                    } else {
-                        hourCell.classList.add('non-working-hour');
+                        if (slot.isAvailable) {
+                            slotDiv.classList.add('available-slot');
+                            // Event Listener hinzufügen, wenn gewünscht
+                        } else {
+                            slotDiv.classList.add('unavailable-slot');
+                        }
+    
+                        cellContainer.appendChild(slotDiv);
                     }
-                } else {
-                    hourCell.classList.add('non-working-hour');
                 }
     
-                hourCell.dataset.dayIndex = i;
-                hourCell.dataset.hour = hour;
-    
-                calendar.appendChild(hourCell);
+                cell.appendChild(cellContainer);
+                calendar.appendChild(cell);
             }
         }
     
         // Termine anzeigen
         displayAppointmentsOnCalendar();
     }
+    
+    //Zeitslots für externe Buchungsplattform bereitstellen
+    function getAvailableSlotsForExport() {
+        const slots = generateTimeSlots();
+        updateSlotAvailability(slots, allAppointments);
+    
+        // Filtern der verfügbaren Slots
+        const availableSlots = slots.filter(slot => slot.isAvailable);
+    
+        // Formatieren der Daten
+        return availableSlots.map(slot => {
+            return {
+                dateTime: slot.time.toISOString(),
+                duration: slot.duration
+            };
+        });
+    }
+    
     
     
     
@@ -218,50 +245,52 @@
 async function displayAppointmentsOnCalendar() {
     const startOfWeek = getStartOfWeek(currentDate);
 
-    const clientsResponse = await fetch('http://localhost:5000/api/clients'); // Lädt alle Kunden aus der Kunden-Datenbank
-    const clients = await clientsResponse.json();
+    // Lade die Clients nur einmal, falls noch nicht geschehen
+    if (!clients || clients.length === 0) {
+        const clientsResponse = await fetch('http://localhost:5000/api/clients');
+        clients = await clientsResponse.json();
+    }
 
     allAppointments.forEach(app => {
         const appDate = new Date(app.dateTime);
-        const appEndDate = new Date(appDate.getTime() + app.duration * 60000); // Dauer in Minuten
+        const appEndDate = new Date(appDate.getTime() + app.duration * 60000);
 
         if (appDate >= startOfWeek && appDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
             const dayIndex = (appDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
             const hour = appDate.getHours();
 
-            const calendar = document.getElementById('calendar');
-            const cells = calendar.querySelectorAll(`.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`);
-            if (cells.length > 0) {
-                const cell = cells[0];
+            // Berechne die Position des Termins
+            const appointmentTop = ((appDate.getHours() * 60 + appDate.getMinutes()) - (hour * 60)) / 60 * 100;
+            const appointmentHeight = (app.duration / 60) * 100;
 
+            // Selektiere die entsprechende Zelle
+            const cellSelector = `.hour-cell:nth-child(${(dayIndex + 2) + (hour - startHour) * 8})`;
+            const hourCell = document.querySelector(cellSelector);
+
+            if (hourCell) {
                 const appointmentDiv = document.createElement('div');
                 appointmentDiv.classList.add('appointment');
 
-                const topPosition = (appDate.getMinutes() / 60) * 100;
-                const durationHeight = (app.duration / 60) * 100;
-
-                appointmentDiv.style.top = topPosition + '%';
-                appointmentDiv.style.height = durationHeight + '%';
+                appointmentDiv.style.top = `${appointmentTop}%`;
+                appointmentDiv.style.height = `${appointmentHeight}%`;
 
                 const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-                appointmentDiv.innerHTML = ` 
-    <div>   
-        ${clientAppointment ? 
-            `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong> 
-            <br>
-            ${app.Preis} ${app.Dienstleistung}` 
-            : 
-            "Kunde nicht gefunden"}
-    </div>`;
+                appointmentDiv.innerHTML = `
+                    <div>
+                        ${clientAppointment ? 
+                            `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
+                            <br>
+                            ${app.Preis} ${app.Dienstleistung}`
+                            :
+                            "Kunde nicht gefunden"}
+                    </div>`;
 
-                cell.appendChild(appointmentDiv);
-                console.log(app.KundennummerzumTermin);
-                console.log(clients);
-                
+                hourCell.appendChild(appointmentDiv);
             }
         }
     });
 }
+
     
     
     
@@ -282,7 +311,74 @@ async function displayAppointmentsOnCalendar() {
     });
 
 
-    //Zeitslots
+    //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
+    function generateTimeSlots() {
+        const slots = [];
+        const startOfWeek = getStartOfWeek(currentDate);
+        const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+    
+        // Iteriere über die Tage der Woche
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(startOfWeek);
+            day.setDate(startOfWeek.getDate() + i);
+            const dayName = getDayName(day).toLowerCase();
+    
+            // Überspringe Tage, die nicht aktiv sind
+            if (!workingHours[dayName] || !workingHours[dayName].active) continue;
+    
+            // Sammle alle Zeitfenster (Morgen und Nachmittag)
+            const periods = ['morning', 'afternoon'];
+            periods.forEach(period => {
+                const start = workingHours[dayName][period].start;
+                const end = workingHours[dayName][period].end;
+    
+                if (start && end) {
+                    const startMinutes = parseTime(start);
+                    const endMinutes = parseTime(end);
+    
+                    for (let minutes = startMinutes; minutes + defaultLength <= endMinutes; minutes += defaultLength) {
+                        const slotTime = new Date(day);
+                        slotTime.setHours(0, minutes, 0, 0);
+    
+                        slots.push({
+                            dayIndex: i,
+                            time: slotTime,
+                            duration: defaultLength,
+                            isAvailable: true // Wird später aktualisiert
+                        });
+                    }
+                }
+            });
+        }
+    
+        return slots;
+    }
+    
+    //Verfügbarkeit der Zeit-Slots prüfen
+    function updateSlotAvailability(slots, appointments) {
+        slots.forEach(slot => {
+            const slotStart = slot.time;
+            const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
+    
+            // Prüfe, ob der Slot mit einem bestehenden Termin kollidiert
+            const conflict = appointments.some(app => {
+                const appStart = new Date(app.dateTime);
+                const appEnd = new Date(appStart.getTime() + app.duration * 60000);
+    
+                return (slotStart < appEnd) && (appStart < slotEnd);
+            });
+    
+            if (conflict) {
+                slot.isAvailable = false;
+            }
+        });
+    }
+    
+    document.getElementById('toggleSlotGridLines').addEventListener('click', function () {
+        const calendar = document.getElementById('calendar');
+        calendar.classList.toggle('hide-slot-lines');
+      });
+      
 
     //====================================================================================================================================
     //TERMINVERWALTUNG

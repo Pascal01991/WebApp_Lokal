@@ -209,7 +209,7 @@ KALENDER
     }
 
     .appointment {
-      background-color: var(--theme-color); 
+      background-color: var(--theme-color);
       position: absolute;
       left: 0;
       right: 0;
@@ -219,12 +219,15 @@ KALENDER
       border-radius: 5px;
       box-sizing: border-box;
       overflow: hidden;
-    }
+      z-index: 200; /* Füge dies hinzu, um die Termine über anderen Elementen zu positionieren */
+  }
+  
 
     .appointment div {
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+      z-index: 200; /* Füge dies hinzu, um die Termine über anderen Elementen zu positionieren */
     }
 
     #Formular {
@@ -248,6 +251,41 @@ KALENDER
       background-color: unset;
     }
 
+
+    /*Neu für individuelle Zeit-Slots für externe Buchungslattform)*/
+    .time-slot-div {
+      position: absolute;
+      left: 0;
+      right: 0;
+      /* Entferne Hintergrundfarben, die die Termine überdecken könnten */
+      background-color: transparent;
+      /* Füge einen z-index hinzu, der niedriger ist als der der Termine */
+      z-index: 1;
+  }
+  
+  
+  .available-slot {
+      background-color: #d4edda; /* Grün für verfügbare Slots */
+  }
+  
+  .unavailable-slot {
+      /*background-color: rgba(255, 0, 0, 0.226); /* Rot für nicht verfügbare Slots */
+  }
+  
+  .time-slot-div:hover {
+      background-color: #a0d0a0; /* Hover-Effekt für verfügbare Slots */
+      cursor: pointer;
+  }
+  
+  /*Gitterlinien der Terminslots aus- / einblenden*/
+  .hide-slot-lines .hour-cell {
+    border: none;
+  }
+  
+  .hide-slot-lines .hour-cell.hour-line {
+    border-bottom: 1px solid var(--background-light); /* Nur Stundentrennung anzeigen */
+  }
+  
 
 
 /*====================================================================================================================================
