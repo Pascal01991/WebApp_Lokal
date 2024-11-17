@@ -7,16 +7,94 @@
     let currentDate = new Date();
     let allAppointmentsCalendar = [];
 
-    
+    //speicherung der arbeitszeiten
+    let workingHours = {
+        montag: {
+            active: true,
+            morning: { start: '08:00', end: '12:00' },
+            afternoon: { start: '13:00', end: '17:00' }
+        },
+        dienstag: {
+            active: true,
+            morning: { start: '08:00', end: '12:00' },
+            afternoon: { start: '13:00', end: '17:00' }
+        },
+        mittwoch: {
+            active: true,
+            morning: { start: '08:00', end: '12:00' },
+            afternoon: { start: '13:00', end: '17:00' }
+        },
+        donnerstag: {
+            active: true,
+            morning: { start: '08:00', end: '12:00' },
+            afternoon: { start: '13:00', end: '17:00' }
+        },
+        freitag: {
+            active: true,
+            morning: { start: '08:00', end: '12:00' },
+            afternoon: { start: '13:00', end: '17:00' }
+        },
+        samstag: {
+            active: false,
+            morning: { start: null, end: null },
+            afternoon: { start: null, end: null }
+        },
+        sonntag: {
+            active: false,
+            mmorning: { start: null, end: null },
+            afternoon: { start: null, end: null }
+        }
 
-    // Funktion zum Rendern des Kalenders
+
+
+    };
+    
+    console.log('Aktuelle Arbeitszeiten:', workingHours);
+        // Hilfsfunktion, um eine Zeitangabe (HH:MM) in Minuten seit Mitternacht umzuwandeln
+    function parseTime(timeString) {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    // Funktion, um zu überprüfen, ob eine gegebene Zeit innerhalb der Arbeitszeiten liegt
+    function isWithinWorkingHours(time, dayWorkingHours) {
+        // Falls der Tag nicht aktiv ist, sofort false zurückgeben
+        if (!dayWorkingHours.active) return false;
+
+        const timeInMinutes = time.getHours() * 60 + time.getMinutes();
+
+        // Prüfen, ob die Zeit innerhalb der Morgenarbeitszeiten liegt
+        if (dayWorkingHours.morning.start && dayWorkingHours.morning.end) {
+            const morningStart = parseTime(dayWorkingHours.morning.start);
+            const morningEnd = parseTime(dayWorkingHours.morning.end);
+
+            if (timeInMinutes >= morningStart && timeInMinutes < morningEnd) {
+                return true;
+            }
+        }
+
+        // Prüfen, ob die Zeit innerhalb der Nachmittagsarbeitszeiten liegt
+        if (dayWorkingHours.afternoon.start && dayWorkingHours.afternoon.end) {
+            const afternoonStart = parseTime(dayWorkingHours.afternoon.start);
+            const afternoonEnd = parseTime(dayWorkingHours.afternoon.end);
+
+            if (timeInMinutes >= afternoonStart && timeInMinutes < afternoonEnd) {
+                return true;
+            }
+        }
+
+        // Wenn die Zeit weder in den Morgen- noch in den Nachmittagsarbeitszeiten liegt, false zurückgeben
+        return false;
+    }
+
+
     function renderCalendar() {
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = ''; // Vorherigen Inhalt löschen
-
+    
         // Startdatum (Montag) der aktuellen Woche erhalten
         const startOfWeek = getStartOfWeek(currentDate);
-
+    
         // Tagesüberschriften erstellen
         calendar.appendChild(document.createElement('div')); // Leere Ecke für die Zeitspalte
         for (let i = 0; i < 7; i++) {
@@ -27,28 +105,73 @@
             dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
             calendar.appendChild(dayHeader);
         }
-
-        // Zeitslots erstellen 
-        for (let hour = 8; hour <= 19; hour++) {
-            // Zeitlabel
+    
+        // Zeitslots erstellen
+        let earliestTime = '24:00';
+        let latestTime = '00:00';
+        Object.values(workingHours).forEach(day => {
+            if (day.active) {
+                if (day.morning.start && day.morning.start < earliestTime) earliestTime = day.morning.start;
+                if (day.morning.end && day.morning.end > latestTime) latestTime = day.morning.end;
+                if (day.afternoon.start && day.afternoon.start < earliestTime) earliestTime = day.afternoon.start;
+                if (day.afternoon.end && day.afternoon.end > latestTime) latestTime = day.afternoon.end;
+            }
+        });
+    
+        // Konvertiere früheste und späteste Zeit in Stunden
+        const startHour = parseInt(earliestTime.split(':')[0]);
+        const endHour = parseInt(latestTime.split(':')[0]);
+    
+        // Erstelle Stundenzeilen
+        for (let hour = startHour; hour <= endHour; hour++) {
+            // Zeitlabel erstellen
             const timeLabel = document.createElement('div');
             timeLabel.classList.add('time-slot');
             timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
             calendar.appendChild(timeLabel);
-
+    
             // Stundenfelder für jeden Tag
             for (let i = 0; i < 7; i++) {
+                const day = new Date(startOfWeek);
+                day.setDate(startOfWeek.getDate() + i);
+                const dayName = getDayName(day).toLowerCase();
+    
                 const hourCell = document.createElement('div');
                 hourCell.classList.add('hour-cell');
+                hourCell.style.position = 'relative';
+    
+                // Überprüfen, ob der Tag aktiv ist
+                if (workingHours[dayName].active) {
+                    // Überprüfen, ob der Slot innerhalb der Arbeitszeit liegt
+                    const slotTimeStart = new Date(day);
+                    slotTimeStart.setHours(hour, 0, 0, 0);
+    
+                    const slotTimeEnd = new Date(day);
+                    slotTimeEnd.setHours(hour + 1, 0, 0, 0);
+    
+                    const inWorkingHours = isWithinWorkingHours(slotTimeStart, workingHours[dayName]) || isWithinWorkingHours(slotTimeEnd, workingHours[dayName]);
+    
+                    if (inWorkingHours) {
+                        hourCell.classList.add('working-hour');
+                    } else {
+                        hourCell.classList.add('non-working-hour');
+                    }
+                } else {
+                    hourCell.classList.add('non-working-hour');
+                }
+    
                 hourCell.dataset.dayIndex = i;
                 hourCell.dataset.hour = hour;
+    
                 calendar.appendChild(hourCell);
             }
         }
-
+    
         // Termine anzeigen
         displayAppointmentsOnCalendar();
     }
+    
+    
 
     // Funktion, um den Start der Woche (Montag) zu erhalten
     function getStartOfWeek(date) {
@@ -157,6 +280,8 @@ async function displayAppointmentsOnCalendar() {
         renderCalendar();
     });
 
+
+    //Zeitslots
 
     //====================================================================================================================================
     //TERMINVERWALTUNG
@@ -860,6 +985,63 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     //====================================================================================================================================
     //EINSTELLUNGEN
     //====================================================================================================================================
+    
+    // Arbeitszeiten speichern: Event-Listener für den "Speichern"-Button hinzufügen
+    document.getElementById('saveWorkingHours').addEventListener('click', saveWorkingHours);
+
+
+    function saveWorkingHours() {
+        const days = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
+    
+        days.forEach(day => {
+            const active = document.getElementById(`${day}Active`).checked;
+            const morningStart = document.getElementById(`${day}MorningStart`).value;
+            const morningEnd = document.getElementById(`${day}MorningEnd`).value;
+            const afternoonStart = document.getElementById(`${day}AfternoonStart`).value;
+            const afternoonEnd = document.getElementById(`${day}AfternoonEnd`).value;
+    
+            workingHours[day] = {
+                active: active,
+                morning: { start: morningStart, end: morningEnd },
+                afternoon: { start: afternoonStart, end: afternoonEnd }
+            };
+        });
+    
+        // Arbeitszeiten in localStorage speichern
+        localStorage.setItem('workingHours', JSON.stringify(workingHours));
+    
+        // Kalender neu rendern
+        renderCalendar();
+    }
+    
+    function loadWorkingHours() {
+        const savedHours = localStorage.getItem('workingHours');
+        if (savedHours) {
+            workingHours = JSON.parse(savedHours);
+        }
+    
+        const days = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
+        days.forEach(day => {
+            if (workingHours[day]) {
+                document.getElementById(`${day}Active`).checked = workingHours[day].active;
+                document.getElementById(`${day}MorningStart`).value = workingHours[day].morning.start;
+                document.getElementById(`${day}MorningEnd`).value = workingHours[day].morning.end;
+                document.getElementById(`${day}AfternoonStart`).value = workingHours[day].afternoon.start;
+                document.getElementById(`${day}AfternoonEnd`).value = workingHours[day].afternoon.end;
+            } else {
+                console.warn(`Arbeitszeiten für ${day} sind nicht definiert.`);
+                // Optional: Setze Standardwerte oder behandle den Fehler entsprechend
+            }
+        });
+    }
+    
+    
+    // Beim Laden der Seite aufrufen
+    document.addEventListener('DOMContentLoaded', function() {
+        loadWorkingHours();
+    });
+    
+    
     //FARBAUSWAHL THEMA DESIGN DARKMODE
     // Funktion zum Aktualisieren der Themenfarbe
     function updateThemeColor(color) {
@@ -911,3 +1093,4 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     });
 
 
+    localStorage.removeItem('workingHours');

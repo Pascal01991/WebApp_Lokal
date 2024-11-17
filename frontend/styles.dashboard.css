@@ -219,6 +219,20 @@ KALENDER
   justify-content: space-between;
 }
 
+/* CSS-Klassen für die Zeit-Slots */
+.hour-cell.free-slot {
+  background-color: #d4edda; /* Grün für freie Slots */
+}
+
+.hour-cell.occupied-slot {
+  background-color: #f8d7da; /* Rot für besetzte Slots */
+}
+
+.hour-cell.non-working-hour {
+  background-color: #e2e3e5; /* Grau für nicht arbeitende Stunden */
+}
+
+
 /*====================================================================================================================================
 TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 ==================================================================================================================================*/
