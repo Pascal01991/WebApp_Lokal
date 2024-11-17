@@ -172,6 +172,7 @@
     }
     
     
+    
 
     // Funktion, um den Start der Woche (Montag) zu erhalten
     function getStartOfWeek(date) {

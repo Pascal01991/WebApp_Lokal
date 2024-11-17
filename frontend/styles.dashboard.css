@@ -145,92 +145,109 @@ MAINCONTENT
 KALENDER
 ==================================================================================================================================*/
 
-/* Kalenderbereich und -navigation */
-#week-navigation {
-  margin-bottom: 0px; /* Abstand unterhalb der Navigation */
-}
+    /* Kalenderbereich und -navigation */
+    #week-navigation {
+      margin-bottom: 0px; /* Abstand unterhalb der Navigation */
+    }
 
-#calendar {
-  display: grid;
-  grid-template-columns: 80px repeat(7, 1fr);
-  border: 1px solid #ccc;
-  width: 100%;
-  max-width: 1100px; /* Begrenze die maximale Breite des Kalenders */
-  margin: 20px auto; /* Zentriert den Kalender */
-  padding: 10px; /* Zusätzlicher Abstand um den Kalenderinhalt */
-  box-sizing: border-box;
-  background-color: var(--background-medium);
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 5px; /* Weniger Padding für kleine Bildschirme */
+    #calendar {
+      display: grid;
+      grid-template-columns: 80px repeat(7, 1fr);
+      border: 1px solid #ccc;
+      width: 100%;
+      max-width: 1100px; /* Begrenze die maximale Breite des Kalenders */
+      margin: 20px auto; /* Zentriert den Kalender */
+      box-sizing: border-box;
+      background-color: var(--background-medium);
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 5px; /* Weniger Padding für kleine Bildschirme */
+    }
 
-}
+    .time-slot {
+      grid-column: 1;
+      border-bottom: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      height: 60px;
+      padding: 5px;
+      box-sizing: border-box;
+      text-align: center;
+      background-color: var(--background-medium);
+      font-weight: bold;
+    }
 
-.time-slot {
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  height: 60px;
-  padding: 5px;
-  box-sizing: border-box;
-  text-align: center;
-  background-color:  var(--background-medium);
-}
+    .day-header {
+      border-bottom: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+      text-align: center;
+      padding: 5px;
+      background-color: var(--background-medium);
+      box-sizing: border-box;
+      font-weight: bold;
+    }
 
-.day-header {
-  border-bottom: 1px solid #ccc;
-  text-align: center;
-  padding: 5px;
-  background-color: var(--background-medium);
-  box-sizing: border-box;
-}
+    .hour-cell {
+      border-bottom: 1px solid var(--background-light);
+      border-right: 1px solid var(--background-light);
+      position: relative;
+      height: 60px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
-.hour-cell {
-  border-bottom: 1px solid var(--background-light);
-  border-right: 1px solid var(--background-light);
-  position: relative;
-  height: 60px;
-  box-sizing: border-box;
-}
+    .working-hour {
+      background-color: #d4edda; /* Grün für Arbeitsstunden */
+    }
 
-.appointment {
-  background-color: var(--theme-color); 
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  padding: 2px;
-  font-size: 12px;
-  border: 1px solid var(--background-dark);
-  border-radius: 5px;
-  box-sizing: border-box;
-}
+    .working-hour:hover {
+      background-color: #b3e6c1; /* Hellere Grünfarbe beim Hover */
+      cursor: pointer;
+    }
 
-#Formular {
-  width: 100%;
-  max-width: 600px;
-  padding: 20px;
-  background-color: var(--background-medium);
-  border-radius: 8px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: space-between;
-}
+    .non-working-hour {
+      background-color: var(--background-light); /* Grau für nicht arbeitende Stunden */
+    }
 
-/* CSS-Klassen für die Zeit-Slots */
-.hour-cell.free-slot {
-  background-color: #d4edda; /* Grün für freie Slots */
-}
+    .appointment {
+      background-color: var(--theme-color); 
+      position: absolute;
+      left: 0;
+      right: 0;
+      padding: 2px;
+      font-size: 12px;
+      border: 1px solid var(--background-dark);
+      border-radius: 5px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
-.hour-cell.occupied-slot {
-  background-color: #f8d7da; /* Rot für besetzte Slots */
-}
+    .appointment div {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
 
-.hour-cell.non-working-hour {
-  background-color: #e2e3e5; /* Grau für nicht arbeitende Stunden */
-}
+    #Formular {
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+      background-color: var(--background-medium);
+      border-radius: 8px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: space-between;
+    }
+
+    /* Alte CSS-Klassen für die Zeit-Slots entfernen oder überschreiben */
+    .hour-cell.free-slot,
+    .hour-cell.occupied-slot {
+      /* Entferne die Hintergrundfarben oder überschreibe sie, falls notwendig */
+      background-color: unset;
+    }
+
 
 
 /*====================================================================================================================================
