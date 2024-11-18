@@ -92,6 +92,7 @@
 
 
     function renderCalendar() {
+        console.log('Kalender schon wieder gerendert')
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = ''; // Vorherigen Inhalt löschen
     
@@ -185,6 +186,40 @@
     
         displayAppointmentsOnCalendar();
     }
+    
+    function findOverlappingAppointments(appointments) {
+    const overlappingGroups = [];
+
+    appointments.forEach(app => {
+        const appStart = new Date(app.dateTime);
+        const appEnd = new Date(appStart.getTime() + app.duration * 60000);
+
+        let addedToGroup = false;
+
+        // Überprüfe, ob der Termin zu einer bestehenden Gruppe gehört
+        overlappingGroups.forEach(group => {
+            for (const existingApp of group) {
+                const existingStart = new Date(existingApp.dateTime);
+                const existingEnd = new Date(existingStart.getTime() + existingApp.duration * 60000);
+
+                if (appStart < existingEnd && appEnd > existingStart) {
+                    group.push(app); // Füge den Termin zur Gruppe hinzu
+                    addedToGroup = true;
+                    break;
+                }
+            }
+        });
+
+        // Falls keine passende Gruppe gefunden wurde, erstelle eine neue Gruppe
+        if (!addedToGroup) {
+            overlappingGroups.push([app]);
+        }
+    });
+
+    return overlappingGroups;
+}
+
+
     
     
     //Anklicken eines Slots öffnet Terminformular
@@ -301,13 +336,26 @@ async function displayAppointmentsOnCalendar() {
         clients = await clientsResponse.json();
     }
 
-    allAppointments.forEach(app => {
+
+
+    // Filtere Termine der aktuellen Woche
+    const appointmentsThisWeek = allAppointments.filter(app => {
         const appStartDate = new Date(app.dateTime);
-        const appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
+        return appStartDate >= startOfWeek && appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+    });
 
-        if (appStartDate >= startOfWeek && appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+    // Finde Gruppen überlappender Termine
+    const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
+
+    // Platziere die Termine
+    overlappingGroups.forEach(group => {
+        const groupSize = group.length;
+        console.log(groupSize);
+
+        group.forEach((app, index) => {
+            const appStartDate = new Date(app.dateTime);
+            const appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
             const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
-
             const startHour = appStartDate.getHours();
             const endHour = appEndDate.getHours();
 
@@ -330,7 +378,12 @@ async function displayAppointmentsOnCalendar() {
                         appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
                         appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
                         appointmentDiv.style.height = `${durationHours * 100}%`;
+                        appointmentDiv.style.width = `${100 / groupSize}%`; // Breite teilen
+                        appointmentDiv.style.left = `${(100 / groupSize) * index}%`; // Position basierend auf Index
                         appointmentDiv.style.zIndex = '2';
+
+                        console.log(`Termin ${app._id}: Breite=${100 / groupSize}%, Position=${(100 / groupSize) * index}%`);
+                        console.log(`Termin ${app._id}: Breite=${appointmentDiv.style.width}, Position=${appointmentDiv.style.left}`);
 
                         // Inhalte des Termins
                         const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
@@ -348,8 +401,49 @@ async function displayAppointmentsOnCalendar() {
                     }
                 }
             }
-        }
+        });
     });
+
+
+
+    //Überschneidende Termine identifizieren
+    function logOverlappingAppointments() {
+        const startOfWeek = getStartOfWeek(currentDate);
+        const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+        const appointmentsThisWeek = allAppointments.filter(app => {
+            const appStart = new Date(app.dateTime);
+            return appStart >= startOfWeek && appStart < endOfWeek;
+        });
+    
+        const overlappingAppointments = [];
+    
+        // Vergleiche jedes Terminpaar, um Überlappungen zu finden
+        for (let i = 0; i < appointmentsThisWeek.length; i++) {
+            for (let j = i + 1; j < appointmentsThisWeek.length; j++) {
+                const appA = appointmentsThisWeek[i];
+                const appB = appointmentsThisWeek[j];
+    
+                const startA = new Date(appA.dateTime);
+                const endA = new Date(startA.getTime() + appA.duration * 60000);
+    
+                const startB = new Date(appB.dateTime);
+                const endB = new Date(startB.getTime() + appB.duration * 60000);
+    
+                // Prüfen auf Überlappung
+                if (startA < endB && startB < endA) {
+                    overlappingAppointments.push([appA, appB]);
+                }
+            }
+        }
+    
+        // Ausgabe der überlappenden Termine in der Konsole
+        console.log("Überlappende Termine der aktuellen Woche:", overlappingAppointments);
+    }
+    
+    // Rufen Sie diese Funktion nach dem Laden der Termine auf
+    logOverlappingAppointments();
+    
 }
 
 
@@ -524,6 +618,8 @@ async function displayAppointmentsOnCalendar() {
             alert('Fehler: ' + err.message);
         }
     }
+
+
 
     // Termine in der Liste anzeigen
     // Funktion zur Anzeige der Terminliste mit Verweis auf Kundendaten basierend auf KundennummerzumTermin
