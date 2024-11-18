@@ -238,7 +238,7 @@ KALENDER
     /* Container für die Symbole */
     .appointment-icons {
       position: absolute;
-      top: -20px; /* Oberhalb des Termins */
+      top: -30px; /* Oberhalb des Termins */
       right: 0;
       display: none; /* Standardmäßig versteckt */
       z-index: 300; /* Oberhalb anderer Elemente */
