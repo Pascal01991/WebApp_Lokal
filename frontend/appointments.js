@@ -235,6 +235,7 @@
     // Termine im Kalender anzeigen
     // Global definierte Var
     let clients = []; 
+    
         
     // Funktion zum Laden der Clients-Daten
     async function loadClients() {
@@ -266,12 +267,6 @@ async function displayAppointmentsOnCalendar() {
         if (appStartDate >= startOfWeek && appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000)) {
             const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
 
-            const appointmentStartMinutes = appStartDate.getHours() * 60 + appStartDate.getMinutes();
-            const appointmentEndMinutes = appEndDate.getHours() * 60 + appEndDate.getMinutes();
-
-            const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-
-            // Bestimme die Stunden, die der Termin abdeckt
             const startHour = appStartDate.getHours();
             const endHour = appEndDate.getHours();
 
@@ -281,50 +276,41 @@ async function displayAppointmentsOnCalendar() {
                 const hourCell = calendar.querySelector(cellSelector);
 
                 if (hourCell) {
-                    const appointmentDiv = document.createElement('div');
-                    appointmentDiv.classList.add('appointment');
+                    if (hour === startHour) {
+                        // Erstelle das Termin-Element nur einmal in der ersten Stunde
+                        const appointmentDiv = document.createElement('div');
+                        appointmentDiv.classList.add('appointment');
+                        appointmentDiv.setAttribute('data-app-id', app._id);
 
-                    let appointmentTop, appointmentHeight;
+                        // Berechne die Dauer in Stunden
+                        const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
 
-                    if (hour === startHour && hour === endHour) {
-                        // Termin beginnt und endet innerhalb derselben Stunde
-                        appointmentTop = ((appStartDate.getMinutes()) / 60) * 100;
-                        appointmentHeight = (app.duration / 60) * 100;
-                    } else if (hour === startHour) {
-                        // Termin beginnt in dieser Stunde und geht weiter
-                        appointmentTop = ((appStartDate.getMinutes()) / 60) * 100;
-                        appointmentHeight = ((60 - appStartDate.getMinutes()) / 60) * 100;
-                    } else if (hour === endHour) {
-                        // Termin endet in dieser Stunde
-                        appointmentTop = 0;
-                        appointmentHeight = ((appEndDate.getMinutes()) / 60) * 100;
-                    } else {
-                        // Termin deckt die gesamte Stunde ab
-                        appointmentTop = 0;
-                        appointmentHeight = 100;
+                        // Setze CSS-Eigenschaften für das Termin-Element
+                        appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
+                        appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
+                        appointmentDiv.style.height = `${durationHours * 100}%`;
+                        appointmentDiv.style.zIndex = '2';
+
+                        // Inhalte des Termins
+                        const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+                        appointmentDiv.innerHTML = `
+                            <div>
+                                ${clientAppointment
+                                    ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
+                                    <br>
+                                    ${app.Preis} ${app.Dienstleistung}`
+                                    : "Kunde nicht gefunden"}
+                            </div>`;
+
+                        // Füge das Termin-Element der ersten Zelle hinzu
+                        hourCell.appendChild(appointmentDiv);
                     }
-
-                    appointmentDiv.style.top = `${appointmentTop}%`;
-                    appointmentDiv.style.height = `${appointmentHeight}%`;
-                    appointmentDiv.style.zIndex = '2'; // Termine über den Slots anzeigen
-
-                    const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-                    appointmentDiv.innerHTML = `
-                        <div>
-                            ${clientAppointment ? 
-                                `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
-                                <br>
-                                ${app.Preis} ${app.Dienstleistung}`
-                                :
-                                "Kunde nicht gefunden"}
-                        </div>`;
-
-                    hourCell.appendChild(appointmentDiv);
                 }
             }
         }
     });
 }
+
 
 
     

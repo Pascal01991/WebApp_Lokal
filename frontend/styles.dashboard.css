@@ -161,7 +161,8 @@ KALENDER
       background-color: var(--background-medium);
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 5px; /* Weniger Padding für kleine Bildschirme */
+      padding: 5px; /* Weniger Padding für kleine Bildschirme */  
+      grid-auto-rows: 60px; /* Jede Stunde ist 60px hoch */
     }
 
     .time-slot {
@@ -187,13 +188,13 @@ KALENDER
     }
 
     .hour-cell {
-      border-bottom: 1px solid var(--background-light);
-      border-right: 1px solid var(--background-light);
-      position: relative;
+      position: relative; /* Erlaubt absolute Positionierung der Termine */
+      overflow: visible; /* Wichtig, damit sich Elemente über mehrere Zellen erstrecken können */
       height: 60px;
       box-sizing: border-box;
-      overflow: hidden;
-    }
+      border-bottom: 1px solid var(--background-light);
+      border-right: 1px solid var(--background-light);
+  }
 
     .working-hour {
       background-color: #d4edda; /* Grün für Arbeitsstunden */
