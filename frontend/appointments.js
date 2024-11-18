@@ -369,6 +369,7 @@ async function displayAppointmentsOnCalendar() {
 
                         // Berechne die Dauer in Stunden
                         const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
+                        
 
                         // Setze CSS-Eigenschaften für das Termin-Element
                         appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
@@ -377,6 +378,7 @@ async function displayAppointmentsOnCalendar() {
                         appointmentDiv.style.width = `${100 / groupSize}%`; // Breite teilen
                         appointmentDiv.style.left = `${(100 / groupSize) * index}%`; // Position basierend auf Index
                         appointmentDiv.style.zIndex = '2';
+                        console.log(`Termin ${app._id}: Höhe=${appointmentDiv.style.height}, Top=${appointmentDiv.style.top}`);
 
                         // Erstelle die Icon-Container
                         const iconContainer = document.createElement('div');

@@ -195,7 +195,6 @@ KALENDER
       border-bottom: 1px solid var(--background-light);
       border-right: 1px solid var(--background-light);
       background-color: var(--background-medium);
-      z-index: 5;
   }
 
   /*

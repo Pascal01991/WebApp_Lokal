@@ -1,0 +1,538 @@
+/*====================================================================================================================================
+MAINCONTENT
+==================================================================================================================================*/
+
+/*Abstand zur Sidebar */
+#main-content {
+    margin-left: 220px; /* Platz für die Sidebar schaffen */
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  /*====================================================================================================================================
+  KALENDER
+  ==================================================================================================================================*/
+  
+      /* Kalenderbereich und -navigation */
+      #week-navigation {
+        margin-bottom: 0px; /* Abstand unterhalb der Navigation */
+      }
+  
+      #calendar {
+        display: grid;
+        grid-template-columns: 80px repeat(7, 1fr);
+        border: 1px solid #ccc;
+        width: 100%;
+        max-width: 1100px; /* Begrenze die maximale Breite des Kalenders */
+        margin: 20px auto; /* Zentriert den Kalender */
+        box-sizing: border-box;
+        background-color: var(--background-medium);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 5px; /* Weniger Padding für kleine Bildschirme */  
+        grid-auto-rows: 60px; /* Jede Stunde ist 60px hoch */
+      }
+  
+      .time-slot {
+        grid-column: 1;
+        border-bottom: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        height: 60px;
+        padding: 5px;
+        box-sizing: border-box;
+        text-align: center;
+        background-color: var(--background-medium);
+        font-weight: bold;
+      }
+  
+      .day-header {
+        border-bottom: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        text-align: center;
+        padding: 5px;
+        background-color: var(--background-medium);
+        box-sizing: border-box;
+        font-weight: bold;
+      }
+  
+      .hour-cell {
+        position: relative; /* Erlaubt absolute Positionierung der Termine */
+        overflow: visible; /* Wichtig, damit sich Elemente über mehrere Zellen erstrecken können */
+        height: 60px;
+        box-sizing: border-box;
+        border-bottom: 1px solid var(--background-light);
+        border-right: 1px solid var(--background-light);
+        background-color: var(--background-medium);
+    }
+  
+    /*
+      .working-hour {
+        background-color: #d4edda; /* Grün für Arbeitsstunden 
+      }
+  
+      /*.working-hour:hover {
+        background-color: #b3e6c1; /* Hellere Grünfarbe beim Hover 
+        cursor: pointer; }*/
+  
+      .non-working-hour {
+        background-color: var(--background-light); /* Grau für nicht arbeitende Stunden */
+      }
+  
+      .appointment {
+        background-color: var(--theme-color);
+        position: absolute;
+        left: 0;
+        right: 0;
+        padding: 2px;
+        font-size: 12px;
+        border: 1px solid var(--background-dark);
+        border-radius: 5px;
+        box-sizing: border-box;
+        overflow: hidden;
+        z-index: 200; /* Füge dies hinzu, um die Termine über anderen Elementen zu positionieren */
+    }
+    
+  
+      .appointment div {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        z-index: 200; /* Füge dies hinzu, um die Termine über anderen Elementen zu positionieren */
+      }
+  
+      #Formular {
+        width: 100%;
+        max-width: 600px;
+        padding: 20px;
+        background-color: var(--background-medium);
+        border-radius: 8px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-between;
+      }
+  
+      /* Alte CSS-Klassen für die Zeit-Slots entfernen oder überschreiben */
+      .hour-cell.free-slot,
+      .hour-cell.occupied-slot {
+        /* Entferne die Hintergrundfarben oder überschreibe sie, falls notwendig */
+        background-color: unset;
+      }
+  
+  
+      /*Neu für individuelle Zeit-Slots für externe Buchungslattform)*/
+      .time-slot-div {
+        position: absolute;
+        left: 0;
+        right: 0;
+        /* Entferne Hintergrundfarben, die die Termine überdecken könnten */
+        background-color: transparent;
+        /* Füge einen z-index hinzu, der niedriger ist als der der Termine */
+        z-index: 1;
+    }
+    
+    
+    .available-slot {
+        background-color: var(--background-dark); /* verfügbare Slots hervorheben */
+    }
+    
+    /* hover für freie Slots */
+    .available-slot:hover {
+      background-color: var(--theme-color); /* Hover-Effekt für verfügbare Slots */
+      cursor: pointer;
+  }
+    /* hover für belegte Slots */
+    .unavailable-slot:hover {
+      background-color: rgba(255, 0, 0, 0.13); /* Hover-Effekt für belegte Slots */
+      cursor: pointer;
+  }
+  
+  
+    /*Gitterlinien der Terminslots aus- / einblenden*/
+    .hide-slot-lines .hour-cell {
+      border: none;
+    }
+    
+    .hide-slot-lines .hour-cell.hour-line {
+      border-bottom: 1px solid var(--background-light); /* Nur Stundentrennung anzeigen */
+    }
+    
+  
+  
+  /*====================================================================================================================================
+  TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
+  ==================================================================================================================================*/
+  
+  
+  
+  /*Formular für bearbeitung selbst*/
+  /* Container für das Terminformular */
+  
+  /* Standardmäßig ist das Formular versteckt und voll transparent */
+  #TerminFormular {
+    max-height: 0; /* Start: Komplett ausgeblendet */
+    opacity: 0;
+    overflow: hidden; /* Verhindert, dass der Inhalt sichtbar ist */
+    transition: max-height 0.3s ease, opacity 0.3s ease; /* Sanfter Übergang */
+  }
+  
+  /* Wenn das Formular angezeigt werden soll */
+  #TerminFormular.show {
+    max-height: 1000px; /* Groß genug für den Inhalt (oder eine passende maximale Höhe) */
+    opacity: 1;
+  }
+  
+  #appointmentForm {
+    display: flex;
+    gap: 20px; /* Abstand zwischen den Spalten */
+    max-width: 100%;
+    box-sizing: border-box;
+    background-color: var(--background-medium);
+    height: 100%; /* Verfügbaren Platz füllen */
+    margin-bottom: 30px;;
+  }
+  
+  /* Stile für die einzelnen Spalten im Formular */
+  .form-column {
+    flex: 1;
+    min-width: 250px; /* Mindestbreite für jede Spalte */
+    padding: 20px;
+    border-radius: 10px;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Gleichmäßige Verteilung der Inhalte innerhalb der Kundendaten- und Termindetails-Spalten */
+  .customer-info > div,
+  .appointment-details > div {
+    margin-bottom: 15px;
+    flex-grow: 1; /* Elemente gleichmäßig verteilen */
+  }
+  
+  
+  
+  /* Spalte C: Beschreibung */
+  .description {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-between; /* Gleiche Verteilung in der Höhe */
+    gap: 15px; /* Abstand zwischen den Elementen */
+  }
+  
+  /* Textfeld-Stile */
+  .description textarea {
+    flex-grow: 1;
+    resize: none;
+    padding: 10px;
+    height: 150px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: var(--background-light);
+    color: var(--text-color);
+    margin-bottom: 15px;
+    max-width: 300px;
+  }
+  
+  /* Buttons innerhalb von .description */
+  .description button {
+    width: 150px; /* Fixierte Breite für die Buttons */
+    align-self: center; /* Buttons zentrieren */
+    padding: 10px;
+    margin-top: 10px;
+  }
+  
+  
+  /* Stile für das Kunden-Suchfeld */
+  #customer-search {
+    position: relative;
+    margin-bottom: 15px; /* Abstand zum nächsten Element */
+  }
+  
+  /* Responsive Anpassung für kleinere Bildschirme */
+  @media (max-width: 768px) {
+    #appointmentForm {
+      flex-direction: column;
+    }
+  }
+  
+  
+  
+  
+  
+  /*KUNDEN-SUCHFUNKTION FÜR TERMIN*/
+  
+  #searchClientForApointment {
+    display: none;
+    position: absolute;
+    top: 100%; /* Direkt unter dem Eingabefeld */
+    left: 0;
+    width: 800px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: var(--background-light);
+    color: var(--text-color);
+    z-index: 10;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    padding: 5px;
+  }
+  
+  /* Styling einzelner Suchergebnisse */
+  #searchClientForApointment .search-result-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+  }
+  
+  #searchClientForApointment .search-result-item:last-child {
+    border-bottom: none;
+  }
+  
+  /* Hover-Effekt für Suchergebnisse */
+  #searchClientForApointment .search-result-item:hover {
+    background-color: var(--theme-color);
+    color: var(--background-dark);
+  }
+  
+  
+  
+  /*====================================================================================================================================
+  TERMINVERWALTUNG SCROLLBARE LISTE
+  ====================================================================================================================================*/
+  
+  #customer-management-section {
+    margin-top: 50px;
+  }
+  
+            
+            
+  
+  .filter-button {
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: var(--background-light);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .filter-button.active {
+    background-color: var(--theme-color); /* Aktivierter Filter */
+    color: #fff;
+  }
+  
+  
+  
+  /* Scrollbare Terminliste */
+  .scrollable-termin-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: var(--background-medium);
+  }
+  
+  /* Jede Zeile für einen Termin */
+  .termin-card {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+  }
+  
+  /* Flexibles Layout für 3 Spalten */
+  .termin-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0 10px;
+  }
+  
+  /* Styling für Buttons mit Icons und Tooltip */
+  .termin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .action-btn {
+    background-color: transparent;
+    color: #333;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: color 0.3s ease;
+    position: relative;
+  }
+  
+  .action-btn:hover {
+    color: #007bff;
+  }
+  
+  .edit-btn:hover::after, .delete-btn:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -20px;
+    background-color: #333;
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    white-space: nowrap;
+  }
+  
+  /*====================================================================
+  KUNDENVERWALTUNG
+  ====================================================================*/
+  
+  /*KundenFormular*/
+  #kundenFormular {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    background-color: var(--background-medium);
+    border-radius: 10px;
+    padding: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  }
+  
+  #kundenFormular.show {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 20px;
+  }
+  
+  #kundenFormular.hidden {
+    display: none; /* Komplett unsichtbar, wenn die Transition abgeschlossen ist */
+  }
+  
+  
+  #kundenFormular.hidden {
+    display: none; /* Komplett unsichtbar, wenn die Transition abgeschlossen ist */
+  }
+  
+  
+  #kundenFormular.show {
+    max-height: 1000px; /* Ausreichend Platz für das Formular */
+    opacity: 1;
+    padding: 20px;
+  }
+  
+  #clientForm {
+      display: flex;
+      justify-content: space-between; /* Spalten nebeneinander */
+      gap: 20px;
+  }
+  
+  #clientForm .form-column {
+      flex: 1; /* Jede Spalte nimmt gleichen Platz ein */
+      display: flex;
+      flex-direction: column;
+      gap: 10px; /* Abstand zwischen den Eingabefeldern */
+  }
+  
+  #clientForm .form-column input {
+      width: 100%; /* Eingabefelder füllen die Spalte */
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: var(--background-light);
+      color: var(--text-color);
+  }
+  
+  #clientForm .form-actions {
+      display: flex;
+      justify-content: center; /* Buttons zentrieren */
+      gap: 15px;
+      margin-top: 20px;
+  }
+  
+  #clientForm .form-actions button {
+      padding: 10px 20px; /* Standard-Padding für einen Button */
+      border-radius: 5px;
+      background-color: var(--background-light);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      height: auto; /* Stellt sicher, dass die Höhe nur durch den Inhalt definiert wird */
+      line-height: normal; /* Entfernt Stretching des Texts */
+      align-self: center; /* Zentriert die Buttons */
+  }
+  
+  
+  #clientForm .form-actions button:hover {
+      background-color: var(--theme-color);
+  }
+  
+  
+  /* Styling für die Scroll-Box */
+  .scrollable-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: var(--background-medium);
+  }
+  
+  /* Jede Zeile für einen Kunden */
+  .client-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  /* Gleichmäßige Verteilung der Abschnitte */
+  .client-info {
+    flex: 1;
+    padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Styling für Buttons mit Icon und Tooltip */
+  .client-actions {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .action-btn {
+    background-color: transparent;
+    color: #333;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    position: relative;
+    transition: color 0.3s ease;
+  }
+  
+  .edit-btn:hover::after, .delete-btn:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -20px;
+    background-color: var(--theme-color);
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    white-space: nowrap;
+  }
