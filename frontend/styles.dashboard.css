@@ -195,6 +195,7 @@ KALENDER
       border-bottom: 1px solid var(--background-light);
       border-right: 1px solid var(--background-light);
       background-color: var(--background-medium);
+      z-index: 5;
   }
 
   /*
@@ -219,7 +220,6 @@ KALENDER
       border: 1px solid var(--background-dark);
       border-radius: 5px;
       z-index: 200;
-      overflow: hidden;
       /* Entferne `left: 0` und füge Breitensteuerung hinzu */
       left: unset;
       width: auto; /* Dynamische Breite zulassen */
@@ -234,6 +234,43 @@ KALENDER
       text-overflow: ellipsis;
       z-index: 200; /* Füge dies hinzu, um die Termine über anderen Elementen zu positionieren */
     }
+
+    /*Icons zur Bearbeitung und Löschung eines Termins*/
+    /* Container für die Symbole */
+    .appointment-icons {
+      position: absolute;
+      top: -20px; /* Oberhalb des Termins */
+      right: 0;
+      display: none; /* Standardmäßig versteckt */
+      z-index: 300; /* Oberhalb anderer Elemente */
+      background-color: var(--background-dark);
+      border: 1px solid var(--background-light);
+      border-radius: 5px;
+      padding: 5px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+      z-index: 300;
+    }
+
+    /* Styling für die einzelnen Icons */
+    .icon {
+      margin: 0 5px;
+      font-size: 14px;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .icon:hover {
+      color: var(--theme-color);
+      transform: scale(1.2);
+    }
+
+    /* Zeige Symbole beim Hover des Termins */
+    .appointment:hover .appointment-icons {
+      display: flex; /* Symbole sichtbar machen */
+      justify-content: space-between;
+    }
+
 
     #Formular {
       width: 100%;

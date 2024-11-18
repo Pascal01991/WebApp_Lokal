@@ -92,7 +92,7 @@
 
 
     function renderCalendar() {
-        console.log('Kalender schon wieder gerendert')
+        console.log('Kalender gerendert')
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = ''; // Vorherigen Inhalt löschen
     
@@ -221,7 +221,6 @@
 
 
     
-    
     //Anklicken eines Slots öffnet Terminformular
     function handleSlotClick(startOfWeek, dayIndex, hour, minute, defaultLength) {
         const selectedDate = new Date(startOfWeek);
@@ -336,8 +335,6 @@ async function displayAppointmentsOnCalendar() {
         clients = await clientsResponse.json();
     }
 
-
-
     // Filtere Termine der aktuellen Woche
     const appointmentsThisWeek = allAppointments.filter(app => {
         const appStartDate = new Date(app.dateTime);
@@ -350,7 +347,6 @@ async function displayAppointmentsOnCalendar() {
     // Platziere die Termine
     overlappingGroups.forEach(group => {
         const groupSize = group.length;
-        console.log(groupSize);
 
         group.forEach((app, index) => {
             const appStartDate = new Date(app.dateTime);
@@ -382,12 +378,26 @@ async function displayAppointmentsOnCalendar() {
                         appointmentDiv.style.left = `${(100 / groupSize) * index}%`; // Position basierend auf Index
                         appointmentDiv.style.zIndex = '2';
 
-                        console.log(`Termin ${app._id}: Breite=${100 / groupSize}%, Position=${(100 / groupSize) * index}%`);
-                        console.log(`Termin ${app._id}: Breite=${appointmentDiv.style.width}, Position=${appointmentDiv.style.left}`);
+                        // Erstelle die Icon-Container
+                        const iconContainer = document.createElement('div');
+                        iconContainer.classList.add('appointment-icons');
+                        iconContainer.innerHTML = `
+                            <span class="icon edit-icon" title="Bearbeiten">✏️</span>
+                            <span class="icon delete-icon" title="Löschen">🗑️</span>
+                        `;
+
+                        // Event-Handler für Icons
+                        iconContainer.querySelector('.edit-icon').addEventListener('click', () => {
+                            editAppointment(app._id); // Bearbeiten-Funktion
+                        });
+                        iconContainer.querySelector('.delete-icon').addEventListener('click', () => {
+                            deleteAppointment(app._id); // Löschen-Funktion
+                        });
 
                         // Inhalte des Termins
                         const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-                        appointmentDiv.innerHTML = `
+                        const appointmentContent = document.createElement('div');
+                        appointmentContent.innerHTML = `
                             <div>
                                 ${clientAppointment
                                     ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
@@ -395,6 +405,10 @@ async function displayAppointmentsOnCalendar() {
                                     ${app.Preis} ${app.Dienstleistung}`
                                     : "Kunde nicht gefunden"}
                             </div>`;
+
+                        // Füge Icons und Inhalte hinzu
+                        appointmentDiv.appendChild(iconContainer);
+                        appointmentDiv.appendChild(appointmentContent);
 
                         // Füge das Termin-Element der ersten Zelle hinzu
                         hourCell.appendChild(appointmentDiv);
@@ -404,47 +418,42 @@ async function displayAppointmentsOnCalendar() {
         });
     });
 
-
-
     //Überschneidende Termine identifizieren
     function logOverlappingAppointments() {
         const startOfWeek = getStartOfWeek(currentDate);
         const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
+
         const appointmentsThisWeek = allAppointments.filter(app => {
             const appStart = new Date(app.dateTime);
             return appStart >= startOfWeek && appStart < endOfWeek;
         });
-    
+
         const overlappingAppointments = [];
-    
+
         // Vergleiche jedes Terminpaar, um Überlappungen zu finden
         for (let i = 0; i < appointmentsThisWeek.length; i++) {
             for (let j = i + 1; j < appointmentsThisWeek.length; j++) {
                 const appA = appointmentsThisWeek[i];
                 const appB = appointmentsThisWeek[j];
-    
+
                 const startA = new Date(appA.dateTime);
                 const endA = new Date(startA.getTime() + appA.duration * 60000);
-    
+
                 const startB = new Date(appB.dateTime);
                 const endB = new Date(startB.getTime() + appB.duration * 60000);
-    
+
                 // Prüfen auf Überlappung
                 if (startA < endB && startB < endA) {
                     overlappingAppointments.push([appA, appB]);
                 }
             }
         }
-    
-        // Ausgabe der überlappenden Termine in der Konsole
-        console.log("Überlappende Termine der aktuellen Woche:", overlappingAppointments);
     }
-    
+
     // Rufen Sie diese Funktion nach dem Laden der Termine auf
     logOverlappingAppointments();
-    
 }
+
 
 
 
@@ -607,7 +616,6 @@ async function displayAppointmentsOnCalendar() {
 
             if (response.ok) {
                 allAppointments = await response.json(); // Termine global speichern
-                console.log(allAppointments); // Debugging-Log
                 displayAppointments(allAppointments); // Alle Termine anzeigen in der Liste
                 renderCalendar(); // Kalender nach dem Laden der Termine rendern im Kalender
             } else {
@@ -718,7 +726,6 @@ function filterAppointments() {
 
     // Event-Listener für die Suche hinzufügen
     document.getElementById('searchAppointment').addEventListener('input', function () {
-        console.log("Search Input Detected"); // Testlog
         filterAppointments();
     });
 
