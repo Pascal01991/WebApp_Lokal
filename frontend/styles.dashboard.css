@@ -344,12 +344,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   flex-grow: 1; /* Elemente gleichmäßig verteilen */
 }
 
-/* Maximale Nutzung der Höhe für das Beschreibungstextfeld */
-.description {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
+
 
 /* Spalte C: Beschreibung */
 .description {
@@ -371,6 +366,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   background-color: var(--background-light);
   color: var(--text-color);
   margin-bottom: 15px;
+  max-width: 300px;
 }
 
 /* Buttons innerhalb von .description */
