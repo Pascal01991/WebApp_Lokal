@@ -130,30 +130,33 @@
         <section id="customer-management-section">
           
           <button id="openClientFormButton" type="submit">Kunden anlegen</button>
-          <div id="kundenFormular">
+          <!-- Kundenformular, standardmäßig ausgeblendet -->
+          <div id="kundenFormular" style="display: none;">
             <form id="clientForm">
-                <div class="form-row">
-                    <input type="text" id="Vorname" placeholder="Vorname" required>
-                    <input type="text" id="Nachname" placeholder="Nachname" required>
+                <!-- Linke Spalte -->
+                <div class="form-column">
+                    <div><label>Vorname:</label><input type="text" id="Vorname" required></div>
+                    <div><label>Nachname:</label><input type="text" id="Nachname" required></div>
+                    <div><label>Telefon:</label><input type="text" id="Telefon" required></div>
+                    <div><label>E-Mail:</label><input type="email" id="Mail" required></div>
                 </div>
-                <div class="form-row">
-                    <input type="text" id="Strasse" placeholder="Strasse" required>
-                    <input type="text" id="Hausnummer" placeholder="Hausnummer" required>
+
+                <!-- Rechte Spalte -->
+                <div class="form-column">
+                    <div><label>Straße:</label><input type="text" id="Strasse" required></div>
+                    <div><label>Hausnummer:</label><input type="text" id="Hausnummer" required></div>
+                    <div><label>Postleitzahl:</label><input type="text" id="Postleitzahl" required></div>
+                    <div><label>Ort:</label><input type="text" id="Ort" required></div>
                 </div>
-                <div class="form-row">
-                    <input type="text" id="Postleitzahl" placeholder="Postleitzahl" required>
-                    <input type="text" id="Ort" placeholder="Ort" required>
-                </div>
-                <div class="form-row">
-                    <input type="text" id="Telefon" placeholder="Telefon" required>
-                    <input type="email" id="Mail" placeholder="E-Mail" required>
-                </div>
-                <div class="form-row">
+
+                <!-- Buttons unten -->
+                <div class="form-actions">
                     <button type="submit">Kunden speichern</button>
                     <button type="button" id="cancelClientFormButton">Abbrechen</button>
                 </div>
             </form>
-        </div>
+          </div>
+
     
   
             <!-- Kundenliste im Kundenverwaltungs-Abschnitt -->

@@ -1007,14 +1007,32 @@ function displaySearchResults() {
 
 // Button KUNDEN ANLEGEN
 function showClientForm() {
-    document.getElementById('kundenFormular').style.display = 'block';
-    document.getElementById('openClientFormButton').style.display = 'none';
+    const form = document.getElementById('kundenFormular');
+    form.classList.remove('hidden'); // Entfernt den Zustand "komplett unsichtbar"
+    form.style.display = 'block'; // Sichtbar machen
+    setTimeout(() => {
+        form.classList.add('show'); // Fügt die Transition ein
+    }, 10); // Leichter Delay, damit die Transition greift
+    document.getElementById('openClientFormButton').style.display = 'none'; // Button ausblenden
 }
+
+
+
 // Funktion zum Ausblenden des Formulars
-document.getElementById('cancelClientFormButton').addEventListener('click', function() {
-    document.getElementById('kundenFormular').style.display = 'none';
-    document.getElementById('openClientFormButton').style.display = 'inline-block'; // Button wieder anzeigen
-});//Kunden anlegen Button zum öffnen des Formulars
+document.getElementById('cancelClientFormButton').addEventListener('click', function () {
+    const form = document.getElementById('kundenFormular');
+    const openButton = document.getElementById('openClientFormButton');
+
+    // Button "Kunden anlegen" direkt sichtbar machen
+    openButton.style.display = 'inline-block';
+
+    // Smooth das Formular schließen
+    form.classList.remove('show');
+    setTimeout(() => {
+        form.classList.add('hidden'); // Versteckt das Formular komplett
+        form.style.display = 'none';
+    }, 300); // Nach Abschluss der Transition ausblenden
+});
 
 
 // Für "Termin erstellen" -->Formular öffnen

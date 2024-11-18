@@ -533,6 +533,87 @@ TERMINVERWALTUNG SCROLLBARE LISTE
 KUNDENVERWALTUNG
 ====================================================================*/
 
+/*KundenFormular*/
+#kundenFormular {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  background-color: var(--background-medium);
+  border-radius: 10px;
+  padding: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+#kundenFormular.show {
+  max-height: 1000px;
+  opacity: 1;
+  padding: 20px;
+}
+
+#kundenFormular.hidden {
+  display: none; /* Komplett unsichtbar, wenn die Transition abgeschlossen ist */
+}
+
+
+#kundenFormular.hidden {
+  display: none; /* Komplett unsichtbar, wenn die Transition abgeschlossen ist */
+}
+
+
+#kundenFormular.show {
+  max-height: 1000px; /* Ausreichend Platz für das Formular */
+  opacity: 1;
+  padding: 20px;
+}
+
+#clientForm {
+    display: flex;
+    justify-content: space-between; /* Spalten nebeneinander */
+    gap: 20px;
+}
+
+#clientForm .form-column {
+    flex: 1; /* Jede Spalte nimmt gleichen Platz ein */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Abstand zwischen den Eingabefeldern */
+}
+
+#clientForm .form-column input {
+    width: 100%; /* Eingabefelder füllen die Spalte */
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: var(--background-light);
+    color: var(--text-color);
+}
+
+#clientForm .form-actions {
+    display: flex;
+    justify-content: center; /* Buttons zentrieren */
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#clientForm .form-actions button {
+    padding: 10px 20px; /* Standard-Padding für einen Button */
+    border-radius: 5px;
+    background-color: var(--background-light);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: auto; /* Stellt sicher, dass die Höhe nur durch den Inhalt definiert wird */
+    line-height: normal; /* Entfernt Stretching des Texts */
+    align-self: center; /* Zentriert die Buttons */
+}
+
+
+#clientForm .form-actions button:hover {
+    background-color: var(--theme-color);
+}
+
+
 /* Styling für die Scroll-Box */
 .scrollable-list {
   max-height: 300px;
