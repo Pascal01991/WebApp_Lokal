@@ -98,7 +98,6 @@
         const slots = generateTimeSlots();
         updateSlotAvailability(slots, allAppointments);
     
-        // Startdatum (Montag) der aktuellen Woche erhalten
         const startOfWeek = getStartOfWeek(currentDate);
     
         // Tagesüberschriften erstellen
@@ -119,7 +118,6 @@
             slotsMap[key] = slot;
         });
     
-        // Bestimme früheste und späteste Zeit
         const allTimes = slots.map(slot => slot.time.getHours() * 60 + slot.time.getMinutes());
         const minTime = Math.min(...allTimes);
         const maxTime = Math.max(...allTimes);
@@ -127,25 +125,20 @@
         const startHour = Math.floor(minTime / 60);
         const endHour = Math.ceil(maxTime / 60);
     
-        // Erstelle Kalenderzeilen
         for (let hour = startHour; hour <= endHour; hour++) {
-            // Zeitlabel erstellen
             const timeLabel = document.createElement('div');
             timeLabel.classList.add('time-slot');
             timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
             calendar.appendChild(timeLabel);
     
-            // Erstelle Zellen für jeden Tag
             for (let i = 0; i < 7; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('hour-cell');
-                cell.style.position = 'relative'; // Wichtig für absolute Positionierung der Termine
+                cell.style.position = 'relative';
     
-                // Setze die Datenattribute
                 cell.dataset.dayIndex = i;
                 cell.dataset.hour = hour;
     
-                // Inneren Container für Slots hinzufügen
                 const cellContainer = document.createElement('div');
                 cellContainer.style.position = 'relative';
                 cellContainer.style.height = '100%';
@@ -165,18 +158,22 @@
                     slotDiv.style.height = (100 / slotsPerHour) + '%';
                     slotDiv.style.left = '0';
                     slotDiv.style.right = '0';
-                    slotDiv.style.zIndex = '1'; // Slots unter den Terminen
+                    slotDiv.style.zIndex = '1';
     
                     if (slot) {
                         if (slot.isAvailable) {
                             slotDiv.classList.add('available-slot');
-                            // Event Listener hinzufügen, wenn gewünscht
                         } else {
                             slotDiv.classList.add('unavailable-slot');
                         }
                     } else {
-                        slotDiv.classList.add('non-working-hour');
+                        slotDiv.classList.add('unavailable-slot');
                     }
+    
+                    // Klick-Event hinzufügen
+                    slotDiv.addEventListener('click', function () {
+                        handleSlotClick(startOfWeek, i, hour, minute, defaultLength);
+                    });
     
                     cellContainer.appendChild(slotDiv);
                 }
@@ -186,9 +183,50 @@
             }
         }
     
-        // Termine anzeigen
         displayAppointmentsOnCalendar();
     }
+    
+    
+    //Anklicken eines Slots öffnet Terminformular
+    function handleSlotClick(startOfWeek, dayIndex, hour, minute, defaultLength) {
+        const selectedDate = new Date(startOfWeek);
+        selectedDate.setDate(startOfWeek.getDate() + dayIndex);
+        selectedDate.setHours(hour, minute, 0, 0);
+    
+        const workingHoursForDay = workingHours[getDayName(selectedDate).toLowerCase()];
+    
+        let alertMessage = null;
+    
+        // Arbeitszeitprüfung
+        if (!isWithinWorkingHours(selectedDate, workingHoursForDay)) {
+            alertMessage = "Achtung Termin befindet sich ausserhalb der definierten Arbeitszeit.";
+        }
+    
+        // Konfliktprüfung
+        const overlappingAppointment = allAppointments.some(app => {
+            const appStart = new Date(app.dateTime);
+            const appEnd = new Date(appStart.getTime() + app.duration * 60000);
+            const slotEnd = new Date(selectedDate.getTime() + defaultLength * 60000);
+            return (selectedDate < appEnd && appStart < slotEnd);
+        });
+    
+        if (overlappingAppointment) {
+            alertMessage = "Achtung Termin überschneidet anderen Termin.";
+        }
+    
+        if (alertMessage) {
+            alert(alertMessage);
+        }
+    
+        // Formular öffnen und Felder ausfüllen, unabhängig von Konflikten
+        showAppointmentForm();
+    
+        // Korrekte Zeit setzen
+        setLocalDateTimeInput(selectedDate.toISOString());
+        document.getElementById('duration').value = defaultLength;
+    }
+    
+
     
     
     //Zeitslots für externe Buchungsplattform bereitstellen

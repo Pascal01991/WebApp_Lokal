@@ -197,14 +197,14 @@ KALENDER
       background-color: var(--background-medium);
   }
 
+  /*
     .working-hour {
-      background-color: #d4edda; /* Grün für Arbeitsstunden */
+      background-color: #d4edda; /* Grün für Arbeitsstunden 
     }
 
-    .working-hour:hover {
-      background-color: #b3e6c1; /* Hellere Grünfarbe beim Hover */
-      cursor: pointer;
-    }
+    /*.working-hour:hover {
+      background-color: #b3e6c1; /* Hellere Grünfarbe beim Hover 
+      cursor: pointer; }*/
 
     .non-working-hour {
       background-color: var(--background-light); /* Grau für nicht arbeitende Stunden */
@@ -277,7 +277,7 @@ KALENDER
 }
   /* hover für belegte Slots */
   .unavailable-slot:hover {
-    background-color: firebrick; /* Hover-Effekt für belegte Slots */
+    background-color: rgba(255, 0, 0, 0.13); /* Hover-Effekt für belegte Slots */
     cursor: pointer;
 }
 
