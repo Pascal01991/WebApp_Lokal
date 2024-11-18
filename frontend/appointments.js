@@ -378,7 +378,7 @@ async function displayAppointmentsOnCalendar() {
                         appointmentDiv.style.width = `${100 / groupSize}%`; // Breite teilen
                         appointmentDiv.style.left = `${(100 / groupSize) * index}%`; // Position basierend auf Index
                         appointmentDiv.style.zIndex = '2';
-                        console.log(`Termin ${app._id}: Höhe=${appointmentDiv.style.height}, Top=${appointmentDiv.style.top}`);
+                       
 
                         // Erstelle die Icon-Container
                         const iconContainer = document.createElement('div');
@@ -813,15 +813,6 @@ function setLocalDateTimeInput(dateTimeUTC) {
 
 // Funktion zum Bearbeiten des Termins
 
-
-
-
-
-
-
-
-
-
 // Für "Bearbeiten"-Button im Termin
 async function editAppointment(appointmentId) {
     const appointment = allAppointments.find(app => app._id === appointmentId);
@@ -830,23 +821,61 @@ async function editAppointment(appointmentId) {
         return;
     }
 
-    // Setze die Daten ins Formular
+    // Debugging: Prüfe die Kundennummer
+    console.log('KundennummerzumTermin:', appointment.KundennummerzumTermin);
+
+    // Hole die Kundendaten basierend auf der Kundennummer
+    const customer = clients.find(client => appointment.KundennummerzumTermin === client.Kundennummer);
+
+    if (customer) {
+        // Setze die Kundendaten in die entsprechenden `<span>`-Elemente
+        const kundenNameField = document.getElementById('KundenName');
+        if (kundenNameField) {
+            kundenNameField.innerText = `${customer.Vorname} ${customer.Nachname}`;
+        }
+
+        const kundenAdresseField = document.getElementById('KundenAdresse');
+        if (kundenAdresseField) {
+            kundenAdresseField.innerText = `${customer.Strasse} ${customer.Hausnummer}, ${customer.Postleitzahl} ${customer.Ort}`;
+        }
+
+        const kundenTelefonField = document.getElementById('KundenTelefon');
+        if (kundenTelefonField) {
+            kundenTelefonField.innerText = customer.Telefonnummer;
+        }
+
+        const kundenMailField = document.getElementById('KundenMail');
+        if (kundenMailField) {
+            kundenMailField.innerText = customer.Email;
+        }
+    } else {
+        console.warn('Kundendaten nicht gefunden.');
+    }
+
+    // Setze die Termindaten ins Formular
     setLocalDateTimeInput(appointment.dateTime);
-    document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin;
     document.getElementById('duration').value = appointment.duration;
     document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
     document.getElementById('Preis').value = appointment.Preis;
     document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;
     document.getElementById('description').value = appointment.description;
 
+    // Setze die Kundennummer ins versteckte Feld
+    const kundenNummerField = document.getElementById('KundennummerzumTermin');
+    if (kundenNummerField) {
+        kundenNummerField.value = appointment.KundennummerzumTermin;
+    }
+
     // Formular anzeigen
     showAppointmentForm();
 
-    // Weitere Einstellungen für die Speicherung der Änderungen, z.B. Text und Funktion des Submit-Buttons
+    // Weitere Einstellungen für die Speicherung der Änderungen
     const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
     submitButton.innerText = "Änderungen speichern";
     submitButton.onclick = async function (e) {
         e.preventDefault();
+
+        // Neue Daten sammeln
         const updatedAppointment = {
             KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
             dateTime: document.getElementById('dateTime').value,
@@ -858,6 +887,7 @@ async function editAppointment(appointmentId) {
         };
 
         try {
+            // Termin aktualisieren
             const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
                 method: 'PUT',
                 headers: {
@@ -869,7 +899,7 @@ async function editAppointment(appointmentId) {
 
             if (response.ok) {
                 alert('Termin erfolgreich aktualisiert');
-                loadAppointments();  // Termine neu laden
+                loadAppointments(); // Termine neu laden
                 submitButton.innerText = "Termin hinzufügen";
                 submitButton.onclick = null;
             } else {
@@ -880,6 +910,8 @@ async function editAppointment(appointmentId) {
         }
     };
 }
+
+
 
     //Kundensuche innerhalb der Terminverwaltung:
     // Filtered search results for customer search
