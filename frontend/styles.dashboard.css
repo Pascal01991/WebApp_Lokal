@@ -194,6 +194,7 @@ KALENDER
       box-sizing: border-box;
       border-bottom: 1px solid var(--background-light);
       border-right: 1px solid var(--background-light);
+      background-color: var(--background-medium);
   }
 
     .working-hour {
@@ -266,18 +267,21 @@ KALENDER
   
   
   .available-slot {
-      background-color: #d4edda; /* Grün für verfügbare Slots */
+      background-color: var(--background-dark); /* verfügbare Slots hervorheben */
   }
   
-  .unavailable-slot {
-      /*background-color: rgba(255, 0, 0, 0.226); /* Rot für nicht verfügbare Slots */
-  }
-  
-  .time-slot-div:hover {
-      background-color: #a0d0a0; /* Hover-Effekt für verfügbare Slots */
-      cursor: pointer;
-  }
-  
+  /* hover für freie Slots */
+  .available-slot:hover {
+    background-color: var(--theme-color); /* Hover-Effekt für verfügbare Slots */
+    cursor: pointer;
+}
+  /* hover für belegte Slots */
+  .unavailable-slot:hover {
+    background-color: firebrick; /* Hover-Effekt für belegte Slots */
+    cursor: pointer;
+}
+
+
   /*Gitterlinien der Terminslots aus- / einblenden*/
   .hide-slot-lines .hour-cell {
     border: none;
@@ -297,6 +301,21 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 
 /*Formular für bearbeitung selbst*/
 /* Container für das Terminformular */
+
+/* Standardmäßig ist das Formular versteckt und voll transparent */
+#TerminFormular {
+  max-height: 0; /* Start: Komplett ausgeblendet */
+  opacity: 0;
+  overflow: hidden; /* Verhindert, dass der Inhalt sichtbar ist */
+  transition: max-height 0.3s ease, opacity 0.3s ease; /* Sanfter Übergang */
+}
+
+/* Wenn das Formular angezeigt werden soll */
+#TerminFormular.show {
+  max-height: 1000px; /* Groß genug für den Inhalt (oder eine passende maximale Höhe) */
+  opacity: 1;
+}
+
 #appointmentForm {
   display: flex;
   gap: 20px; /* Abstand zwischen den Spalten */

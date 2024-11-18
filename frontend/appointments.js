@@ -1,8 +1,11 @@
-    console.log("Zeile1");
+
+    //====================================================================================================================================
+    //====================================================================================================================================
     //====================================================================================================================================
     //KALEDNER
     //====================================================================================================================================
-
+    //====================================================================================================================================
+    //====================================================================================================================================
     // Globale Variablen
     let currentDate = new Date();
     let allAppointmentsCalendar = [];
@@ -49,7 +52,7 @@
 
     };
     
-    console.log('Aktuelle Arbeitszeiten:', workingHours);
+    
         // Hilfsfunktion, um eine Zeitangabe (HH:MM) in Minuten seit Mitternacht umzuwandeln
     function parseTime(timeString) {
         const [hours, minutes] = timeString.split(':').map(Number);
@@ -400,10 +403,11 @@ async function displayAppointmentsOnCalendar() {
         const calendar = document.getElementById('calendar');
         calendar.classList.toggle('hide-slot-lines');
       });
-      
-
+    //====================================================================================================================================      
+    //====================================================================================================================================
     //====================================================================================================================================
     //TERMINVERWALTUNG
+    //====================================================================================================================================
     //====================================================================================================================================
     // Globale Variablen für die Filterzustände Terminverwaltung
     let filterFutureActive = false;
@@ -587,9 +591,14 @@ function filterAppointments() {
 //Button TERMIN ERSTELLEN
 // Funktion zum Anzeigen des Formulars
 function showAppointmentForm() {
-    document.getElementById('TerminFormular').style.display = 'block';
+    const form = document.getElementById('TerminFormular');
+    form.style.display = 'block'; // Vor dem Hinzufügen der Klasse sicherstellen, dass es sichtbar ist
+    setTimeout(() => {
+        form.classList.add('show'); // Klasse für Transition hinzufügen
+    }, 10); // Minimaler Delay, um die Transition zu triggern
     document.getElementById('openAppointmentFormButton').style.display = 'none';
 }
+
 
 
 // Für "Termin erstellen" verwenden
@@ -598,10 +607,15 @@ document.getElementById('openAppointmentFormButton').addEventListener('click', s
 
 
 // Funktion zum Ausblenden des Formulars
-document.getElementById('CancelAppointmentFormButton').addEventListener('click', function() {
-    document.getElementById('TerminFormular').style.display = 'none';
-    document.getElementById('openAppointmentFormButton').style.display = 'inline-block'; // Button wieder anzeigen
+document.getElementById('CancelAppointmentFormButton').addEventListener('click', function () {
+    const form = document.getElementById('TerminFormular');
+    form.classList.remove('show'); // Klasse entfernen
+    setTimeout(() => {
+        form.style.display = 'none'; // Nach der Transition ausblenden
+    }, 300); // Delay sollte mit der CSS-Transition-Zeit übereinstimmen
+    document.getElementById('openAppointmentFormButton').style.display = 'inline-block';
 });
+
 
 
 
@@ -901,9 +915,12 @@ function displaySearchResults() {
             alert('Fehler: ' + err.message);
         }
     });
-
+    //====================================================================================================================================
+    //====================================================================================================================================
     //====================================================================================================================================
     //CLIENT-MANAGEMENT
+    //====================================================================================================================================
+    //====================================================================================================================================
     //====================================================================================================================================
     
     // Kundenformular und Terminformular beim Laden der Seite ausblenden
@@ -1100,9 +1117,12 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     });
 
 
-
+    //====================================================================================================================================
+    //====================================================================================================================================
     //====================================================================================================================================
     //EINSTELLUNGEN
+    //====================================================================================================================================
+    //====================================================================================================================================
     //====================================================================================================================================
     
     // Arbeitszeiten speichern: Event-Listener für den "Speichern"-Button hinzufügen
@@ -1212,4 +1232,4 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     });
 
 
-    localStorage.removeItem('workingHours');
+   
