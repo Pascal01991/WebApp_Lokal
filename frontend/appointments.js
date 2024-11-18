@@ -841,12 +841,17 @@ async function editAppointment(appointmentId) {
 
         const kundenTelefonField = document.getElementById('KundenTelefon');
         if (kundenTelefonField) {
-            kundenTelefonField.innerText = customer.Telefonnummer;
+            kundenTelefonField.innerText = customer.Telefon || 'Nicht verfügbar';
         }
 
         const kundenMailField = document.getElementById('KundenMail');
         if (kundenMailField) {
-            kundenMailField.innerText = customer.Email;
+            kundenMailField.innerText = customer.Mail || 'Nicht verfügbar';
+        }
+         
+        const kundenNummerDisplayField = document.getElementById('KundennummerzumTerminDisplay');
+        if (kundenNummerDisplayField) {
+            kundenNummerDisplayField.innerText = String(customer.Kundennummer).padStart(6, '0'); // Kundennummer formatieren (optional)
         }
     } else {
         console.warn('Kundendaten nicht gefunden.');
@@ -910,6 +915,7 @@ async function editAppointment(appointmentId) {
         }
     };
 }
+
 
 
 
