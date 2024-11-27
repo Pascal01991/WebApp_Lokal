@@ -19,7 +19,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         if (response.ok) {
             document.getElementById('message').textContent = 'Login erfolgreich! Token: ' + data.token;
             localStorage.setItem('token', data.token); // Speichert den Token im lokalen Speicher
-        } else {
+            window.location.href = '/dashboard.html'; // Backend schützt Dashboard
+        } else { 
             document.getElementById('message').textContent = 'Login fehlgeschlagen: ' + data.msg;
         }
     } catch (err) {

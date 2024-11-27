@@ -16,14 +16,28 @@ const app = express();
 connectDB();
 
 // CORS-Einstellungen
+const allowedOrigins = [
+    'http://localhost:8080',  // Lokale Entwicklung
+    'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
+    'https://www.sapps.ch'    // Deine Produktionsdomain
+];
+
 app.use(cors({
-    origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],  // Deine Frontend-URL
+    origin: (origin, callback) => {
+        // Wenn kein Origin (z. B. bei Tools wie Postman), erlaube es
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS policy violation'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,  // Damit Cookies und Anmeldeinformationen gesendet werden können
+    credentials: true,
     preflightContinue: false,
-    optionsSuccessStatus: 204  // Erfolgreiche OPTIONS-Anfrage wird mit 204 beantwortet (keine Inhalte)
+    optionsSuccessStatus: 204
 }));
+
 
 // Middleware (für JSON und Logger)
 app.use(express.json());
@@ -48,6 +62,6 @@ app.get('/api/protected', auth, (req, res) => {
 
 // Starte den Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server läuft auf Port ${PORT}`);
 });
