@@ -7,3 +7,8 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+
+
+//Globale Backend-URL
+export const BACKEND_URL = "https://sapps.ch/api";
