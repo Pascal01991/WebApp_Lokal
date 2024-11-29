@@ -1,5 +1,5 @@
 // Importiere die Backend-URL (muss am Anfang stehen)
-import { BACKEND_URL } from './server.js';
+import { BACKEND_URL } from './config.js';
 
 // Füge den Event-Listener für das Formular hinzu
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
