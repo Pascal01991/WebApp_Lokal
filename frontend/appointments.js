@@ -1,3 +1,7 @@
+ // Importiere die Backend-URL (muss am Anfang stehen)
+ import { BACKEND_URL } from './config.js';
+ 
+
 
     //====================================================================================================================================
     //====================================================================================================================================
@@ -314,7 +318,7 @@
         
     // Funktion zum Laden der Clients-Daten
     async function loadClients() {
-        const clientsResponse = await fetch('http://localhost:5000/api/clients');
+        const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
         clients = await clientsResponse.json();
     }
     
@@ -331,7 +335,7 @@ async function displayAppointmentsOnCalendar() {
 
     // Lade die Clients nur einmal, falls noch nicht geschehen
     if (!clients || clients.length === 0) {
-        const clientsResponse = await fetch('http://localhost:5000/api/clients');
+        const clientsResponse = await fetch(`${BACKEND_URL}/api/clients`);
         clients = await clientsResponse.json();
     }
 
@@ -584,7 +588,7 @@ async function displayAppointmentsOnCalendar() {
         console.log("Frontend: Dienstleistung:", Dienstleistung);
 
         try {
-            const response = await fetch('http://localhost:5000/api/appointments', {
+            const response = await fetch(`${BACKEND_URL}/api/appointments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -610,7 +614,7 @@ async function displayAppointmentsOnCalendar() {
     // Termine abrufen und anzeigen
     async function loadAppointments() {
         try {
-            const response = await fetch('http://localhost:5000/api/appointments', {
+            const response = await fetch(`${BACKEND_URL}/api/appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -634,7 +638,7 @@ async function displayAppointmentsOnCalendar() {
     // Termine in der Liste anzeigen
     // Funktion zur Anzeige der Terminliste mit Verweis auf Kundendaten basierend auf KundennummerzumTermin
     async function displayAppointments(appointments) {
-        const clientsResponse = await fetch('http://localhost:5000/api/clients'); // Lädt alle Kunden aus der Kunden-Datenbank
+        const clientsResponse = await fetch(`${BACKEND_URL}/api/clients`); // Lädt alle Kunden aus der Kunden-Datenbank
         const clients = await clientsResponse.json();
 
         const appointmentsList = document.getElementById('appointmentsList');
@@ -770,7 +774,7 @@ document.getElementById('CancelAppointmentFormButton').addEventListener('click',
 
 
         try {
-            const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+            const response = await fetch(`${BACKEND_URL}/api/appointments/${appointmentId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -893,7 +897,7 @@ async function editAppointment(appointmentId) {
 
         try {
             // Termin aktualisieren
-            const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+            const response = await fetch(`${BACKEND_URL}/api/appointments/${appointmentId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -1077,7 +1081,7 @@ function displaySearchResults() {
         const description = document.getElementById('description').value;
 
         try {
-            const response = await fetch('http://localhost:5000/api/appointments', {
+            const response = await fetch(`${BACKEND_URL}/api/appointments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1126,7 +1130,7 @@ function displaySearchResults() {
         
 
         try {
-            const response = await fetch('http://localhost:5000/api/clients', {
+            const response = await fetch(`${BACKEND_URL}/api/clients`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1151,7 +1155,7 @@ function displaySearchResults() {
     // Funktion zum Laden aller Kunden
     async function loadClients() {
         try {
-            const response = await fetch('http://localhost:5000/api/clients');
+            const response = await fetch(`${BACKEND_URL}/api/clients`);
             if (response.ok) {
                 allClients = await response.json();
                 displayClients(allClients);
@@ -1253,7 +1257,7 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
             };
 
             try {
-                const response = await fetch(`http://localhost:5000/api/clients/${clientId}`, {
+                const response = await fetch(`${BACKEND_URL}/api/clients/${clientId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedClient)
@@ -1278,7 +1282,7 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
         if (!confirm("Möchtest du diesen Kunden wirklich löschen?")) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/clients/${clientId}`, { method: 'DELETE' });
+            const response = await fetch(`${BACKEND_URL}/api/clients/${clientId}`, { method: 'DELETE' });
             if (response.ok) {
                 alert('Kunde erfolgreich gelöscht');
                 loadClients();
