@@ -67,8 +67,10 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server läuft auf Port ${PORT}`);
 });
 
+
 //Errorhandler:
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ msg: 'Interner Serverfehler', error: err.message });
 });
+
