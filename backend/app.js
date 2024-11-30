@@ -19,7 +19,8 @@ connectDB();
 const allowedOrigins = [
     'http://localhost:8080',  // Lokale Entwicklung
     'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
-    'https://www.sapps.ch'    // Deine Produktionsdomain
+    'https://www.sapps.ch',    // Deine Produktionsdomain
+    'https://sapps.ch'    // Deine Produktionsdomain
 ];
 
 app.use(cors({
@@ -64,4 +65,10 @@ app.get('/api/protected', auth, (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server läuft auf Port ${PORT}`);
+});
+
+//Errorhandler:
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ msg: 'Interner Serverfehler', error: err.message });
 });
