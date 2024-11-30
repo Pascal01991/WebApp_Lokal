@@ -316,11 +316,23 @@
     let clients = []; 
     
         
-    // Funktion zum Laden der Clients-Daten
-    async function loadClients() {
-        const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
-        clients = await clientsResponse.json();
+// Funktion zum Laden aller Kunden
+async function loadClients() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/clients`); // Einheitlicher Endpunkt
+        if (response.ok) {
+            const clients = await response.json(); // Daten laden
+            return clients; // Rückgabe der geladenen Kunden
+        } else {
+            console.error('Fehler beim Laden der Kunden:', response.statusText);
+            return []; // Leere Liste, falls ein Fehler auftritt
+        }
+    } catch (err) {
+        console.error('Fehler:', err.message);
+        return []; // Leere Liste, falls ein Fehler auftritt
     }
+}
+
     
     // Beispiel für eine Funktion, die nach dem Laden der Clients aufgerufen wird
     async function initializeAppointments() {
@@ -1152,20 +1164,6 @@ function displaySearchResults() {
     // Globale Variable für die Kundenliste
     let allClients = [];
 
-    // Funktion zum Laden aller Kunden
-    async function loadClients() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/clients`);
-            if (response.ok) {
-                allClients = await response.json();
-                displayClients(allClients);
-            } else {
-                alert('Fehler beim Laden der Kunden');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    }
 
     // Funktion zum Anzeigen der Kundenliste
     function displayClients(clients) {
