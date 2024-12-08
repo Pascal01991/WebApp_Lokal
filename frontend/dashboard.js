@@ -96,7 +96,6 @@
 
 
     function renderCalendar() {
-        console.log('Kalender gerendert')
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = ''; // Vorherigen Inhalt löschen
     
