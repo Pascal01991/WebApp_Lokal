@@ -1166,6 +1166,8 @@ function displaySearchResults() {
 
     // Funktion zum Anzeigen der Kundenliste
     function displayClients(clients) {
+        console.log('Anzuzeigende Kunden:', clients); // Logge die Kunden
+        console.log(clientsList);
         const clientsList = document.getElementById('clientsList');
         clientsList.innerHTML = clients.map(client => `
             <div class="client-card">
@@ -1182,6 +1184,8 @@ function displaySearchResults() {
                 </div>
             </div>
         `).join('');
+        console.log(KundenlisteLOG);
+        console.log(allClients); // Logge die tatsächliche Kundenliste
     }
 
 
