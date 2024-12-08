@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
+app.use(cookieParser());
 
 function auth(req, res, next) {
   // Token aus dem Header holen
-  const token = req.header('x-auth-token');
+  const token = req.cookies.token;
   if (!token) {
     return res.status(401).json({ msg: 'Kein Token, Zugriff verweigert' });
   }

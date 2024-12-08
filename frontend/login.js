@@ -26,8 +26,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             // Zeige Erfolgsmeldung an
             document.getElementById('message').textContent = 'Login erfolgreich! Token: ' + data.token;
 
-            // Speichere den Token im lokalen Speicher
-            localStorage.setItem('token', data.token);
+            
 
             // Weiterleitung auf die geschützte Seite
             window.location.href = '/api/dashboard';
