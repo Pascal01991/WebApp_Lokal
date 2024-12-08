@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
 
-app.use(cookieParser());
+
 
 function auth(req, res, next) {
   // Token aus dem Header holen

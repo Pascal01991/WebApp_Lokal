@@ -11,9 +11,12 @@ const clientRoutes = require('./routes/clients');
 //User - Authentifiezierungsroute
 const path = require('path');
 const auth = require('./middleware/authMiddleware'); // Deine Auth-Middleware
-
+const cookieParser = require('cookie-parser');
 
 const app = express();
+
+//Für User-Authentifizierung
+app.use(cookieParser());
 
 // Verbindung zur Datenbank
 connectDB();
@@ -52,6 +55,7 @@ app.get('/', (req, res) => res.send('API läuft'));
 
 // Auth-Routen
 app.use('/api/auth', authRoutes); // Authentifizierungsrouten
+
 
 // Termin-Routen
 app.use('/api/appointments', appointmentRoutes); // Terminrouten einbinden
