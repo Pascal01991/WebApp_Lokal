@@ -9,6 +9,10 @@ const auth = require('./middleware/authMiddleware');
 const cors = require('cors');
 const clientRoutes = require('./routes/clients');
 
+//User-Authentifiezierungsroute
+const path = require('path');
+const auth = require('./middleware/authMiddleware'); // Deine Auth-Middleware
+
 
 const app = express();
 
@@ -60,6 +64,13 @@ app.use('/api/clients', clientRoutes);
 app.get('/api/protected', auth, (req, res) => {
     res.json({ msg: 'Dies ist eine geschützte Route', user: req.user });
 });
+
+//User-Authentifiezierungsroute
+app.get('/api/dashboard', auth, (req, res) => {
+  // Nur wenn auth erfolgreich ist, wird diese Zeile erreicht
+  res.sendFile(path.join(__dirname, 'secure', 'dashboard.html'));
+});
+
 
 // Starte den Server
 const PORT = process.env.PORT || 5000;

@@ -54,7 +54,12 @@ router.post('/login', async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.json({ msg: 'Login erfolgreich', token });
+        res.cookie('token', token, { 
+            httpOnly: true, 
+            secure: true, 
+            sameSite: 'Strict' 
+          }).json({ msg: 'Login erfolgreich' });
+          
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ msg: 'Serverfehler' });
