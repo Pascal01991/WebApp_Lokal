@@ -30,7 +30,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             localStorage.setItem('token', data.token);
 
             // Weiterleitung auf die geschützte Seite
-            window.location.href = '/dashboard.html';
+            window.location.href = '/api/dashboard';
         } else {
             // Zeige Fehlermeldung an
             document.getElementById('message').textContent = 'Login fehlgeschlagen: ' + data.msg;
