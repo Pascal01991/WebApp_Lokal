@@ -5,7 +5,6 @@ const connectDB = require('./config/db');
 const logger = require('./middleware/logger');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments'); // Routen für Termine
-const auth = require('./middleware/authMiddleware');
 const cors = require('cors');
 const clientRoutes = require('./routes/clients');
 
