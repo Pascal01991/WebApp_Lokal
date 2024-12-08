@@ -8,7 +8,7 @@ const appointmentRoutes = require('./routes/appointments'); // Routen für Termi
 const cors = require('cors');
 const clientRoutes = require('./routes/clients');
 
-//User-Authentifiezierungsroute
+//User - Authentifiezierungsroute
 const path = require('path');
 const auth = require('./middleware/authMiddleware'); // Deine Auth-Middleware
 
