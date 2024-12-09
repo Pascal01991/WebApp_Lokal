@@ -1184,9 +1184,9 @@ function displaySearchResults() {
                 </div>
             </div>
         `).join('');
-        
+        console.log("KundenlisteLOG");    
     }
-    console.log(KundenlisteLOG);
+    
     console.log('allClients' + allClients); // Logge die tatsächliche Kundenliste
 
 
