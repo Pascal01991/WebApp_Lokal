@@ -1,4 +1,4 @@
-/*IONOS Konfiguration:
+
 
 // Globale Backend-URL basierend auf der Umgebung
 export const BACKEND_URL =
@@ -7,6 +7,7 @@ export const BACKEND_URL =
         : 'https://sapps.ch/api'; // Produktions-Backend für Live-System
 
 
-*/
 
+/* //Lokalerbetrieb funktioniert so:
 export const BACKEND_URL = "http://localhost:5000/api";
+/*
