@@ -1184,10 +1184,10 @@ function displaySearchResults() {
                 </div>
             </div>
         `).join('');
-        console.log(KundenlisteLOG);
-        console.log(allClients); // Logge die tatsächliche Kundenliste
+        
     }
-
+    console.log(KundenlisteLOG);
+    console.log('allClients' + allClients); // Logge die tatsächliche Kundenliste
 
 
 
@@ -1296,16 +1296,23 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     }
 
     // Suchfunktion für Kunden
-    document.getElementById('searchClient').addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const filteredClients = allClients.filter(client =>
-            client.Vorname.toLowerCase().includes(searchTerm) ||
-            client.Nachname.toLowerCase().includes(searchTerm) ||
-            client.Telefon.toLowerCase().includes(searchTerm) ||
-            client.Mail.toLowerCase().includes(searchTerm)
-        );
-        displayClients(filteredClients);
-    });
+    const searchClientInput = document.getElementById('searchClient');
+    if (!searchClientInput) {
+        console.error("Das Element mit der ID 'searchClient' wurde nicht gefunden!");
+    } else {
+        searchClientInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const filteredClients = allClients.filter(client =>
+                client.Vorname.toLowerCase().includes(searchTerm) ||
+                client.Nachname.toLowerCase().includes(searchTerm) ||
+                client.Telefon.toLowerCase().includes(searchTerm) ||
+                client.Mail.toLowerCase().includes(searchTerm)
+            );
+            console.log('Gefilterte Kunden:', filteredClients);
+            displayClients(filteredClients);
+        });
+    }
+
 
     document.addEventListener('DOMContentLoaded', function() {
         loadAppointments();
