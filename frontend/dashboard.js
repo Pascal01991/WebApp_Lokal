@@ -315,22 +315,23 @@
     let clients = []; 
     
         
-// Funktion zum Laden aller Kunden
-async function loadClients() {
-    try {
-        const response = await fetch(`${BACKEND_URL}/clients`); // Einheitlicher Endpunkt
-        if (response.ok) {
-            const clients = await response.json(); // Daten laden
-            return clients; // Rückgabe der geladenen Kunden
-        } else {
-            console.error('Fehler beim Laden der Kunden:', response.statusText);
-            return []; // Leere Liste, falls ein Fehler auftritt
+    // Funktion zum Laden aller Kunden
+     async function loadClients() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/clients`); // Einheitlicher Endpunkt
+            if (response.ok) {
+                const clients = await response.json(); // Daten laden
+                allClients = clients; // Aktualisiere die globale Variable allClients
+                displayClients(allClients); // Zeige die Kundenliste an
+                console.log('Kunden erfolgreich geladen:', allClients); // Debugging-Log
+            } else {
+                console.error('Fehler beim Laden der Kunden:', response.statusText);
+            }
+        } catch (err) {
+            console.error('Fehler beim Laden der Kunden:', err.message);
         }
-    } catch (err) {
-        console.error('Fehler:', err.message);
-        return []; // Leere Liste, falls ein Fehler auftritt
     }
-}
+
 
     
     // Beispiel für eine Funktion, die nach dem Laden der Clients aufgerufen wird
@@ -1167,8 +1168,8 @@ function displaySearchResults() {
     // Funktion zum Anzeigen der Kundenliste
     function displayClients(clients) {
         console.log('Anzuzeigende Kunden:', clients); // Logge die Kunden
-        console.log(clientsList);
         const clientsList = document.getElementById('clientsList');
+        console.log(clientsList);
         clientsList.innerHTML = clients.map(client => `
             <div class="client-card">
                 <span class="client-info">${client.Vorname} ${client.Nachname}</span>
