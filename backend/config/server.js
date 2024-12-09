@@ -1,6 +1,2 @@
-const BACKEND_URL =
-    window.location.hostname === 'localhost'
-        ? 'http://localhost:5000' // Lokales Backend für lokale Tests
-        : 'https://sapps.ch'; // Produktions-Backend für Live-System
-
-export default BACKEND_URL;
+//const BACKEND_URL = "http://87.106.70.66:5000";
+const BACKEND_URL = "http://127.0.0.1:5000";

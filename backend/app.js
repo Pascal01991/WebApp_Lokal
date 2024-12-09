@@ -71,6 +71,7 @@ app.get('/api/protected', auth, (req, res) => {
 //User-Authentifiezierungsroute
 app.get('/api/dashboard', auth, (req, res) => {
   // Nur wenn auth erfolgreich ist, wird diese Zeile erreicht
+  console.log("Authentifizierter Benutzer:", req.user);
   res.sendFile(path.join(__dirname, 'secure', 'dashboard.html'));
 });
 

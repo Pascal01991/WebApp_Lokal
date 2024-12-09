@@ -56,10 +56,11 @@ router.post('/login', async (req, res) => {
 
         res.cookie('token', token, { 
             httpOnly: true, 
-            secure: true, 
+            secure: process.env.NODE_ENV === 'production', 
             sameSite: 'Strict' 
           }).json({ msg: 'Login erfolgreich' });
           
+    
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ msg: 'Serverfehler' });

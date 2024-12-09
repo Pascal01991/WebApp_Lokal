@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 
 
 function auth(req, res, next) {
+  console.log("Cookies:", req.cookies);
+  console.log("Token:", req.cookies.token);
   // Token aus dem Header holen
   const token = req.cookies.token;
   if (!token) {

@@ -26,10 +26,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             // Zeige Erfolgsmeldung an
             document.getElementById('message').textContent = 'Login erfolgreich! Token: ' + data.token;
 
-            
-
             // Weiterleitung auf die geschützte Seite
-            window.location.href = '/api/dashboard';
+            window.location.href = `${BACKEND_URL}/dashboard`;
+            console.log('Token:');
         } else {
             // Zeige Fehlermeldung an
             document.getElementById('message').textContent = 'Login fehlgeschlagen: ' + data.msg;
