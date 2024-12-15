@@ -804,7 +804,7 @@ document.getElementById('CancelAppointmentFormButton').addEventListener('click',
             alert('Fehler: ' + err.message);
         }
     }
-// Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local
+// Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local:
 function setLocalDateTimeInput(dateTimeUTC) {
     console.log("Original UTC dateTime from database:", dateTimeUTC);
 
