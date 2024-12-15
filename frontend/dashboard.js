@@ -804,28 +804,31 @@ document.getElementById('CancelAppointmentFormButton').addEventListener('click',
             alert('Fehler: ' + err.message);
         }
     }
-// Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local:
-function setLocalDateTimeInput(dateTimeUTC) {
-    console.log("Original UTC dateTime from database:", dateTimeUTC);
+// Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local (Achtung funktioniert nur online mit NginX korrekt!!!)
+function setLocalDateTimeInput(dateTimeLocalStr) {
+    console.log("Original local dateTime from database:", dateTimeLocalStr);
 
-    const date = new Date(dateTimeUTC); // Das Date-Objekt wird korrekt als lokale Zeit interpretiert
+    // dateTimeLocalStr ist z.B. "2024-12-15T10:00"
+    // Wir zerlegen es manuell
+    const [datePart, timePart] = dateTimeLocalStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
+
+    // Erstelle ein Datum unter Annahme, dass diese Werte lokale Zeiten sind
+    const date = new Date(year, month - 1, day, hour, minute);
+
     if (isNaN(date)) {
-        console.error("Ungültiges Datum:", dateTimeUTC);
+        console.error("Ungültiges Datum:", dateTimeLocalStr);
         return;
     }
 
-    // Wir holen die lokale Zeit direkt aus den Date-Objekt-Methoden
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Monate beginnen bei 0
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-
-    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    console.log("Formatted datetime for input (local time):", localDateTime); // Kontrollausgabe
+    // Jetzt formatieren wir es wieder für das <input type="datetime-local">
+    const localDateTime = `${year.toString().padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+    console.log("Formatted datetime for input (local time):", localDateTime);
 
     document.getElementById('dateTime').value = localDateTime;
 }
+
 
 // Funktion zum Bearbeiten des Termins
 
