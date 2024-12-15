@@ -222,7 +222,15 @@
     return overlappingGroups;
 }
 
-
+// Hilfsfunktion Zeitformat:
+function dateToLocalString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${minute}`;
+ }
     
     //Anklicken eines Slots öffnet Terminformular
     function handleSlotClick(startOfWeek, dayIndex, hour, minute, defaultLength) {
@@ -259,7 +267,7 @@
         showAppointmentForm();
     
         // Korrekte Zeit setzen
-        setLocalDateTimeInput(selectedDate.toISOString());
+        setLocalDateTimeInput(dateToLocalString(selectedDate));
         document.getElementById('duration').value = defaultLength;
     }
     
@@ -277,7 +285,7 @@
         // Formatieren der Daten
         return availableSlots.map(slot => {
             return {
-                dateTime: slot.time.toISOString(),
+                dateTime: dateToLocalString(slot.time),
                 duration: slot.duration
             };
         });
@@ -805,29 +813,24 @@ document.getElementById('CancelAppointmentFormButton').addEventListener('click',
         }
     }
 // Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local (Achtung funktioniert nur online mit NginX korrekt!!!)
+// Beispiel: dateTimeLocalStr = "2024-12-18T12:00:00"
 function setLocalDateTimeInput(dateTimeLocalStr) {
-    console.log("Original local dateTime from database:", dateTimeLocalStr);
-
-    // dateTimeLocalStr ist z.B. "2024-12-15T10:00"
-    // Wir zerlegen es manuell
     const [datePart, timePart] = dateTimeLocalStr.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
+    const [hour, minute, second] = timePart.split(':').map(Number);
 
-    // Erstelle ein Datum unter Annahme, dass diese Werte lokale Zeiten sind
-    const date = new Date(year, month - 1, day, hour, minute);
+    // Erstelle ein Datum in lokaler Zeit, ohne Zeitzonen-Shift
+    const date = new Date(year, month - 1, day, hour, minute, second);
 
     if (isNaN(date)) {
         console.error("Ungültiges Datum:", dateTimeLocalStr);
         return;
     }
 
-    // Jetzt formatieren wir es wieder für das <input type="datetime-local">
     const localDateTime = `${year.toString().padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-    console.log("Formatted datetime for input (local time):", localDateTime);
-
     document.getElementById('dateTime').value = localDateTime;
 }
+
 
 
 // Funktion zum Bearbeiten des Termins
