@@ -8,7 +8,7 @@ const appointmentSchema = new mongoose.Schema({
         required: true,
     },
     dateTime: { // Umbenannt von "date" zu "dateTime" für besseres Verständnis
-        type: Date, // Mongoose kann Datum und Uhrzeit in einem einzigen Date-Feld speichern
+        type: String, // Mongoose kann Datum und Uhrzeit in einem einzigen Date-Feld speichern speichert aber UTC mit wenn man Type Date nehme nwürde
         required: true,
     },
     description: {

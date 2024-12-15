@@ -284,7 +284,7 @@ function dateToLocalString(date) {
     
         // Formatieren der Daten
         return availableSlots.map(slot => {
-            return {
+            return {    
                 dateTime: dateToLocalString(slot.time),
                 duration: slot.duration
             };
