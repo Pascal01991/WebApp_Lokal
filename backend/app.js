@@ -25,6 +25,7 @@ connectDB();
 const allowedOrigins = [
     'http://localhost:8080',  // Lokale Entwicklung
     'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
+    'http://localhost:5000', 
     'https://www.sapps.ch',    // Deine Produktionsdomain
     'https://sapps.ch'    // Deine Produktionsdomain
 ];
@@ -49,6 +50,9 @@ app.use(cors({
 // Middleware (für JSON und Logger)
 app.use(express.json());
 app.use(logger);
+
+//Statische Auslieferung der CSS und JS für dashboard auch wenn die dashboard.html im backend liegt. Diese Concfig ist lediglich damit die dateien auch lokal ausgeliefert werden. im ionos nicht nötig da Nginx:
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // Einfache Route
 app.get('/', (req, res) => res.send('API läuft'));
