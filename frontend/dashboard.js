@@ -13,6 +13,139 @@
     //====================================================================================================================================
    
 
+// Funktion zum Bearbeiten des Termins
+
+// Für "Bearbeiten"-Button im Termin
+async function editAppointment(appointmentId) {
+    const appointment = allAppointments.find(app => app._id === appointmentId);
+    if (!appointment) {
+        alert('Termin nicht gefunden');
+        return;
+    }
+
+    // Debugging: Prüfe die Kundennummer
+    console.log('KundennummerzumTermin:', appointment.KundennummerzumTermin);
+
+    // Hole die Kundendaten basierend auf der Kundennummer
+    const customer = clients.find(client => appointment.KundennummerzumTermin === client.Kundennummer);
+
+    if (customer) {
+        // Setze die Kundendaten in die entsprechenden `<span>`-Elemente
+        const kundenNameField = document.getElementById('KundenName');
+        if (kundenNameField) {
+            kundenNameField.innerText = `${customer.Vorname} ${customer.Nachname}`;
+        }
+
+        const kundenAdresseField = document.getElementById('KundenAdresse');
+        if (kundenAdresseField) {
+            kundenAdresseField.innerText = `${customer.Strasse} ${customer.Hausnummer}, ${customer.Postleitzahl} ${customer.Ort}`;
+        }
+
+        const kundenTelefonField = document.getElementById('KundenTelefon');
+        if (kundenTelefonField) {
+            kundenTelefonField.innerText = customer.Telefon || 'Nicht verfügbar';
+        }
+
+        const kundenMailField = document.getElementById('KundenMail');
+        if (kundenMailField) {
+            kundenMailField.innerText = customer.Mail || 'Nicht verfügbar';
+        }
+         
+        const kundenNummerDisplayField = document.getElementById('KundennummerzumTerminDisplay');
+        if (kundenNummerDisplayField) {
+            kundenNummerDisplayField.innerText = String(customer.Kundennummer).padStart(6, '0'); // Kundennummer formatieren (optional)
+        }
+    } else {
+        console.warn('Kundendaten nicht gefunden.');
+    }
+
+    // Setze die Termindaten ins Formular
+    setLocalDateTimeInput(appointment.dateTime);
+    document.getElementById('duration').value = appointment.duration;
+    document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
+    document.getElementById('Preis').value = appointment.Preis;
+    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;
+    document.getElementById('description').value = appointment.description;
+
+    // Setze die Kundennummer ins versteckte Feld
+    const kundenNummerField = document.getElementById('KundennummerzumTermin');
+    if (kundenNummerField) {
+        kundenNummerField.value = appointment.KundennummerzumTermin;
+    }
+
+    // Formular anzeigen
+    showAppointmentForm();
+
+    // Weitere Einstellungen für die Speicherung der Änderungen
+    const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+    submitButton.onclick = async function (e) {
+        e.preventDefault();
+
+        // Neue Daten sammeln
+        const updatedAppointment = {
+            KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
+            dateTime: document.getElementById('dateTime').value,
+            duration: document.getElementById('duration').value,
+            Dienstleistung: document.getElementById('Dienstleistung').value,
+            Preis: document.getElementById('Preis').value,
+            Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
+            description: document.getElementById('description').value,
+        };
+
+        try {
+            // Termin aktualisieren
+            const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedAppointment)
+            });
+
+            if (response.ok) {
+                alert('Termin erfolgreich aktualisiert');
+                loadAppointments(); // Termine neu laden
+                submitButton.innerText = "Termin hinzufügen";
+                submitButton.onclick = null;
+            } else {
+                alert('Fehler beim Aktualisieren des Termins');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    };
+}
+
+
+    //Button für Löschen des Termins
+    async function deleteAppointment(appointmentId) {
+        const confirmation = confirm("Möchtest du diesen Termin wirklich löschen?");
+        if (!confirmation) return;
+        console.log("Appointment ID to delete: ", appointmentId);
+
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                alert('Termin erfolgreich gelöscht');
+                loadAppointments();  // Termine neu laden
+            } else {
+                alert('Fehler beim Löschen des Termins');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    }
+
     //====================================================================================================================================
     //====================================================================================================================================
     //====================================================================================================================================
@@ -665,55 +798,63 @@ async function displayAppointmentsOnCalendar() {
 
 
 
-    // Termine in der Liste anzeigen
-    // Funktion zur Anzeige der Terminliste mit Verweis auf Kundendaten basierend auf KundennummerzumTermin
-    async function displayAppointments(appointments) {
-        const clientsResponse = await fetch(`${BACKEND_URL}/clients`); // Lädt alle Kunden aus der Kunden-Datenbank
-        const clients = await clientsResponse.json();
+// TermineListe TemplateLiteral, Liste anzeigen
+// Funktion zur Anzeige der Terminliste mit Verweis auf Kundendaten basierend auf KundennummerzumTermin
+async function displayAppointments(appointments) {
+    const clientsResponse = await fetch(`${BACKEND_URL}/clients`); // Lädt alle Kunden aus der Kunden-Datenbank
+    const clients = await clientsResponse.json();
 
-        const appointmentsList = document.getElementById('appointmentsList');
-        appointmentsList.innerHTML = appointments.map(app => {
+    const appointmentsList = document.getElementById('appointmentsList');
+    appointmentsList.innerHTML = appointments.map(app => {
+        // Kunden basierend auf KundennummerzumTermin finden 
+        const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
 
-            
-
-
-// Kunden basierend auf KundennummerzumTermin finden
-const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-   
-
-            return `
-                <div class="termin-card">
-                    <!-- Spalte A: Kundendaten -->
-                    <div class="termin-info">
-                        <div>${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}</div> <!-- A1 -->
-                        <div>${client ? `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}` : ""}</div> <!-- A2 -->
-                        <div>${client ? `${client.Telefon}, ${client.Mail}` : ""}</div> <!-- A3 -->
-                    </div>
-                    <!-- Spalte B: Termindetails -->
-                    <div class="termin-info">
-                        <div>${new Date(app.dateTime).toLocaleDateString()} ${new Date(app.dateTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div> <!-- B1 -->
-                        <div>${app.Dienstleistung} (${app.duration} Min)</div> <!-- B2 -->
-                        <div>${app.description}</div> <!-- B3 -->
-                    </div>
-                    <!-- Spalte C: Weitere Details -->
-                    <div class="termin-info">
-                        <div>Preis: ${app.Preis || "nicht angegeben"}</div> <!-- C1 -->
-                        <div>Status: ${app.Abrechnungsstatus || "nicht angegeben"}</div> <!-- C2 -->
-                    </div>
-                    <!-- Spalte D: Aktionen -->
-                    <div class="termin-actions">
-                        <button onclick="editAppointment('${app._id}')" class="action-btn edit-btn" title="Bearbeiten">
-                            ✏️
-                        </button>
-                        <button onclick="deleteAppointment('${app._id}')" class="action-btn delete-btn" title="Löschen">
-                            🗑️
-                        </button>
-                    </div>
+        return `
+            <div class="termin-card">
+                <!-- Spalte A: Kundendaten -->
+                <div class="termin-info">
+                    <div>${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}</div> <!-- A1 -->
+                    <div>${client ? `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}` : ""}</div> <!-- A2 -->
+                    <div>${client ? `${client.Telefon}, ${client.Mail}` : ""}</div> <!-- A3 -->
                 </div>
-            `;
-        }).join('');
-    }
+                <!-- Spalte B: Termindetails -->
+                <div class="termin-info">
+                    <div>${new Date(app.dateTime).toLocaleDateString()} ${new Date(app.dateTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div> <!-- B1 -->
+                    <div>${app.Dienstleistung} (${app.duration} Min)</div> <!-- B2 -->
+                    <div>${app.description}</div> <!-- B3 -->
+                </div>
+                <!-- Spalte C: Weitere Details -->
+                <div class="termin-info">
+                    <div>Preis: ${app.Preis || "nicht angegeben"}</div> <!-- C1 -->
+                    <div>Status: ${app.Abrechnungsstatus || "nicht angegeben"}</div> <!-- C2 -->
+                </div>
+                <!-- Spalte D: Aktionen -->
+                <div class="termin-actions">
+                    <!-- Entferne die onclick-Attribute und verwende data-app-id -->
+                    <button data-app-id="${app._id}" class="action-btn edit-btn" title="Bearbeiten">✏️</button>
+                    <button data-app-id="${app._id}" class="action-btn delete-btn" title="Löschen">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
 
+    // Nachdem die Liste gerendert wurde, fügen wir nun die Event-Listener hinzu:
+    // Edit-Buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const appointmentId = btn.getAttribute('data-app-id');
+            editAppointment(appointmentId);
+        });
+    });
+
+    // Delete-Buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const appointmentId = btn.getAttribute('data-app-id');
+            deleteAppointment(appointmentId);
+        });
+    });
+}
 
 
 function filterAppointments() {
@@ -796,32 +937,6 @@ document.getElementById('CancelAppointmentFormButton').addEventListener('click',
 
 
 
-    //Button für Löschen des Termins
-    async function deleteAppointment(appointmentId) {
-        const confirmation = confirm("Möchtest du diesen Termin wirklich löschen?");
-        if (!confirmation) return;
-        console.log("Appointment ID to delete: ", appointmentId);
-
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                alert('Termin erfolgreich gelöscht');
-                loadAppointments();  // Termine neu laden
-            } else {
-                alert('Fehler beim Löschen des Termins');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    }
 // Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local (Achtung funktioniert nur online mit NginX korrekt!!!)
 // Beispiel: dateTimeLocalStr = "2024-12-18T12:00:00"
 function setLocalDateTimeInput(dateTimeLocalStr) {
@@ -849,110 +964,6 @@ function setLocalDateTimeInput(dateTimeLocalStr) {
 
 
 
-// Funktion zum Bearbeiten des Termins
-
-// Für "Bearbeiten"-Button im Termin
-async function editAppointment(appointmentId) {
-    const appointment = allAppointments.find(app => app._id === appointmentId);
-    if (!appointment) {
-        alert('Termin nicht gefunden');
-        return;
-    }
-
-    // Debugging: Prüfe die Kundennummer
-    console.log('KundennummerzumTermin:', appointment.KundennummerzumTermin);
-
-    // Hole die Kundendaten basierend auf der Kundennummer
-    const customer = clients.find(client => appointment.KundennummerzumTermin === client.Kundennummer);
-
-    if (customer) {
-        // Setze die Kundendaten in die entsprechenden `<span>`-Elemente
-        const kundenNameField = document.getElementById('KundenName');
-        if (kundenNameField) {
-            kundenNameField.innerText = `${customer.Vorname} ${customer.Nachname}`;
-        }
-
-        const kundenAdresseField = document.getElementById('KundenAdresse');
-        if (kundenAdresseField) {
-            kundenAdresseField.innerText = `${customer.Strasse} ${customer.Hausnummer}, ${customer.Postleitzahl} ${customer.Ort}`;
-        }
-
-        const kundenTelefonField = document.getElementById('KundenTelefon');
-        if (kundenTelefonField) {
-            kundenTelefonField.innerText = customer.Telefon || 'Nicht verfügbar';
-        }
-
-        const kundenMailField = document.getElementById('KundenMail');
-        if (kundenMailField) {
-            kundenMailField.innerText = customer.Mail || 'Nicht verfügbar';
-        }
-         
-        const kundenNummerDisplayField = document.getElementById('KundennummerzumTerminDisplay');
-        if (kundenNummerDisplayField) {
-            kundenNummerDisplayField.innerText = String(customer.Kundennummer).padStart(6, '0'); // Kundennummer formatieren (optional)
-        }
-    } else {
-        console.warn('Kundendaten nicht gefunden.');
-    }
-
-    // Setze die Termindaten ins Formular
-    setLocalDateTimeInput(appointment.dateTime);
-    document.getElementById('duration').value = appointment.duration;
-    document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
-    document.getElementById('Preis').value = appointment.Preis;
-    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;
-    document.getElementById('description').value = appointment.description;
-
-    // Setze die Kundennummer ins versteckte Feld
-    const kundenNummerField = document.getElementById('KundennummerzumTermin');
-    if (kundenNummerField) {
-        kundenNummerField.value = appointment.KundennummerzumTermin;
-    }
-
-    // Formular anzeigen
-    showAppointmentForm();
-
-    // Weitere Einstellungen für die Speicherung der Änderungen
-    const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
-    submitButton.innerText = "Änderungen speichern";
-    submitButton.onclick = async function (e) {
-        e.preventDefault();
-
-        // Neue Daten sammeln
-        const updatedAppointment = {
-            KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
-            dateTime: document.getElementById('dateTime').value,
-            duration: document.getElementById('duration').value,
-            Dienstleistung: document.getElementById('Dienstleistung').value,
-            Preis: document.getElementById('Preis').value,
-            Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
-            description: document.getElementById('description').value,
-        };
-
-        try {
-            // Termin aktualisieren
-            const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updatedAppointment)
-            });
-
-            if (response.ok) {
-                alert('Termin erfolgreich aktualisiert');
-                loadAppointments(); // Termine neu laden
-                submitButton.innerText = "Termin hinzufügen";
-                submitButton.onclick = null;
-            } else {
-                alert('Fehler beim Aktualisieren des Termins');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    };
-}
 
 
 
@@ -1134,6 +1145,8 @@ function displaySearchResults() {
             alert('Fehler: ' + err.message);
         }
     });
+
+ 
     //====================================================================================================================================
     //====================================================================================================================================
     //====================================================================================================================================
