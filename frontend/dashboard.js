@@ -1320,10 +1320,7 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     }
 
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAppointments();
-        loadClients();
-    });
+    
 
 
 
