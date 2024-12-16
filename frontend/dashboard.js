@@ -262,7 +262,6 @@ async function editAppointment(appointmentId) {
         // Slots asynchron vom Backend laden
         const slots = await fetchAvailableSlots();
         
-    console.log('calendar gerendert')
         const startOfWeek = getStartOfWeek(currentDate);
         
 
@@ -747,21 +746,17 @@ async function displayAppointmentsOnCalendar() {
 
     // Termine abrufen und anzeigen
     async function loadAppointments() {
-        console.log('autorisierung mit token');
         try {
             const response = await fetch(`${BACKEND_URL}/appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    
                 }
-                
             });
 
             if (response.ok) {
                 allAppointments = await response.json(); // Termine global speichern
                 displayAppointments(allAppointments); // Alle Termine anzeigen in der Liste
                 renderCalendar(); // Kalender nach dem Laden der Termine rendern im Kalender
-                console.log('loadAppiontsments Funktion');
             } else {
                 alert('Fehler beim Laden der Termine');
                 console.error('Fehler beim Laden der Termine');

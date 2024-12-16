@@ -11,11 +11,15 @@ async function getSlots(req, res) {
         updateSlotAvailability(slots, allAppointments);
         
         // Formatieren (falls nötig)
-        const formattedSlots = slots.map(slot => ({
-            dateTime: dateToLocalString(slot.dateTime),
-            duration: slot.duration,
-            isAvailable: slot.isAvailable
-        }));
+        const formattedSlots = slots.map(slot => {
+            const dateObj = new Date(slot.time); // falls slot.time jetzt ein String ist
+            return {
+                dateTime: dateToLocalString(dateObj),
+                duration: slot.duration,
+                isAvailable: slot.isAvailable
+            };
+        });
+        
         
         res.json(formattedSlots);
     } catch (error) {

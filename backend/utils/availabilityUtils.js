@@ -109,7 +109,7 @@ let workingHours = {            //Später aus DB
     //Verfügbarkeit der Zeit-Slots prüfen
     function updateSlotAvailability(slots, appointments) {
         slots.forEach(slot => {
-            const slotStart = slot.dateTime;
+            const slotStart = new Date(slot.dateTime); // Aus String ein Date-Objekt machen
             const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
     
             // Prüfe, ob der Slot mit einem bestehenden Termin kollidiert
