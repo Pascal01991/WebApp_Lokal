@@ -200,12 +200,7 @@ async function editAppointment(appointmentId) {
         }
     };
     
-    ///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
-        // Hilfsfunktion, um eine Zeitangabe (HH:MM) in Minuten seit Mitternacht umzuwandeln
-    function parseTime(timeString) {
-        const [hours, minutes] = timeString.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
+
 
     // Funktion, um zu überprüfen, ob eine gegebene Zeit innerhalb der Arbeitszeiten liegt
     function isWithinWorkingHours(time, dayWorkingHours) {
@@ -393,17 +388,7 @@ async function editAppointment(appointmentId) {
     return overlappingGroups;
 }
 
-///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
-//Nach nochmaliger Nachfrage diese Funktion vermutlich besser nur im Backend!
-// // Hilfsfunktion Zeitformat:
-function dateToLocalString(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hour}:${minute}`;
- }
+
     
     //Anklicken eines Slots öffnet Terminformular
     function handleSlotClick(startOfWeek, dayIndex, hour, minute, defaultLength) {
@@ -467,7 +452,7 @@ function dateToLocalString(date) {
     
     
     
-///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
+///Diese Funktion haben wir ins Backend kopiert, wird aber gemäss Tests hier dennoch benötigt
     // Funktion, um den Start der Woche (Montag) zu erhalten
     function getStartOfWeek(date) {
         const day = date.getDay(); // 0 (So) bis 6 (Sa)
@@ -478,7 +463,7 @@ function dateToLocalString(date) {
         return startOfWeek;
     }
     
-    ///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
+  ///Diese Funktion haben wir ins Backend kopiert, wird aber gemäss Tests hier dennoch benötigt
     // Funktion, um den Namen des Tages zu erhalten
     function getDayName(date) {
         const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
