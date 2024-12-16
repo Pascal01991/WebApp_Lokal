@@ -3,6 +3,16 @@
  
 
 
+ 
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //ALLGMEIN BENÖTIGTE ELEMENTE
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //====================================================================================================================================
+   
+
     //====================================================================================================================================
     //====================================================================================================================================
     //====================================================================================================================================
@@ -817,19 +827,25 @@ document.getElementById('CancelAppointmentFormButton').addEventListener('click',
 function setLocalDateTimeInput(dateTimeLocalStr) {
     const [datePart, timePart] = dateTimeLocalStr.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute, second] = timePart.split(':').map(Number);
 
-    // Erstelle ein Datum in lokaler Zeit, ohne Zeitzonen-Shift
+    const timeParts = timePart.split(':').map(Number);
+    const hour = timeParts[0];
+    const minute = timeParts[1];
+    const second = timeParts[2] || 0; // Falls kein Sekundenteil vorhanden, auf 0 setzen
+
+    // Erstelle ein Datum in lokaler Zeit
     const date = new Date(year, month - 1, day, hour, minute, second);
 
-    if (isNaN(date)) {
+    if (isNaN(date.getTime())) {
         console.error("Ungültiges Datum:", dateTimeLocalStr);
         return;
     }
 
+    // Nun das Formatieren für das Input-Feld:
     const localDateTime = `${year.toString().padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
     document.getElementById('dateTime').value = localDateTime;
 }
+
 
 
 
