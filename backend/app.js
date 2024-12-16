@@ -13,6 +13,9 @@ const path = require('path');
 const auth = require('./middleware/authMiddleware'); // Deine Auth-Middleware
 const cookieParser = require('cookie-parser');
 
+//Verfügbarkeiten der Slots
+const availabilityRoutes = require('./routes/availability');
+
 const app = express();
 
 //Für User-Authentifizierung
@@ -60,6 +63,8 @@ app.get('/', (req, res) => res.send('API läuft'));
 // Auth-Routen
 app.use('/api/auth', authRoutes); // Authentifizierungsrouten
 
+//Verfügbarkeiten der Slots
+app.use('/api/availability', availabilityRoutes);
 
 // Termin-Routen
 app.use('/api/appointments', appointmentRoutes); // Terminrouten einbinden

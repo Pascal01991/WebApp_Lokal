@@ -154,11 +154,15 @@ async function editAppointment(appointmentId) {
     //====================================================================================================================================
     //====================================================================================================================================
     // Globale Variablen
+    
+    
     let currentDate = new Date();
     let allAppointmentsCalendar = [];
 
+
+
     //speicherung der arbeitszeiten
-    let workingHours = {
+    let workingHours = {            //Später aus DB
         montag: {
             active: true,
             morning: { start: '08:00', end: '12:00' },
@@ -194,12 +198,9 @@ async function editAppointment(appointmentId) {
             mmorning: { start: null, end: null },
             afternoon: { start: null, end: null }
         }
-
-
-
     };
     
-    
+    ///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
         // Hilfsfunktion, um eine Zeitangabe (HH:MM) in Minuten seit Mitternacht umzuwandeln
     function parseTime(timeString) {
         const [hours, minutes] = timeString.split(':').map(Number);
@@ -237,16 +238,34 @@ async function editAppointment(appointmentId) {
         return false;
     }
 
+    async function fetchAvailableSlots() {
+        const response = await fetch('/api/availability/slots', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        if (!response.ok) {
+            console.error('Fehler beim Laden der Slots:', response.statusText);
+            return [];
+        }
+    
+        const slots = await response.json();
+        // Die Slots kommen bereits mit isAvailable vom Backend zurück.
+        return slots;
+    }
 
-    function renderCalendar() {
+    async function renderCalendar() {
         const calendar = document.getElementById('calendar');
-        calendar.innerHTML = ''; // Vorherigen Inhalt löschen
-    
-        const slots = generateTimeSlots();
-        updateSlotAvailability(slots, allAppointments);
-    
+        calendar.innerHTML = '';
+        
+        // Slots asynchron vom Backend laden
+        const slots = await fetchAvailableSlots();
+        
+    console.log('calendar gerendert')
         const startOfWeek = getStartOfWeek(currentDate);
-    
+        
+
         // Tagesüberschriften erstellen
         calendar.appendChild(document.createElement('div')); // Leere Ecke für die Zeitspalte
         for (let i = 0; i < 7; i++) {
@@ -261,17 +280,28 @@ async function editAppointment(appointmentId) {
         // Erstelle eine Map für schnelle Slot-Suche
         const slotsMap = {};
         slots.forEach(slot => {
-            const key = `${slot.dayIndex}-${slot.time.getHours()}-${slot.time.getMinutes()}`;
+            const date = new Date(slot.dateTime);
+            const hour = date.getHours();
+            const minute = date.getMinutes(); 
+            const key = `${slot.dayIndex}-${hour}-${minute}`; 
             slotsMap[key] = slot;
         });
     
-        const allTimes = slots.map(slot => slot.time.getHours() * 60 + slot.time.getMinutes());
+        const allTimes = slots.map(slot => {
+            const date = new Date(slot.dateTime);
+            return date.getHours() * 60 + date.getMinutes();
+        });
+        
         const minTime = Math.min(...allTimes);
         const maxTime = Math.max(...allTimes);
     
         const startHour = Math.floor(minTime / 60);
         const endHour = Math.ceil(maxTime / 60);
     
+        const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+        const slotsPerHour = 60 / defaultLength;
+
+
         for (let hour = startHour; hour <= endHour; hour++) {
             const timeLabel = document.createElement('div');
             timeLabel.classList.add('time-slot');
@@ -290,8 +320,7 @@ async function editAppointment(appointmentId) {
                 cellContainer.style.position = 'relative';
                 cellContainer.style.height = '100%';
     
-                const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-                const slotsPerHour = 60 / defaultLength;
+                
     
                 for (let s = 0; s < slotsPerHour; s++) {
                     const minute = s * defaultLength;
@@ -365,7 +394,9 @@ async function editAppointment(appointmentId) {
     return overlappingGroups;
 }
 
-// Hilfsfunktion Zeitformat:
+///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
+//Nach nochmaliger Nachfrage diese Funktion vermutlich besser nur im Backend!
+// // Hilfsfunktion Zeitformat:
 function dateToLocalString(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -428,7 +459,7 @@ function dateToLocalString(date) {
         // Formatieren der Daten
         return availableSlots.map(slot => {
             return {    
-                dateTime: dateToLocalString(slot.time),
+                dateTime: dateToLocalString(slot.dateTime),
                 duration: slot.duration
             };
         });
@@ -437,7 +468,7 @@ function dateToLocalString(date) {
     
     
     
-
+///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
     // Funktion, um den Start der Woche (Montag) zu erhalten
     function getStartOfWeek(date) {
         const day = date.getDay(); // 0 (So) bis 6 (Sa)
@@ -447,7 +478,8 @@ function dateToLocalString(date) {
         startOfWeek.setHours(0, 0, 0, 0);
         return startOfWeek;
     }
-
+    
+    ///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
     // Funktion, um den Namen des Tages zu erhalten
     function getDayName(date) {
         const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -646,68 +678,7 @@ async function displayAppointmentsOnCalendar() {
     });
 
 
-    //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
-    function generateTimeSlots() {
-        const slots = [];
-        const startOfWeek = getStartOfWeek(currentDate);
-        const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-    
-        // Iteriere über die Tage der Woche
-        for (let i = 0; i < 7; i++) {
-            const day = new Date(startOfWeek);
-            day.setDate(startOfWeek.getDate() + i);
-            const dayName = getDayName(day).toLowerCase();
-    
-            // Überspringe Tage, die nicht aktiv sind
-            if (!workingHours[dayName] || !workingHours[dayName].active) continue;
-    
-            // Sammle alle Zeitfenster (Morgen und Nachmittag)
-            const periods = ['morning', 'afternoon'];
-            periods.forEach(period => {
-                const start = workingHours[dayName][period].start;
-                const end = workingHours[dayName][period].end;
-    
-                if (start && end) {
-                    const startMinutes = parseTime(start);
-                    const endMinutes = parseTime(end);
-    
-                    for (let minutes = startMinutes; minutes + defaultLength <= endMinutes; minutes += defaultLength) {
-                        const slotTime = new Date(day);
-                        slotTime.setHours(0, minutes, 0, 0);
-    
-                        slots.push({
-                            dayIndex: i,
-                            time: slotTime,
-                            duration: defaultLength,
-                            isAvailable: true // Wird später aktualisiert
-                        });
-                    }
-                }
-            });
-        }
-    
-        return slots;
-    }
-    
-    //Verfügbarkeit der Zeit-Slots prüfen
-    function updateSlotAvailability(slots, appointments) {
-        slots.forEach(slot => {
-            const slotStart = slot.time;
-            const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
-    
-            // Prüfe, ob der Slot mit einem bestehenden Termin kollidiert
-            const conflict = appointments.some(app => {
-                const appStart = new Date(app.dateTime);
-                const appEnd = new Date(appStart.getTime() + app.duration * 60000);
-    
-                return (slotStart < appEnd) && (appStart < slotEnd);
-            });
-    
-            if (conflict) {
-                slot.isAvailable = false;
-            }
-        });
-    }
+
     
     document.getElementById('toggleSlotGridLines').addEventListener('click', function () {
         const calendar = document.getElementById('calendar');
@@ -776,17 +747,21 @@ async function displayAppointmentsOnCalendar() {
 
     // Termine abrufen und anzeigen
     async function loadAppointments() {
+        console.log('autorisierung mit token');
         try {
             const response = await fetch(`${BACKEND_URL}/appointments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    
                 }
+                
             });
 
             if (response.ok) {
                 allAppointments = await response.json(); // Termine global speichern
                 displayAppointments(allAppointments); // Alle Termine anzeigen in der Liste
                 renderCalendar(); // Kalender nach dem Laden der Termine rendern im Kalender
+                console.log('loadAppiontsments Funktion');
             } else {
                 alert('Fehler beim Laden der Termine');
                 console.error('Fehler beim Laden der Termine');
