@@ -252,6 +252,7 @@ async function editAppointment(appointmentId) {
     
         const slots = await response.json();
         // Die Slots kommen bereits mit isAvailable vom Backend zurück.
+        console.log('[fetchAvailableSlots] Response-Daten:', slots); // ← Debug!
         return slots;
     }
 
@@ -283,6 +284,7 @@ async function editAppointment(appointmentId) {
             const hour = date.getHours();
             const minute = date.getMinutes(); 
             const key = `${slot.dayIndex}-${hour}-${minute}`; 
+            console.log('[Key-Create]', key, '-> slot:', slot);
             slotsMap[key] = slot;
         });
     
@@ -324,6 +326,7 @@ async function editAppointment(appointmentId) {
                 for (let s = 0; s < slotsPerHour; s++) {
                     const minute = s * defaultLength;
                     const key = `${i}-${hour}-${minute}`;
+                    console.log('[Key-Check]', key);
                     const slot = slotsMap[key];
     
                     const slotDiv = document.createElement('div');
@@ -334,15 +337,18 @@ async function editAppointment(appointmentId) {
                     slotDiv.style.left = '0';
                     slotDiv.style.right = '0';
                     slotDiv.style.zIndex = '1';
-    
+                    console.log('ForSchleifeAktiv')
                     if (slot) {
+                        console.log('ifSlot')
                         if (slot.isAvailable) {
-                            slotDiv.classList.add('available-slot');
+                            slotDiv.classList.add('available-slot'); //Gemäss Tests in alten Codes ist diese Funktion für die Anzeige der Arbeitszeiten im Kalender zuständig
                         } else {
                             slotDiv.classList.add('unavailable-slot');
+                            console.log('slot besetzt')
                         }
                     } else {
                         slotDiv.classList.add('unavailable-slot');
+                        console.log('if slot bedingung nicht erfüllt')
                     }
     
                     // Klick-Event hinzufügen

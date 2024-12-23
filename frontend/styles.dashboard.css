@@ -316,7 +316,7 @@ KALENDER
 }
   /* hover für belegte Slots */
   .unavailable-slot:hover {
-    background-color: rgba(255, 0, 0, 0.13); /* Hover-Effekt für belegte Slots */
+    background-color: rgba(223, 49, 49, 0.13); /* Hover-Effekt für belegte Slots */
     cursor: pointer;
 }
 

@@ -66,7 +66,7 @@ let workingHours = {            //Später aus DB
     function generateTimeSlots() {
         const slots = [];
         const startOfWeek = getStartOfWeek(currentDate);
-        const defaultLength = slots.length > 0 ? slots[0].duration : 30;
+        const defaultLength = 30;
 
     
         // Iteriere über die Tage der Woche
@@ -94,7 +94,7 @@ let workingHours = {            //Später aus DB
     
                         slots.push({
                             dayIndex: i,
-                            time: slotTime,
+                            dateTime: slotTime,
                             duration: defaultLength,
                             isAvailable: true // Wird später aktualisiert
                         });
@@ -109,6 +109,9 @@ let workingHours = {            //Später aus DB
     //Verfügbarkeit der Zeit-Slots prüfen
     function updateSlotAvailability(slots, appointments) {
         slots.forEach(slot => {
+            console.log('slot.dateTime =', slot.dateTime);
+            const testDate = new Date(slot.dateTime);
+            console.log('testDate =', testDate);
             const slotStart = new Date(slot.dateTime); // Aus String ein Date-Objekt machen
             const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
     
@@ -123,10 +126,14 @@ let workingHours = {            //Später aus DB
             if (conflict) {
                 slot.isAvailable = false;
             }
+            
         });
+        
     }
 
 
+
+      
 
     // Hilfsfunktion Zeitformat:
     function dateToLocalString(date) {
