@@ -260,6 +260,19 @@
           </tbody>
       </table>
 
+      <div id="holidaySettings">
+        <h2>Feiertage/Urlaub</h2>
+        <div id="holidaysList">
+            <!-- Feiertage werden hier dynamisch hinzugefügt -->
+        </div>
+        <div id="addHolidayForm">
+            <input type="date" id="holidayFromDate" placeholder="Von">
+            <input type="date" id="holidayToDate" placeholder="Bis">
+            <input type="text" id="holidayDescription" placeholder="Beschreibung">
+            <button id="addHolidayButton">Hinzufügen</button>
+        </div>
+    </div>
+    
           <!-- In deinem HTML unter Einstellungen -->
           <label for="defaultAppointmentLength">Standard-Terminlänge (Minuten):</label>
           <input type="number" id="defaultAppointmentLength" value="30">

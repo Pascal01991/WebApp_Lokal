@@ -21,6 +21,9 @@ const app = express();
 //Für User-Authentifizierung
 app.use(cookieParser());
 
+
+
+
 // Verbindung zur Datenbank
 connectDB();
 
@@ -59,6 +62,10 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // Einfache Route
 app.get('/', (req, res) => res.send('API läuft'));
+
+//Settings
+const settingsRoutes = require('./routes/settings');
+app.use('/api/settings', settingsRoutes);
 
 // Auth-Routen
 app.use('/api/auth', authRoutes); // Authentifizierungsrouten

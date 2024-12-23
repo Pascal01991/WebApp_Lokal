@@ -1,6 +1,19 @@
 let currentDate = new Date();
 let defaultAppointmentLength = 30; // in Minuten, später aus DB
 
+async function initializeSlots() {
+    try {
+        const holidays = await fetchHolidaysFromDatabase(); // Feiertage aus der Datenbank laden
+        const slots = generateTimeSlots(holidays);
+
+        console.log('Generierte Slots:', slots);
+        return slots;
+    } catch (error) {
+        console.error('Fehler beim Initialisieren der Slots:', error);
+    }
+}
+
+
 let workingHours = {            //Später aus DB
     montag: {
         active: true,
@@ -25,7 +38,7 @@ let workingHours = {            //Später aus DB
     freitag: {
         active: true,
         morning: { start: '08:00', end: '12:00' },
-        afternoon: { start: '13:00', end: '17:00' }
+        afternoon: { start: '13:00', end: '17:30' }
     },
     samstag: {
         active: false,
@@ -62,12 +75,20 @@ let workingHours = {            //Später aus DB
         return days[date.getDay()];
 }
 
+    function isDateInHoliday(date, holidays) {
+        return holidays.some(holiday => {
+            const fromDate = new Date(holiday.from);
+            const toDate = new Date(holiday.to);
+            return date >= fromDate && date <= toDate;
+        });
+}
+
+
     //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
-    function generateTimeSlots() {
+    function generateTimeSlots(holidays = []) {
         const slots = [];
         const startOfWeek = getStartOfWeek(currentDate);
         const defaultLength = 30;
-
     
         // Iteriere über die Tage der Woche
         for (let i = 0; i < 7; i++) {
@@ -92,11 +113,14 @@ let workingHours = {            //Später aus DB
                         const slotTime = new Date(day);
                         slotTime.setHours(0, minutes, 0, 0);
     
+                        // Ferienprüfung
+                        const isInHoliday = isDateInHoliday(slotTime, holidays);
+    
                         slots.push({
                             dayIndex: i,
                             dateTime: slotTime,
                             duration: defaultLength,
-                            isAvailable: true // Wird später aktualisiert
+                            isAvailable: !isInHoliday // Markiere Slot als nicht verfügbar, wenn in Ferien
                         });
                     }
                 }
@@ -105,6 +129,8 @@ let workingHours = {            //Später aus DB
     
         return slots;
     }
+    
+    
     
     //Verfügbarkeit der Zeit-Slots prüfen
     function updateSlotAvailability(slots, appointments) {

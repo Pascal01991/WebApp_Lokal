@@ -1445,5 +1445,91 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
         loadThemeSettings();
     });
 
+// Feiertage laden
+async function loadHolidays() {
+    const response = await fetch(`${BACKEND_URL}/settings`);
+    if (response.ok) {
+        const settings = await response.json();
+        renderHolidays(settings.holidays || []);
+    } else {
+        console.error('Fehler beim Laden der Feiertage');
+    }
+}
+
+// Feiertage anzeigen
+function renderHolidays(holidays) {
+    const holidaysList = document.getElementById('holidaysList');
+    holidaysList.innerHTML = holidays.map((holiday, index) => `
+        <div class="holiday-item">
+            <span>${holiday.from} - ${holiday.to}: ${holiday.description}</span>
+            <button onclick="editHoliday(${index})">Bearbeiten</button>
+            <button onclick="deleteHoliday(${index})">Löschen</button>
+        </div>
+    `).join('');
+}
+
+
+
+// Feiertag hinzufügen
+document.getElementById('addHolidayButton').addEventListener('click', async () => {
+    const from = document.getElementById('holidayFromDate').value;
+    const to = document.getElementById('holidayToDate').value || from;
+    const description = document.getElementById('holidayDescription').value;
+
+    const response = await fetch(`${BACKEND_URL}/settings/holidays`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, description })
+    });
+
+    if (response.ok) {
+        await loadHolidays();
+        alert('Feiertag hinzugefügt');
+    } else {
+        alert('Fehler beim Hinzufügen');
+    }
+});
+
+// Feiertag bearbeiten
+function editHoliday(index) {
+    const holidayItem = document.querySelectorAll('.holiday-item')[index];
+    const from = prompt('Neues Von-Datum:', holidayItem.dataset.from);
+    const to = prompt('Neues Bis-Datum:', holidayItem.dataset.to);
+    const description = prompt('Neue Beschreibung:', holidayItem.dataset.description);
+
+    fetch(`${BACKEND_URL}/settings/holidays/${index}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, description })
+    }).then(async (response) => {
+        if (response.ok) {
+            await loadHolidays();
+            alert('Feiertag bearbeitet');
+        } else {
+            alert('Fehler beim Bearbeiten');
+        }
+    });
+}
+
+// Feiertag löschen
+async function deleteHoliday(index) {
+    const response = await fetch(`${BACKEND_URL}/settings/holidays/${index}`, { method: 'DELETE' });
+    if (response.ok) {
+        await loadHolidays();
+        alert('Feiertag gelöscht');
+    } else {
+        alert('Fehler beim Löschen');
+    }
+}
+
+
+// Standardmäßig "Bis" auf "Von" setzen
+document.getElementById('holidayFromDate').addEventListener('change', (e) => {
+    const fromDate = e.target.value;
+    document.getElementById('holidayToDate').value = fromDate;
+});
+
+// Initial laden
+loadHolidays();
 
    
