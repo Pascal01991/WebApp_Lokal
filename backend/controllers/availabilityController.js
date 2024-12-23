@@ -16,7 +16,7 @@ async function getSlots(req, res) {
         const formattedSlots = slots.map(slot => {
             const dateObj = new Date(slot.dateTime); // falls slot.time jetzt ein String ist
             return {
-                
+                dayIndex: slot.dayIndex,
                 dateTime: dateToLocalString(dateObj),
                 duration: slot.duration,
                 isAvailable: slot.isAvailable
