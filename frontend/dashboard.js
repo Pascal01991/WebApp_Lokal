@@ -1460,13 +1460,16 @@ async function loadHolidays() {
 function renderHolidays(holidays) {
     const holidaysList = document.getElementById('holidaysList');
     holidaysList.innerHTML = holidays.map((holiday, index) => `
-        <div class="holiday-item">
+        <div class="holiday-item" data-from="${holiday.from}" data-to="${holiday.to}" data-description="${holiday.description}">
             <span>${holiday.from} - ${holiday.to}: ${holiday.description}</span>
-            <button onclick="editHoliday(${index})">Bearbeiten</button>
-            <button onclick="deleteHoliday(${index})">Löschen</button>
+            <button type="button" onclick="editHoliday(${index})">✏️</button>
+            <button type="button" onclick="deleteHoliday(${index})">🗑️</button>
         </div>
     `).join('');
 }
+
+
+
 
 
 
@@ -1491,16 +1494,25 @@ document.getElementById('addHolidayButton').addEventListener('click', async () =
 });
 
 // Feiertag bearbeiten
-function editHoliday(index) {
+window.editHoliday = function (index) {
     const holidayItem = document.querySelectorAll('.holiday-item')[index];
-    const from = prompt('Neues Von-Datum:', holidayItem.dataset.from);
-    const to = prompt('Neues Bis-Datum:', holidayItem.dataset.to);
-    const description = prompt('Neue Beschreibung:', holidayItem.dataset.description);
+
+    // Daten aus den Attributen lesen
+    const from = holidayItem.getAttribute('data-from');
+    const to = holidayItem.getAttribute('data-to');
+    const description = holidayItem.getAttribute('data-description');
+
+    // Öffnen Sie ein Bearbeitungsformular oder verwenden Sie `prompt`
+    const newFrom = prompt('Neues Von-Datum:', from);
+    const newTo = prompt('Neues Bis-Datum:', to);
+    const newDescription = prompt('Neue Beschreibung:', description);
+
+    console.log('PUT Request:', { newFrom, newTo, newDescription });
 
     fetch(`${BACKEND_URL}/settings/holidays/${index}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, description })
+        body: JSON.stringify({ from: newFrom, to: newTo, description: newDescription })
     }).then(async (response) => {
         if (response.ok) {
             await loadHolidays();
@@ -1509,10 +1521,12 @@ function editHoliday(index) {
             alert('Fehler beim Bearbeiten');
         }
     });
-}
+};
 
 // Feiertag löschen
-async function deleteHoliday(index) {
+window.deleteHoliday = async function (index) {
+    console.log('DELETE Request für Index:', index);
+
     const response = await fetch(`${BACKEND_URL}/settings/holidays/${index}`, { method: 'DELETE' });
     if (response.ok) {
         await loadHolidays();
@@ -1520,8 +1534,7 @@ async function deleteHoliday(index) {
     } else {
         alert('Fehler beim Löschen');
     }
-}
-
+};
 
 // Standardmäßig "Bis" auf "Von" setzen
 document.getElementById('holidayFromDate').addEventListener('change', (e) => {
