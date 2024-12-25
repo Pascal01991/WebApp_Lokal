@@ -308,6 +308,12 @@ KALENDER
   .available-slot {
       background-color: var(--background-dark); /* verfügbare Slots hervorheben */
   }
+
+  .unavailable-holiday {
+    background-color: rgba(255, 99, 71, 0.5); /* Beispiel: halbtransparentes Rot */
+    border: 1px solid rgba(255, 99, 71, 1);
+}
+
   
   /* hover für freie Slots */
   .available-slot:hover {

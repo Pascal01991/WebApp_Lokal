@@ -1,17 +1,6 @@
 let currentDate = new Date();
 let defaultAppointmentLength = 30; // in Minuten, später aus DB
 
-async function initializeSlots() {
-    try {
-        const holidays = await fetchHolidaysFromDatabase(); // Feiertage aus der Datenbank laden
-        const slots = generateTimeSlots(holidays);
-
-        console.log('Generierte Slots:', slots);
-        return slots;
-    } catch (error) {
-        console.error('Fehler beim Initialisieren der Slots:', error);
-    }
-}
 
 
 let workingHours = {            //Später aus DB
@@ -75,13 +64,19 @@ let workingHours = {            //Später aus DB
         return days[date.getDay()];
 }
 
-    function isDateInHoliday(date, holidays) {
-        return holidays.some(holiday => {
-            const fromDate = new Date(holiday.from);
-            const toDate = new Date(holiday.to);
-            return date >= fromDate && date <= toDate;
-        });
+function isDateInHoliday(date, holidays) {
+    const formattedDate = date.toISOString().split('T')[0]; // Nur Datumsteil extrahieren
+    console.log(`Vergleiche Datum: ${formattedDate}`);
+
+    return holidays.some(holiday => {
+        const fromDate = new Date(holiday.from).toISOString().split('T')[0];
+        const toDate = new Date(holiday.to).toISOString().split('T')[0];
+        console.log(`Prüfe gegen Feiertag: From ${fromDate}, To ${toDate}`);
+
+        return formattedDate >= fromDate && formattedDate <= toDate;
+    });
 }
+
 
 
     //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
@@ -90,6 +85,8 @@ let workingHours = {            //Später aus DB
         const startOfWeek = getStartOfWeek(currentDate);
         const defaultLength = 30;
     
+        console.log('Geladene Feiertage:', holidays); // Feiertage ausgeben
+
         // Iteriere über die Tage der Woche
         for (let i = 0; i < 7; i++) {
             const day = new Date(startOfWeek);
@@ -113,14 +110,20 @@ let workingHours = {            //Später aus DB
                         const slotTime = new Date(day);
                         slotTime.setHours(0, minutes, 0, 0);
     
-                        // Ferienprüfung
                         const isInHoliday = isDateInHoliday(slotTime, holidays);
-    
+                        
+                        console.log(`Slot geprüft: ${slotTime.toISOString()}, Feiertag: ${isInHoliday}`);
+                        
+                        if (holidays.length > 0) {
+                            console.log('Vergleiche mit Feiertagen:', holidays.map(h => `From: ${h.from}, To: ${h.to}`));
+                        }
+                        
                         slots.push({
                             dayIndex: i,
                             dateTime: slotTime,
                             duration: defaultLength,
-                            isAvailable: !isInHoliday // Markiere Slot als nicht verfügbar, wenn in Ferien
+                            isAvailable: !isInHoliday,
+                            isHoliday: isInHoliday // Neu: Markiere, ob es sich um einen Feiertag handelt
                         });
                     }
                 }
@@ -129,6 +132,7 @@ let workingHours = {            //Später aus DB
     
         return slots;
     }
+    
     
     
     

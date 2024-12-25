@@ -239,33 +239,37 @@ async function editAppointment(appointmentId) {
     }
 
     async function fetchAvailableSlots() {
-        const response = await fetch('/api/availability/slots', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+        try {
+            const response = await fetch(`${BACKEND_URL}/availability/slots`);
+            if (!response.ok) {
+                throw new Error(`Fehler beim Laden der Slots: ${response.statusText}`);
             }
-        });
-        if (!response.ok) {
-            console.error('Fehler beim Laden der Slots:', response.statusText);
+            const slots = await response.json();
+            console.log('Frontend: Slots erfolgreich geladen:', slots);
+            return slots;
+        } catch (error) {
+            console.error('Fehler beim Abrufen der Slots im Frontend:', error);
             return [];
         }
-    
-        const slots = await response.json();
-        // Die Slots kommen bereits mit isAvailable vom Backend zurück.
-        console.log('[fetchAvailableSlots] Response-Daten:', slots); // ← Debug!
-        return slots;
     }
+
+
+    
 
     async function renderCalendar() {
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = '';
-        
+    
+        // Feiertage und Slots initialisieren
         // Slots asynchron vom Backend laden
         const slots = await fetchAvailableSlots();
-        
-        const startOfWeek = getStartOfWeek(currentDate);
-        
+        if (!slots.length) {
+            console.warn('Keine Slots zum Anzeigen gefunden.');
+            return;
+        }
 
+        const startOfWeek = getStartOfWeek(currentDate);
+    
         // Tagesüberschriften erstellen
         calendar.appendChild(document.createElement('div')); // Leere Ecke für die Zeitspalte
         for (let i = 0; i < 7; i++) {
@@ -282,8 +286,8 @@ async function editAppointment(appointmentId) {
         slots.forEach(slot => {
             const date = new Date(slot.dateTime);
             const hour = date.getHours();
-            const minute = date.getMinutes(); 
-            const key = `${slot.dayIndex}-${hour}-${minute}`; 
+            const minute = date.getMinutes();
+            const key = `${slot.dayIndex}-${hour}-${minute}`;
             slotsMap[key] = slot;
         });
     
@@ -291,7 +295,7 @@ async function editAppointment(appointmentId) {
             const date = new Date(slot.dateTime);
             return date.getHours() * 60 + date.getMinutes();
         });
-        
+    
         const minTime = Math.min(...allTimes);
         const maxTime = Math.max(...allTimes);
     
@@ -300,8 +304,7 @@ async function editAppointment(appointmentId) {
     
         const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
         const slotsPerHour = 60 / defaultLength;
-
-
+    
         for (let hour = startHour; hour <= endHour; hour++) {
             const timeLabel = document.createElement('div');
             timeLabel.classList.add('time-slot');
@@ -320,8 +323,6 @@ async function editAppointment(appointmentId) {
                 cellContainer.style.position = 'relative';
                 cellContainer.style.height = '100%';
     
-                
-    
                 for (let s = 0; s < slotsPerHour; s++) {
                     const minute = s * defaultLength;
                     const key = `${i}-${hour}-${minute}`;
@@ -335,14 +336,18 @@ async function editAppointment(appointmentId) {
                     slotDiv.style.left = '0';
                     slotDiv.style.right = '0';
                     slotDiv.style.zIndex = '1';
+    
                     if (slot) {
-                        if (slot.isAvailable) {
-                            slotDiv.classList.add('available-slot'); //Gemäss Tests in alten Codes ist diese Funktion für die Anzeige der Arbeitszeiten im Kalender zuständig
+                        if (slot.isHoliday) {
+                            slotDiv.classList.add('unavailable-holiday');
+                            console.log(`Frontend Holiday: Slot am ${new Date(slot.dateTime).toISOString()} ist ein Feiertag.`);
+                        } else if (slot.isAvailable) {
+                            slotDiv.classList.add('available-slot');
                         } else {
                             slotDiv.classList.add('unavailable-slot');
                         }
                     } else {
-                        slotDiv.classList.add('unavailable-slot');   
+                        slotDiv.classList.add('unavailable-slot');
                     }
     
                     // Klick-Event hinzufügen
@@ -360,6 +365,8 @@ async function editAppointment(appointmentId) {
     
         displayAppointmentsOnCalendar();
     }
+    
+    
     
     function findOverlappingAppointments(appointments) {
     const overlappingGroups = [];
