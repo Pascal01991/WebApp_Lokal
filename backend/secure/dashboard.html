@@ -26,9 +26,13 @@
           <span class="icon">🧍</span>
           <span class="text">Kundenverwaltung</span>
       </a>
-      <a href="#accounting-section" class="sidebar-button">
+      <a href="#Project-section" class="sidebar-button">
           <span class="icon">💼</span>
-          <span class="text">Abrechnung</span>
+          <span class="text">Projektverwaltung</span>
+      </a>
+      <a href="#absence-management-section" class="sidebar-button">
+        <span class="icon">⛔</span>
+        <span class="text">Projektverwaltung</span>
       </a>
       <a href="#settings-section" class="sidebar-button">
           <span class="icon">⚙️</span>
@@ -171,10 +175,54 @@
     
       </section>
 
-        <section id="accounting-section">
-            <h2>Buchhaltung</h2>
-            <!-- Inhalt des Buchhaltungs-Abschnitts -->
-        </section>
+        <!-- Absenzen-Abschnitt -->
+<section id="absence-management-section">
+    <div id="holidaySettings">
+        <h2>Feiertage/Urlaub</h2>
+        
+        <!-- Formular für Feiertage und Urlaub -->
+        <button id="openHolidayFormButton" type="submit">Absenz anlegen</button>
+        <div id="holidaysForm" style="display: none;">
+            <form id="holidayForm">
+                <div class="form-column">
+                    <div><label>Beschreibung:</label><input type="text" id="holidayDescription" placeholder="Beschreibung" required></div>
+                    <div><label>Von:</label><input type="date" id="holidayFromDate" placeholder="Von" required></div>
+                    <div><label>Bis:</label><input type="date" id="holidayToDate" placeholder="Bis" required></div>
+                    <div><label>Ressource:</label><input type="text" id="holidayResource" placeholder="Ressource"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Speichern</button>
+                    <button type="button" id="cancelHolidayFormButton">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    
+        <!-- Filterbuttons für Jahre -->
+        <div id="holidayFilters">
+            <button id="filter2024" class="filter-btn">2024</button>
+            <button id="filter2025" class="filter-btn">2025</button>
+        </div>
+    
+        <!-- Liste der Feiertage/Urlaub -->
+        <div id="holidaysList" class="scrollable-list">
+            <!-- Feiertage/Urlaub werden hier dynamisch geladen -->
+        </div>
+    </div>
+    
+    <div id="holidaySettings">
+        <h2>Feiertage/Urlaub</h2>
+        <div id="holidaysList">
+            <!-- Feiertage werden hier dynamisch hinzugefügt -->
+        </div>
+        <div id="addHolidayForm">
+            <input type="date" id="holidayFromDate" placeholder="Von">
+            <input type="date" id="holidayToDate" placeholder="Bis">
+            <input type="text" id="holidayDescription" placeholder="Beschreibung">
+            <button id="addHolidayButton">Hinzufügen</button>
+        </div>
+    </div>
+</section>
+
 
         <!-- Inhalt des Einstellungen-Abschnitts -->
         <section id="settings-section">
@@ -260,18 +308,7 @@
           </tbody>
       </table>
 
-      <div id="holidaySettings">
-        <h2>Feiertage/Urlaub</h2>
-        <div id="holidaysList">
-            <!-- Feiertage werden hier dynamisch hinzugefügt -->
-        </div>
-        <div id="addHolidayForm">
-            <input type="date" id="holidayFromDate" placeholder="Von">
-            <input type="date" id="holidayToDate" placeholder="Bis">
-            <input type="text" id="holidayDescription" placeholder="Beschreibung">
-            <button id="addHolidayButton">Hinzufügen</button>
-        </div>
-    </div>
+      
     
           <!-- In deinem HTML unter Einstellungen -->
           <label for="defaultAppointmentLength">Standard-Terminlänge (Minuten):</label>

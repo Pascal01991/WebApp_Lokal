@@ -713,3 +713,84 @@ KUNDENVERWALTUNG
   font-size: 0.8em;
   white-space: nowrap;
 }
+
+
+
+
+
+/*====================================================================
+Projektverwaltung
+====================================================================*/
+
+
+
+
+
+
+
+
+
+
+/*====================================================================
+Absenzverwaltung
+====================================================================*/
+
+/* Formular für Feiertage/Urlaub */
+#holidaysForm {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  background-color: var(--background-medium);
+  border-radius: 10px;
+  padding: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+#holidaysForm.show {
+  max-height: 1000px;
+  opacity: 1;
+  padding: 20px;
+}
+
+#holidaysForm.hidden {
+  display: none;
+}
+
+/* Styling der Liste */
+.scrollable-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: var(--background-medium);
+}
+
+.holiday-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.holiday-info {
+  flex: 1;
+  padding: 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.holiday-actions button {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: var(--background-light);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.holiday-actions button:hover {
+  background-color: var(--theme-color);
+}

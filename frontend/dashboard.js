@@ -240,13 +240,12 @@ async function editAppointment(appointmentId) {
 
     async function fetchAvailableSlots() {
         try {
-            console.log('Aktuelles Datum für Anfrage:', currentDate.toISOString());
             const response = await fetch(`${BACKEND_URL}/availability/slots?currentDate=${currentDate.toISOString()}`);
             if (!response.ok) {
                 throw new Error(`Fehler beim Laden der Slots: ${response.statusText}`);
             }
             const slots = await response.json();
-            console.log('Empfangene Slots:', slots);
+            
             return slots;
         } catch (error) {
             console.error('Fehler beim Abrufen der Slots:', error);
@@ -342,7 +341,7 @@ async function editAppointment(appointmentId) {
                     if (slot) {
                         if (slot.isHoliday) {
                             slotDiv.classList.add('unavailable-holiday');
-                            console.log(`Frontend Holiday: Slot am ${new Date(slot.dateTime).toISOString()} ist ein Feiertag.`);
+                            
                         } else if (slot.isAvailable) {
                             slotDiv.classList.add('available-slot');
                         } else {
@@ -514,7 +513,7 @@ function dateToLocalString(date) {
                 const clients = await response.json(); // Daten laden
                 allClients = clients; // Aktualisiere die globale Variable allClients
                 displayClients(allClients); // Zeige die Kundenliste an
-                console.log('Kunden erfolgreich geladen:', allClients); // Debugging-Log
+                
             } else {
                 console.error('Fehler beim Laden der Kunden:', response.statusText);
             }
@@ -1199,7 +1198,7 @@ function displaySearchResults() {
                 </div>
             </div>
         `).join('');
-        console.log("KundenlisteLOG");    
+            
     }
     
     console.log('allClients' + allClients); // Logge die tatsächliche Kundenliste
@@ -1339,6 +1338,119 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
         loadClients();  // AllClients wird hier geladen
     });
 
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //Absenz-Verwaltung
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //====================================================================================================================================
+  
+    
+    //Anzeige und Bearbeitung der Absenzen
+    function displayHolidays(holidays) {
+        const holidaysList = document.getElementById('holidaysList');
+        holidaysList.innerHTML = holidays.map(holiday => `
+            <div class="holiday-card">
+                <span class="holiday-info">${holiday.description}</span>
+                <span class="holiday-info">${holiday.fromDate} - ${holiday.toDate}</span>
+                <span class="holiday-info">${holiday.resource || 'Keine Ressource'}</span>
+                <div class="holiday-actions">
+                    <button onclick="editHoliday('${holiday._id}')" class="action-btn edit-btn" title="Bearbeiten">✏️</button>
+                    <button onclick="deleteHoliday('${holiday._id}')" class="action-btn delete-btn" title="Löschen">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    
+    
+
+    // Anzeigen des Absenzen-Formulars
+    function showHolidayForm() {
+        const form = document.getElementById('holidaysForm');
+        form.style.display = 'block';
+        document.getElementById('openHolidayFormButton').style.display = 'none';
+    }
+    
+    // Formular ausblenden
+    document.getElementById('cancelHolidayFormButton').addEventListener('click', function () {
+    const form = document.getElementById('holidaysForm');
+    const openButton = document.getElementById('openHolidayFormButton');
+    form.style.display = 'none';
+    openButton.style.display = 'inline-block';
+    });
+    
+    // Absenz anlegen
+    document.getElementById('openHolidayFormButton').addEventListener('click', showHolidayForm);
+    
+
+
+    //Bearbeiten und Löschen von Absenzen:
+    async function editHoliday(holidayId) {
+        showHolidayForm();
+        const holiday = allHolidays.find(h => h._id === holidayId);
+        if (!holiday) return alert('Absenz nicht gefunden');
+    
+        document.getElementById('holidayDescription').value = holiday.description;
+        document.getElementById('holidayFromDate').value = holiday.fromDate;
+        document.getElementById('holidayToDate').value = holiday.toDate;
+        document.getElementById('holidayResource').value = holiday.resource;
+    
+        const submitButton = document.querySelector('#holidayForm button[type="submit"]');
+        submitButton.innerText = "Änderungen speichern";
+        submitButton.onclick = async function (e) {
+            e.preventDefault();
+            const updatedHoliday = {
+                description: document.getElementById('holidayDescription').value,
+                fromDate: document.getElementById('holidayFromDate').value,
+                toDate: document.getElementById('holidayToDate').value,
+                resource: document.getElementById('holidayResource').value,
+            };
+    
+            try {
+                const response = await fetch(`${BACKEND_URL}/holidays/${holidayId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedHoliday),
+                });
+    
+                if (response.ok) {
+                    alert('Absenz erfolgreich aktualisiert');
+                    loadHolidays();
+                    submitButton.innerText = "Speichern";
+                    submitButton.onclick = null;
+                } else {
+                    alert('Fehler beim Aktualisieren der Absenz');
+                }
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        };
+    }
+    
+    
+
+    //Filterbuttons für Jahre
+    document.getElementById('filter2024').addEventListener('click', () => {
+        filterHolidays(2024);
+    });
+    
+    document.getElementById('filter2025').addEventListener('click', () => {
+        filterHolidays(2025);
+    });
+    
+    function filterHolidays(year) {
+        const filteredHolidays = allHolidays.filter(holiday => {
+            const fromYear = new Date(holiday.fromDate).getFullYear();
+            const toYear = new Date(holiday.toDate).getFullYear();
+            return fromYear <= year && toYear >= year;
+        });
+    
+        displayHolidays(filteredHolidays);
+    }
+    
+    
 
     //====================================================================================================================================
     //====================================================================================================================================
@@ -1459,14 +1571,17 @@ async function loadHolidays() {
     const response = await fetch(`${BACKEND_URL}/settings`);
     if (response.ok) {
         const settings = await response.json();
+        
         renderHolidays(settings.holidays || []);
     } else {
         console.error('Fehler beim Laden der Feiertage');
+        
     }
 }
 
 // Feiertage anzeigen
 function renderHolidays(holidays) {
+       
     const holidaysList = document.getElementById('holidaysList');
     holidaysList.innerHTML = holidays.map((holiday, index) => `
         <div class="holiday-item" data-from="${holiday.from}" data-to="${holiday.to}" data-description="${holiday.description}">
