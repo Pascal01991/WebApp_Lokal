@@ -80,58 +80,55 @@ function isDateInHoliday(date, holidays) {
 
 
     //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
-    function generateTimeSlots(holidays = []) {
-        const slots = [];
-        const startOfWeek = getStartOfWeek(currentDate);
-        const defaultLength = 30;
-    
-        console.log('Geladene Feiertage:', holidays); // Feiertage ausgeben
+    function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
+    const slots = [];
+    const defaultLength = 30;
 
-        // Iteriere über die Tage der Woche
-        for (let i = 0; i < 7; i++) {
-            const day = new Date(startOfWeek);
-            day.setDate(startOfWeek.getDate() + i);
-            const dayName = getDayName(day).toLowerCase();
-    
-            // Überspringe Tage, die nicht aktiv sind
-            if (!workingHours[dayName] || !workingHours[dayName].active) continue;
-    
-            // Sammle alle Zeitfenster (Morgen und Nachmittag)
-            const periods = ['morning', 'afternoon'];
-            periods.forEach(period => {
-                const start = workingHours[dayName][period].start;
-                const end = workingHours[dayName][period].end;
-    
-                if (start && end) {
-                    const startMinutes = parseTime(start);
-                    const endMinutes = parseTime(end);
-    
-                    for (let minutes = startMinutes; minutes + defaultLength <= endMinutes; minutes += defaultLength) {
-                        const slotTime = new Date(day);
-                        slotTime.setHours(0, minutes, 0, 0);
-    
-                        const isInHoliday = isDateInHoliday(slotTime, holidays);
-                        
-                        console.log(`Slot geprüft: ${slotTime.toISOString()}, Feiertag: ${isInHoliday}`);
-                        
-                        if (holidays.length > 0) {
-                            console.log('Vergleiche mit Feiertagen:', holidays.map(h => `From: ${h.from}, To: ${h.to}`));
-                        }
-                        
-                        slots.push({
-                            dayIndex: i,
-                            dateTime: slotTime,
-                            duration: defaultLength,
-                            isAvailable: !isInHoliday,
-                            isHoliday: isInHoliday // Neu: Markiere, ob es sich um einen Feiertag handelt
-                        });
-                    }
+    console.log('Generiere Slots für den Zeitraum:', startOfWeek.toISOString(), '-', endOfWeek.toISOString());
+    console.log('Geladene Feiertage:', holidays);
+
+    // Iteriere über die Tage der Woche
+    for (let i = 0; i < 7; i++) {
+        const day = new Date(startOfWeek);
+        day.setDate(startOfWeek.getDate() + i);
+
+        // Überspringe Tage außerhalb des Enddatums
+        if (day > endOfWeek) break;
+
+        const dayName = getDayName(day).toLowerCase();
+        if (!workingHours[dayName] || !workingHours[dayName].active) continue;
+
+        const periods = ['morning', 'afternoon'];
+        periods.forEach(period => {
+            const start = workingHours[dayName][period]?.start;
+            const end = workingHours[dayName][period]?.end;
+
+            if (start && end) {
+                const startMinutes = parseTime(start);
+                const endMinutes = parseTime(end);
+
+                for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultLength) {
+                    const slotTime = new Date(day);
+                    slotTime.setHours(0, minutes, 0, 0);
+
+                    const isInHoliday = isDateInHoliday(slotTime, holidays);
+                    console.log(`Slot geprüft: ${slotTime.toISOString()}, Feiertag: ${isInHoliday}`);
+
+                    slots.push({
+                        dayIndex: i,
+                        dateTime: slotTime,
+                        duration: defaultLength,
+                        isAvailable: !isInHoliday,
+                        isHoliday: isInHoliday,
+                    });
                 }
-            });
-        }
-    
-        return slots;
+            }
+        });
     }
+
+    return slots;
+}
+
     
     
     

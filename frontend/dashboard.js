@@ -240,18 +240,20 @@ async function editAppointment(appointmentId) {
 
     async function fetchAvailableSlots() {
         try {
-            const response = await fetch(`${BACKEND_URL}/availability/slots`);
+            console.log('Aktuelles Datum für Anfrage:', currentDate.toISOString());
+            const response = await fetch(`${BACKEND_URL}/availability/slots?currentDate=${currentDate.toISOString()}`);
             if (!response.ok) {
                 throw new Error(`Fehler beim Laden der Slots: ${response.statusText}`);
             }
             const slots = await response.json();
-            console.log('Frontend: Slots erfolgreich geladen:', slots);
+            console.log('Empfangene Slots:', slots);
             return slots;
         } catch (error) {
-            console.error('Fehler beim Abrufen der Slots im Frontend:', error);
+            console.error('Fehler beim Abrufen der Slots:', error);
             return [];
         }
     }
+    
 
 
     
