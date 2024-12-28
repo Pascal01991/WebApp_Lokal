@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Settings = require('../models/settingsModel');
+const Settings = require('../models/AbsenceModel');
 
 // Alle Einstellungen abrufen
 router.get('/', async (req, res) => {
@@ -16,22 +16,28 @@ router.get('/', async (req, res) => {
 // Feiertag hinzufügen
 router.post('/holidays', async (req, res) => {
     try {
-        console.log('Request Body:', req.body);
-        const { from, to, description } = req.body;
-        
-        
-        
+        const { from, to, description, resource, status } = req.body;
+
+        if (!from || !to || !description) {
+            return res.status(400).json({ error: 'Felder "from", "to" und "description" sind erforderlich.' });
+        }
+
+        const newHoliday = {
+            from,
+            to,
+            description,
+            resource: resource || 'Keine Ressource',
+            status: status || 'Ausstehend'
+        };
+
         let settings = await Settings.findOne();
 
         if (!settings) {
-            console.error('Fehlende Felder im Request Body');
             settings = new Settings({ workingHours: {}, holidays: [] });
         }
 
-        settings.holidays.push({ from, to, description });
+        settings.holidays.push(newHoliday);
         await settings.save();
-
-        console.log('Gespeicherte Feiertage:', settings.holidays); // Logging nach Speicherung
 
         res.status(201).json(settings.holidays);
     } catch (error) {
@@ -39,6 +45,7 @@ router.post('/holidays', async (req, res) => {
         res.status(500).json({ error: 'Fehler beim Hinzufügen des Feiertags' });
     }
 });
+
 
 // Feiertag bearbeiten
 router.put('/holidays/:index', async (req, res) => {

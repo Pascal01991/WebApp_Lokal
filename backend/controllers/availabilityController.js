@@ -1,7 +1,7 @@
 const { getStartOfWeek, generateTimeSlots, updateSlotAvailability, dateToLocalString } = require('../utils/availabilityUtils');
 const Appointment = require('../models/appointmentModel');
 
-const Settings = require('../models/settingsModel'); // Importieren des Modells
+const Settings = require('../models/AbsenceModel'); // Importieren des Modells
 
 async function fetchHolidaysFromDatabase() {
     try {

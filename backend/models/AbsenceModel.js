@@ -14,7 +14,13 @@ const settingsSchema = new mongoose.Schema({
         {
             from: String, // Startdatum (ISO-Format: YYYY-MM-DD)
             to: String,   // Enddatum (ISO-Format: YYYY-MM-DD)
-            description: String
+            description: String, // Beschreibung der Absenz
+            resource: String,    // Ressource, auf die sich die Absenz bezieht
+            status: {            // Genehmigungsstatus
+                type: String,
+                enum: ['Genehmigt', 'Abgelehnt', 'Ausstehend'], // Zulässige Werte
+                default: 'Ausstehend'
+            }
         }
     ]
 });
