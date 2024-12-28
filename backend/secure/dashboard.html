@@ -20,19 +20,19 @@
       </a>
       <a href="#appointment-management-section" class="sidebar-button">
           <span class="icon">🗒️</span>
-          <span class="text">Terminverwaltung</span>
+          <span class="text">Termine</span>
+      </a>
+      <a href="#Project-section" class="sidebar-button">
+        <span class="icon">💼</span>
+        <span class="text">Projekte</span>
       </a>
       <a href="#customer-management-section" class="sidebar-button">
           <span class="icon">🧍</span>
-          <span class="text">Kundenverwaltung</span>
+          <span class="text">Kunden</span>
       </a>
-      <a href="#Project-section" class="sidebar-button">
-          <span class="icon">💼</span>
-          <span class="text">Projektverwaltung</span>
-      </a>
-      <a href="#absence-management-section" class="sidebar-button">
+      <a href="#holidaySettings" class="sidebar-button">
         <span class="icon">⛔</span>
-        <span class="text">Projektverwaltung</span>
+        <span class="text">Absenzen</span>
       </a>
       <a href="#settings-section" class="sidebar-button">
           <span class="icon">⚙️</span>
@@ -55,7 +55,7 @@
 
         <!-- Inhalt des Kalender-Abschnitts -->
         <section id="calendar-section">
-          
+            
               
           <div id="week-navigation">
               <button id="prevWeek">Vorherige Woche</button>
@@ -69,7 +69,7 @@
       <!-- Terminverwaltung Abschnitt -->
 <section id="appointment-management-section">
   
-
+    <h2>Termine</h2>
       <!-- Button zum Öffnen des Formulars  -->
       <button id="openAppointmentFormButton">Termin erstellen</button>
 
@@ -129,10 +129,13 @@
       
         </section>
     
-    
+    <!-- Inhalt des Projekt-Abschnitts -->
+    <section id="Project-section">
+        <h2>BETA! Projekte</h2>
+        <p>Projekte zur Verknüpfung mit Terminen folgt.</p>
         <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
         <section id="customer-management-section">
-          
+            <h2>Kunden</h2>
           <button id="openClientFormButton" type="submit">Kunden anlegen</button>
           <!-- Kundenformular, standardmäßig ausgeblendet -->
           <div id="kundenFormular" style="display: none;">
@@ -177,7 +180,7 @@
 
         <!-- Absenzen-Abschnitt -->
         <section id="holidaySettings">
-            <h2>Feiertage/Urlaub</h2>
+            <h2>Abwesenheiten</h2>
         
             <!-- Formular für Feiertage/Urlaub -->
             <button id="openHolidayFormButton" type="submit">Feiertag/Urlaub anlegen</button>
@@ -226,7 +229,8 @@
         <section id="settings-section">
           <!-- Arbeitszeit-Einstellungen -->
 <div id="settings">
-  <h2>Arbeitszeiten Einstellungen</h2>
+    <h2>Abwesenheiten</h2>
+    <h3>BETA! Öffnungszeiten</h3>
   <form id="workingHoursForm">
       <table>
           <thead>
@@ -306,7 +310,7 @@
           </tbody>
       </table>
 
-      
+      <h3>Slot-Länge</h3>
     
           <!-- In deinem HTML unter Einstellungen -->
           <label for="defaultAppointmentLength">Standard-Terminlänge (Minuten):</label>
@@ -318,12 +322,8 @@
 
       <button type="button" id="saveWorkingHours">Speichern</button>
   </form>
-</div>
 
-
-
-
-                      </div>
+  <h3>Farb-Schema</h3>
               <!-- Farbwahl für das Thema -->
               <div class="form-row">
                 <label for="themeColor">Themenfarbe:</label>

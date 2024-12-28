@@ -1369,8 +1369,12 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
     // Anzeigen des Absenzen-Formulars
     function showHolidayForm() {
         const form = document.getElementById('holidaysForm');
-        form.style.display = 'block';
-        document.getElementById('openHolidayFormButton').style.display = 'none';
+        form.classList.remove('hidden'); // Entfernt den Zustand "komplett unsichtbar"
+        form.style.display = 'block'; // Sichtbar machen
+        setTimeout(() => {
+            form.classList.add('show'); // Fügt die Transition ein
+        }, 10); // Leichter Delay, damit die Transition greift
+        document.getElementById('openHolidayFormButton').style.display = 'none'; // Button ausblenden
     }
     
     // Formular ausblenden
@@ -1416,6 +1420,7 @@ document.getElementById('openClientFormButton').addEventListener('click', showCl
                 });
     
                 if (response.ok) {
+                    renderCalendar();
                     alert('Absenz erfolgreich aktualisiert');
                     loadHolidays();
                     submitButton.innerText = "Speichern";
