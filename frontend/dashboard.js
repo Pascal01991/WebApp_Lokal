@@ -17,8 +17,16 @@
 
 // Für "Bearbeiten"-Button im Termin
 async function editAppointment(appointmentId) {
+    console.log('editAppointment aufgerufen mit ID:', appointmentId);
+    if (!appointmentId) {
+        console.error('Ungültige Appointment-ID:', appointmentId);
+        alert('Termin nicht gefunden');
+        return;
+    }
+
     const appointment = allAppointments.find(app => app._id === appointmentId);
     if (!appointment) {
+        console.error('Termin nicht in allAppointments gefunden:', appointmentId);
         alert('Termin nicht gefunden');
         return;
     }
@@ -809,24 +817,24 @@ async function displayAppointments(appointments) {
                 <!-- Spalte D: Aktionen -->
                 <div class="termin-actions">
                     <!-- Entferne die onclick-Attribute und verwende data-app-id -->
-                    <button data-app-id="${app._id}" class="action-btn edit-btn" title="Bearbeiten">✏️</button>
-                    <button data-app-id="${app._id}" class="action-btn delete-btn" title="Löschen">🗑️</button>
+                    <button class="action-btn appointment-edit-btn" data-app-id="${app._id}" title="Bearbeiten">✏️</button>
+                    <button class="action-btn appointment-delete-btn" data-app-id="${app._id}" title="Löschen">🗑️</button>
+
                 </div>
             </div>
         `;
     }).join('');
 
     // Nachdem die Liste gerendert wurde, fügen wir nun die Event-Listener hinzu:
-    // Edit-Buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
+    // Event-Listener für Termin-Buttons
+    document.querySelectorAll('.appointment-edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const appointmentId = btn.getAttribute('data-app-id');
             editAppointment(appointmentId);
         });
     });
 
-    // Delete-Buttons
-    document.querySelectorAll('.delete-btn').forEach(btn => {
+    document.querySelectorAll('.appointment-delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const appointmentId = btn.getAttribute('data-app-id');
             deleteAppointment(appointmentId);
@@ -1189,19 +1197,32 @@ function displaySearchResults() {
                 <span class="client-info">${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}</span>
                 <span class="client-info">${client.Telefon}, ${client.Mail}</span>
                 <div class="client-actions">
-                    <button onclick="editClient('${client._id}')" class="action-btn edit-btn" title="Bearbeiten">
-                        ✏️
-                    </button>
-                    <button onclick="deleteClient('${client._id}')" class="action-btn delete-btn" title="Löschen">
-                        🗑️
-                    </button>
+                    <button data-client-id="${client._id}" class="action-btn edit-client-btn" title="Bearbeiten">✏️</button>
+                    <button data-client-id="${client._id}" class="action-btn delete-client-btn" title="Löschen">🗑️</button>
                 </div>
             </div>
         `).join('');
-            
+          
+        // Event-Listener für die "Bearbeiten"-Buttons
+        document.querySelectorAll('.edit-client-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const clientId = btn.getAttribute('data-client-id');
+                editClient(clientId);  // ruft die globale Funktion (oder importierte) auf
+            });
+        });
+
+        // Event-Listener für die "Löschen"-Buttons
+        document.querySelectorAll('.delete-client-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const clientId = btn.getAttribute('data-client-id');
+                deleteClient(clientId);
+            });
+        });
     }
     
     console.log('allClients' + allClients); // Logge die tatsächliche Kundenliste
+
+
 
 
 
@@ -1364,30 +1385,52 @@ async function loadHolidays() {
 // Feiertage/Urlaube anzeigen
 function renderHolidays(holidays) {
     const holidaysList = document.getElementById('holidaysList');
-    holidaysList.innerHTML = holidays.map((holiday, index) => `
-        <div class="holiday-item">
-            <!-- Beschreibung -->
+    holidaysList.innerHTML = ''; // Liste zurücksetzen
+
+    holidays.forEach((holiday, index) => {
+        const holidayItem = document.createElement('div');
+        holidayItem.classList.add('holiday-item');
+
+        holidayItem.innerHTML = `
             <div class="holiday-column description-column">
                 <span>${holiday.description}</span>
             </div>
-            <!-- Datum -->
             <div class="holiday-column date-column">
                 <span>Von: ${holiday.from}</span>
                 <span>Bis: ${holiday.to}</span>
             </div>
-            <!-- Ressource und Status -->
             <div class="holiday-column resource-column">
                 <span>Ressource: ${holiday.resource || 'Keine Ressource'}</span>
                 <span>Status: ${holiday.status || 'Unbekannt'}</span>
             </div>
-            <!-- Aktionen -->
             <div class="holiday-column actions-column">
-                <button onclick="editHoliday(${index})" class="action-btn edit-btn" title="Bearbeiten">✏️</button>
-                <button onclick="deleteHoliday(${index})" class="action-btn delete-btn" title="Löschen">🗑️</button>
+                <button data-index="${index}" class="action-btn holiday-edit-btn" title="Bearbeiten">✏️</button>
+                <button data-index="${index}" class="action-btn holiday-delete-btn" title="Löschen">🗑️</button>
+
             </div>
-        </div>
-    `).join('');
+        `;
+
+        holidaysList.appendChild(holidayItem);
+    });
+
+        
+    // Event-Listener für Feiertags-Buttons
+    document.querySelectorAll('.holiday-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const holidayIndex = btn.getAttribute('data-index');
+            editHoliday(holidayIndex);
+        });
+    });
+
+    document.querySelectorAll('.holiday-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const holidayIndex = btn.getAttribute('data-index');
+            deleteHoliday(holidayIndex);
+        });
+    });
 }
+
+
 
 // Anzeigen des Absenzenformulars
 function showHolidayForm() {
@@ -1438,11 +1481,16 @@ document.getElementById('addHolidayButton').addEventListener('click', async (e) 
 
 // Feiertag/Urlaub bearbeiten
 window.editHoliday = async function (index) {
-    const holiday = allHolidays[index]; // Feiertag anhand des Index finden
+    console.log(`editHoliday aufgerufen für Index: ${index}`);
+    console.log('Aktuelle Feiertage:', allHolidays); // Logge den Inhalt der Liste
+
+    const holiday = allHolidays[index];
     if (!holiday) {
         console.error('Feiertag/Urlaub nicht gefunden:', index);
         return alert('Feiertag/Urlaub nicht gefunden');
     }
+
+    console.log('Gefundener Feiertag:', holiday);
 
     // Formular öffnen
     showHolidayForm();
