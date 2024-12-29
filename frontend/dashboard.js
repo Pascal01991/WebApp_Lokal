@@ -16,81 +16,60 @@
 // Funktion zum Bearbeiten des Termins
 
 // Für "Bearbeiten"-Button im Termin
-async function editAppointment(appointmentId) {
-    console.log('editAppointment aufgerufen mit ID:', appointmentId);
-    if (!appointmentId) {
-        console.error('Ungültige Appointment-ID:', appointmentId);
-        alert('Termin nicht gefunden');
-        return;
-    }
 
+
+async function editAppointment(appointmentId) {
+    // 1) Button "Termin erstellen" ausblenden
+    openAppointmentFormButton.style.display = 'none';
+
+    // 2) Terminobjekt finden
     const appointment = allAppointments.find(app => app._id === appointmentId);
     if (!appointment) {
-        console.error('Termin nicht in allAppointments gefunden:', appointmentId);
         alert('Termin nicht gefunden');
         return;
     }
 
-    // Debugging: Prüfe die Kundennummer
-    console.log('KundennummerzumTermin:', appointment.KundennummerzumTermin);
-
-    // Hole die Kundendaten basierend auf der Kundennummer
-    const customer = clients.find(client => appointment.KundennummerzumTermin === client.Kundennummer);
-
-    if (customer) {
-        // Setze die Kundendaten in die entsprechenden `<span>`-Elemente
-        const kundenNameField = document.getElementById('KundenName');
-        if (kundenNameField) {
-            kundenNameField.innerText = `${customer.Vorname} ${customer.Nachname}`;
-        }
-
-        const kundenAdresseField = document.getElementById('KundenAdresse');
-        if (kundenAdresseField) {
-            kundenAdresseField.innerText = `${customer.Strasse} ${customer.Hausnummer}, ${customer.Postleitzahl} ${customer.Ort}`;
-        }
-
-        const kundenTelefonField = document.getElementById('KundenTelefon');
-        if (kundenTelefonField) {
-            kundenTelefonField.innerText = customer.Telefon || 'Nicht verfügbar';
-        }
-
-        const kundenMailField = document.getElementById('KundenMail');
-        if (kundenMailField) {
-            kundenMailField.innerText = customer.Mail || 'Nicht verfügbar';
-        }
-         
-        const kundenNummerDisplayField = document.getElementById('KundennummerzumTerminDisplay');
-        if (kundenNummerDisplayField) {
-            kundenNummerDisplayField.innerText = String(customer.Kundennummer).padStart(6, '0'); // Kundennummer formatieren (optional)
-        }
-    } else {
-        console.warn('Kundendaten nicht gefunden.');
-    }
-
-    // Setze die Termindaten ins Formular
+    // 3) Formularfelder für den Termin befüllen
+    document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin || '';
+    // ...
     setLocalDateTimeInput(appointment.dateTime);
-    document.getElementById('duration').value = appointment.duration;
-    document.getElementById('Dienstleistung').value = appointment.Dienstleistung;
-    document.getElementById('Preis').value = appointment.Preis;
-    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus;
-    document.getElementById('description').value = appointment.description;
+    document.getElementById('duration').value = appointment.duration || '';
+    document.getElementById('Dienstleistung').value = appointment.Dienstleistung || '';
+    document.getElementById('Preis').value = appointment.Preis || '';
+    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
+    document.getElementById('description').value = appointment.description || '';
 
-    // Setze die Kundennummer ins versteckte Feld
-    const kundenNummerField = document.getElementById('KundennummerzumTermin');
-    if (kundenNummerField) {
-        kundenNummerField.value = appointment.KundennummerzumTermin;
+    // 4) den zugehörigen Kunden suchen und Kundendaten befüllen
+    //     (Voraussetzung: `allClients` ist geladen.)
+    const client = allClients.find(c => c.Kundennummer === appointment.KundennummerzumTermin);
+    if (client) {
+        document.getElementById('KundennummerzumTermin').value = client.Kundennummer
+        document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
+        document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
+        document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
+        document.getElementById('KundenTelefon').textContent = client.Telefon || '';
+        document.getElementById('KundenMail').textContent = client.Mail || '';
+        // Falls du das Feld .MailAppointment hast:
+        // document.getElementById('MailAppointment').value = client.Mail || '';
+    } else {
+        // Falls kein passender Kunde gefunden wird
+        document.getElementById('KundenName').textContent = 'Kunde nicht gefunden';
+        document.getElementById('KundenAdresse').textContent = '';
+        document.getElementById('KundenTelefon').textContent = '';
+        document.getElementById('KundenMail').textContent = '';
     }
 
-    // Formular anzeigen
-    showAppointmentForm();
+    // 5) Formular anzeigen (Edit-Modus)
+    showAppointmentForm(true);
 
-    // Weitere Einstellungen für die Speicherung der Änderungen
-    const submitButton = document.querySelector('#appointmentForm button[type="submit"]');
-    submitButton.innerText = "Änderungen speichern";
-    submitButton.onclick = async function (e) {
+    // 6) Button "Änderungen speichern" → PUT
+    const submitButton = appointmentForm.querySelector('button[type="submit"]');
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = appointmentForm.querySelector('button[type="submit"]');
+    newSubmitButton.innerText = 'Änderungen speichern';
+    newSubmitButton.addEventListener('click', async (e) => {
         e.preventDefault();
 
-        // Neue Daten sammeln
         const updatedAppointment = {
             KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
             dateTime: document.getElementById('dateTime').value,
@@ -98,11 +77,10 @@ async function editAppointment(appointmentId) {
             Dienstleistung: document.getElementById('Dienstleistung').value,
             Preis: document.getElementById('Preis').value,
             Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
-            description: document.getElementById('description').value,
+            description: document.getElementById('description').value
         };
 
         try {
-            // Termin aktualisieren
             const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
                 method: 'PUT',
                 headers: {
@@ -114,38 +92,33 @@ async function editAppointment(appointmentId) {
 
             if (response.ok) {
                 alert('Termin erfolgreich aktualisiert');
-                loadAppointments(); // Termine neu laden
-                submitButton.innerText = "Termin hinzufügen";
-                submitButton.onclick = null;
+                hideAppointmentForm();
+                loadAppointments(); 
             } else {
                 alert('Fehler beim Aktualisieren des Termins');
             }
         } catch (err) {
             alert('Fehler: ' + err.message);
         }
-    };
+    });
 }
 
 
     //Button für Löschen des Termins
     async function deleteAppointment(appointmentId) {
-        const confirmation = confirm("Möchtest du diesen Termin wirklich löschen?");
-        if (!confirmation) return;
-        console.log("Appointment ID to delete: ", appointmentId);
-
-
+        if (!confirm("Möchten Sie diesen Termin wirklich löschen?")) return;
+    
         try {
             const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
-
+    
             if (response.ok) {
                 alert('Termin erfolgreich gelöscht');
-                loadAppointments();  // Termine neu laden
+                loadAppointments();
             } else {
                 alert('Fehler beim Löschen des Termins');
             }
@@ -703,128 +676,230 @@ async function displayAppointmentsOnCalendar() {
     //TERMINVERWALTUNG
     //====================================================================================================================================
     //====================================================================================================================================
-    // Globale Variablen für die Filterzustände Terminverwaltung
-    let filterFutureActive = false;
-    let filterPastActive = false;
-    
-    
-    document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
-        e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
+    /**************************************************************
+ * GLOBALE VARIABLEN: Filterzustände, Terminliste
+ **************************************************************/
+let filterFutureActive = false;
+let filterPastActive = false;
+let allAppointments = []; // Termine global speichern
+// Falls benötigt: let allClients = []; // schon in deinem Code definiert?
 
-        
-        
+/**************************************************************
+ * NEUE STRUKTUR FÜR DAS APPOINTMENT-FORMULAR
+ **************************************************************/
+// Referenzen auf DOM-Elemente
+const appointmentFormContainer = document.getElementById('TerminFormular');
+const appointmentForm = document.getElementById('appointmentForm');
+const openAppointmentFormButton = document.getElementById('openAppointmentFormButton');
+const cancelAppointmentFormButton = document.getElementById('CancelAppointmentFormButton');
 
-        // Variablen definieren:
-        const duration = document.getElementById('duration').value;
-        const dateTime = document.getElementById('dateTime').value;
-        const description = document.getElementById('description').value;
-        const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
-        const Preis = document.getElementById('Preis').value;
-        const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
-        const MailAppointment = document.getElementById('MailAppointment').value;
-        const Dienstleistung = document.getElementById('Dienstleistung').value;
+/**
+ * (A) Formular-Felder leeren,
+ *     inkl. Kundendaten (Kundennummer, Name, Adresse usw.).
+ */
+function clearAppointmentForm() {
+    document.getElementById('KundennummerzumTermin').value = '';
+    document.getElementById('KundennummerzumTerminDisplay').textContent = '';
+    document.getElementById('KundenName').textContent = '';
+    document.getElementById('KundenAdresse').textContent = '';
+    document.getElementById('KundenTelefon').textContent = '';
+    document.getElementById('KundenMail').textContent = '';
 
-        // Ausgabe zur Überprüfung
-        console.log("Frontend: duration:", duration);
-        console.log("Frontend: dateTime:", dateTime);
-        console.log("Frontend: Description:", description);
-        console.log("Frontend: KundennummerzumTermin:", KundennummerzumTermin);
-        console.log("Frontend: Preis:", Preis);
-        console.log("Frontend: Abrechnungsstatus:", Abrechnungsstatus);
-        console.log("Frontend: MailAppointment:", MailAppointment);
-        console.log("Frontend: Dienstleistung:", Dienstleistung);
+    document.getElementById('dateTime').value = '';
+    document.getElementById('duration').value = '';
+    document.getElementById('Dienstleistung').value = '';
+    document.getElementById('Preis').value = '';
+    document.getElementById('Abrechnungsstatus').value = '';
+    document.getElementById('description').value = '';
+}
 
-        try {
-            const response = await fetch(`${BACKEND_URL}/appointments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ duration, dateTime, description, KundennummerzumTermin, Preis, Abrechnungsstatus, MailAppointment, Dienstleistung})
-            });
+/**
+ * (B) Formular anzeigen (Unterschied: Neu vs. Edit)
+ * @param {boolean} [isEditMode=false] 
+ */
+function showAppointmentForm(isEditMode = false) {
+    // 1) Formular einblenden
+    appointmentFormContainer.style.display = 'block';
+    setTimeout(() => {
+        appointmentFormContainer.classList.add('show');
+    }, 10);
 
-            if (response.ok) {
-                alert('Termin erfolgreich hinzugefügt!');
-                loadAppointments();  // Termine neu laden
-            } else {
-                alert('Fehler beim Hinzufügen des Termins');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
+    // 2) Button-Beschriftung setzen
+    const submitButton = appointmentForm.querySelector('button[type="submit"]');
+    submitButton.innerText = isEditMode ? 'Änderungen speichern' : 'Termin hinzufügen';
+
+    // 3) Alten Event-Listener entfernen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+}
+
+/**
+ * (C) Formular ausblenden (Abbrechen oder Speichern)
+ */
+function hideAppointmentForm() {
+    appointmentFormContainer.classList.remove('show');
+    setTimeout(() => {
+        appointmentFormContainer.style.display = 'none';
+    }, 300);
+
+    // Button "Termin erstellen" wieder anzeigen
+    openAppointmentFormButton.style.display = 'inline-block';
+
+    // Button-Text zurücksetzen
+    const submitButton = appointmentForm.querySelector('button[type="submit"]');
+    submitButton.innerText = 'Termin hinzufügen';
+
+    // Felder leeren
+    clearAppointmentForm();
+}
+
+/**************************************************************
+ * (D) NEUEN TERMIN ANLEGEN (POST)
+ **************************************************************/
+async function createNewAppointment() {
+    // Termin-Daten sammeln
+    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
+    const dateTime = document.getElementById('dateTime').value;
+    const duration = document.getElementById('duration').value;
+    const Dienstleistung = document.getElementById('Dienstleistung').value;
+    const Preis = document.getElementById('Preis').value;
+    const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
+    const description = document.getElementById('description').value;
+    // Falls du MailAppointment nutzt:
+    // const MailAppointment = document.getElementById('MailAppointment').value || '';
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/appointments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                KundennummerzumTermin,
+                dateTime,
+                duration,
+                Dienstleistung,
+                Preis,
+                Abrechnungsstatus,
+                description
+                // MailAppointment
+            })
+        });
+
+        if (response.ok) {
+            alert('Termin erfolgreich hinzugefügt!');
+            hideAppointmentForm();
+            loadAppointments(); // Termine neu laden
+        } else {
+            alert('Fehler beim Hinzufügen des Termins');
         }
-    });
-    
-    // Globale Variable, um die geladenen Termine zu speichern
-    let allAppointments = [];
-
-    // Termine abrufen und anzeigen
-    async function loadAppointments() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/appointments`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (response.ok) {
-                allAppointments = await response.json(); // Termine global speichern
-                displayAppointments(allAppointments); // Alle Termine anzeigen in der Liste
-                renderCalendar(); // Kalender nach dem Laden der Termine rendern im Kalender
-            } else {
-                alert('Fehler beim Laden der Termine');
-                console.error('Fehler beim Laden der Termine');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
     }
+}
 
 
 
-// TermineListe TemplateLiteral, Liste anzeigen
-// Funktion zur Anzeige der Terminliste mit Verweis auf Kundendaten basierend auf KundennummerzumTermin
+/**************************************************************
+ * (E) TERMIN BEARBEITEN (PUT)
+ **************************************************************/
+//Bereits unter Allgemeine Funktionen definiert
+
+/**************************************************************
+ * (F) TERMIN LÖSCHEN (DELETE)
+ **************************************************************/
+//Bereits unter allgemeinen Funktionen definiert
+
+/**************************************************************
+ * (G) APPOINTMENT-FORMULAR: OPEN/CLOSE EVENTS
+ **************************************************************/
+// Klick auf "Termin erstellen" (Neu)
+openAppointmentFormButton.addEventListener('click', function() {
+    // 1) Button ausblenden
+    openAppointmentFormButton.style.display = 'none';
+    // 2) Felder leeren
+    clearAppointmentForm();
+    // 3) Formular im Neu-Modus anzeigen
+    showAppointmentForm(false);
+    
+    // 4) Event-Listener für "Termin hinzufügen" (POST)
+    const submitButton = appointmentForm.querySelector('button[type="submit"]');
+    submitButton.addEventListener('click', async (e) => {
+        console.log('Termin hinzufügen');
+        e.preventDefault();
+        await createNewAppointment(); 
+    });
+});
+
+// Klick auf "Abbrechen"
+cancelAppointmentFormButton.addEventListener('click', function() {
+    hideAppointmentForm();
+});
+
+/**************************************************************
+ * (H) LOAD APPOINTMENTS (GET) UND ANZEIGE
+ **************************************************************/
+async function loadAppointments() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/appointments`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        if (response.ok) {
+            allAppointments = await response.json();
+            displayAppointments(allAppointments);
+            renderCalendar(); // Falls du den Kalender neu rendern willst
+        } else {
+            alert('Fehler beim Laden der Termine');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+/**************************************************************
+ * (I) TERMINLISTE ANZEIGEN / displayAppointments
+ **************************************************************/
 async function displayAppointments(appointments) {
-    const clientsResponse = await fetch(`${BACKEND_URL}/clients`); // Lädt alle Kunden aus der Kunden-Datenbank
+    // Kunden laden (für Kundendatenanzeige)
+    const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
     const clients = await clientsResponse.json();
 
     const appointmentsList = document.getElementById('appointmentsList');
     appointmentsList.innerHTML = appointments.map(app => {
-        // Kunden basierend auf KundennummerzumTermin finden 
-        const client = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-
+        const client = clients.find(c => c.Kundennummer === app.KundennummerzumTermin);
         return `
             <div class="termin-card">
                 <!-- Spalte A: Kundendaten -->
                 <div class="termin-info">
-                    <div>${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}</div> <!-- A1 -->
-                    <div>${client ? `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}` : ""}</div> <!-- A2 -->
-                    <div>${client ? `${client.Telefon}, ${client.Mail}` : ""}</div> <!-- A3 -->
+                    <div>${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}</div>
+                    <div>${client ? `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}` : ""}</div>
+                    <div>${client ? `${client.Telefon}, ${client.Mail}` : ""}</div>
                 </div>
                 <!-- Spalte B: Termindetails -->
                 <div class="termin-info">
-                    <div>${new Date(app.dateTime).toLocaleDateString()} ${new Date(app.dateTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div> <!-- B1 -->
-                    <div>${app.Dienstleistung} (${app.duration} Min)</div> <!-- B2 -->
-                    <div>${app.description}</div> <!-- B3 -->
+                    <div>${new Date(app.dateTime).toLocaleDateString()} 
+                         ${new Date(app.dateTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                    </div>
+                    <div>${app.Dienstleistung} (${app.duration} Min)</div>
+                    <div>${app.description}</div>
                 </div>
                 <!-- Spalte C: Weitere Details -->
                 <div class="termin-info">
-                    <div>Preis: ${app.Preis || "nicht angegeben"}</div> <!-- C1 -->
-                    <div>Status: ${app.Abrechnungsstatus || "nicht angegeben"}</div> <!-- C2 -->
+                    <div>Preis: ${app.Preis || "nicht angegeben"}</div>
+                    <div>Status: ${app.Abrechnungsstatus || "nicht angegeben"}</div>
                 </div>
                 <!-- Spalte D: Aktionen -->
                 <div class="termin-actions">
-                    <!-- Entferne die onclick-Attribute und verwende data-app-id -->
                     <button class="action-btn appointment-edit-btn" data-app-id="${app._id}" title="Bearbeiten">✏️</button>
                     <button class="action-btn appointment-delete-btn" data-app-id="${app._id}" title="Löschen">🗑️</button>
-
                 </div>
             </div>
         `;
     }).join('');
 
-    // Nachdem die Liste gerendert wurde, fügen wir nun die Event-Listener hinzu:
-    // Event-Listener für Termin-Buttons
+    // Klick auf Bearbeiten
     document.querySelectorAll('.appointment-edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const appointmentId = btn.getAttribute('data-app-id');
@@ -832,6 +907,7 @@ async function displayAppointments(appointments) {
         });
     });
 
+    // Klick auf Löschen
     document.querySelectorAll('.appointment-delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const appointmentId = btn.getAttribute('data-app-id');
@@ -839,6 +915,11 @@ async function displayAppointments(appointments) {
         });
     });
 }
+
+/**************************************************************
+ * (J) FILTER-FUNKTIONEN, SUCHE, ETC. (unverändert)
+ **************************************************************/
+// Beispiel: filterAppointments(), Filter-Buttons etc.
 
 
 function filterAppointments() {
@@ -885,131 +966,56 @@ function filterAppointments() {
     displayAppointments(filteredAppointments);
 }
 
-    // Event-Listener für die Suche hinzufügen
-    document.getElementById('searchAppointment').addEventListener('input', function () {
-        filterAppointments();
-    });
-
-//Button TERMIN ERSTELLEN
-// Funktion zum Anzeigen des Formulars
-function showAppointmentForm() {
-    const form = document.getElementById('TerminFormular');
-    form.style.display = 'block'; // Vor dem Hinzufügen der Klasse sicherstellen, dass es sichtbar ist
-    setTimeout(() => {
-        form.classList.add('show'); // Klasse für Transition hinzufügen
-    }, 10); // Minimaler Delay, um die Transition zu triggern
-    document.getElementById('openAppointmentFormButton').style.display = 'none';
-}
-
-
-
-// Für "Termin erstellen" verwenden
-document.getElementById('openAppointmentFormButton').addEventListener('click', showAppointmentForm);
-
-
-
-// Funktion zum Ausblenden des Formulars
-document.getElementById('CancelAppointmentFormButton').addEventListener('click', function () {
-    const form = document.getElementById('TerminFormular');
-    form.classList.remove('show'); // Klasse entfernen
-    setTimeout(() => {
-        form.style.display = 'none'; // Nach der Transition ausblenden
-    }, 300); // Delay sollte mit der CSS-Transition-Zeit übereinstimmen
-    document.getElementById('openAppointmentFormButton').style.display = 'inline-block';
+document.getElementById('filterPast').addEventListener('click', function () {
+    filterPastActive = !filterPastActive;
+    if (filterPastActive) this.classList.add('active');
+    else this.classList.remove('active');
+    filterAppointments();
 });
 
+document.getElementById('filterFuture').addEventListener('click', function () {
+    filterFutureActive = !filterFutureActive;
+    if (filterFutureActive) this.classList.add('active');
+    else this.classList.remove('active');
+    filterAppointments();
+});
 
+// Event-Listener für die Suche hinzufügen
+document.getElementById('searchAppointment').addEventListener('input', function () {
+    filterAppointments();
+});
 
+// usw.
 
-// Funktion zur Konvertierung der UTC-Zeit in das lokale Format für datetime-local (Achtung funktioniert nur online mit NginX korrekt!!!)
-// Beispiel: dateTimeLocalStr = "2024-12-18T12:00:00"
+/**************************************************************
+ * (K) HILFSFUNKTION: setLocalDateTimeInput
+ **************************************************************/
 function setLocalDateTimeInput(dateTimeLocalStr) {
+    // Dein bereits vorhandener Code...
+    // Wandelt "YYYY-MM-DDTHH:mm:ss" in ein datetime-local-Eingabeformat
+    // und setzt document.getElementById('dateTime').value = ...
     const [datePart, timePart] = dateTimeLocalStr.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
 
     const timeParts = timePart.split(':').map(Number);
     const hour = timeParts[0];
     const minute = timeParts[1];
-    const second = timeParts[2] || 0; // Falls kein Sekundenteil vorhanden, auf 0 setzen
+    const second = timeParts[2] || 0;
 
-    // Erstelle ein Datum in lokaler Zeit
     const date = new Date(year, month - 1, day, hour, minute, second);
-
     if (isNaN(date.getTime())) {
         console.error("Ungültiges Datum:", dateTimeLocalStr);
         return;
     }
 
-    // Nun das Formatieren für das Input-Feld:
     const localDateTime = `${year.toString().padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
     document.getElementById('dateTime').value = localDateTime;
 }
 
-
-
-
-
-
-
-
-    //Kundensuche innerhalb der Terminverwaltung:
-    // Filtered search results for customer search
-    let searchResults = [];
-
-    // Event-Listener für die Kunden-Suche Kundenauswahl
-    // Kundensuche Logik bleibt unverändert
-
-    // Kundensuche-Event-Listener für Auswahl des Kunden
-    document.getElementById('searchCustomerInput').addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        searchResults = allClients
-            .filter(client => 
-                client.Vorname.toLowerCase().includes(searchTerm) ||
-                client.Nachname.toLowerCase().includes(searchTerm) ||
-                client.Ort.toLowerCase().includes(searchTerm) ||
-                client.Telefon.toLowerCase().includes(searchTerm)
-            )
-            .slice(0, 5);
-        displaySearchResults();
-    });
-
-
-
-
-
-// Event-Listener für den "Vergangenheit"-Filter-Button
-document.getElementById('filterPast').addEventListener('click', function () {
-    
-    filterPastActive = !filterPastActive; // Toggle-Zustand
-
-    // Klasse `.active` je nach Zustand hinzufügen oder entfernen
-    if (filterPastActive) {
-        this.classList.add('active'); // Klasse hinzufügen, um den aktiven Zustand zu zeigen
-        console.log("Filter.activ1");
-    } else {
-        this.classList.remove('active'); // Klasse entfernen, um den Zustand zurückzusetzen
-        console.log("Filter.activ2");
-    }
-    filterAppointments(); // Filterung erneut ausführen
-});
-
-// Event-Listener für den "Zukunfts"-Filter-Button
-document.getElementById('filterFuture').addEventListener('click', function () {
-    
-
-    filterFutureActive = !filterFutureActive; // Toggle-Zustand
-
-    // Klasse `.active` je nach Zustand hinzufügen oder entfernen
-    if (filterFutureActive) {
-        this.classList.add('active'); // Klasse hinzufügen, um den aktiven Zustand zu zeigen
-        
-    } else {
-        this.classList.remove('active'); // Klasse entfernen, um den Zustand zurückzusetzen
-   }
-    filterAppointments(); // Filterung erneut ausführen
-});
-
-
+/**************************************************************
+ * (L) WEITERE SUCH-FUNKTIONEN, KUNDENSUCHE, ETC.
+ *     Belässt du einfach in deinem Code, wenn sie schon vorhanden sind.
+ **************************************************************/
 // Funktion zur Anzeige der Suchergebnisse mit angewendeten Filtern und Sortierung
 function displaySearchResults() {
     const searchResultsContainer = document.getElementById('searchClientForApointment'); // Zielcontainer
@@ -1074,6 +1080,25 @@ function displaySearchResults() {
     });
 }
 
+//Kundensuche innerhalb der Terminverwaltung:
+    // Filtered search results for customer search
+    let searchResults = [];
+
+    // Kundensuche-Event-Listener für Auswahl des Kunden
+    document.getElementById('searchCustomerInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        searchResults = allClients
+            .filter(client => 
+                client.Vorname.toLowerCase().includes(searchTerm) ||
+                client.Nachname.toLowerCase().includes(searchTerm) ||
+                client.Ort.toLowerCase().includes(searchTerm) ||
+                client.Telefon.toLowerCase().includes(searchTerm)
+            )
+            .slice(0, 5);
+        displaySearchResults();
+    });
+
+
     // Event-Listener für das Eingabefeld und die Escape-Taste
     document.getElementById('searchCustomerInput').addEventListener('input', function() {
         if (this.value.trim() === '') {
@@ -1129,7 +1154,6 @@ function displaySearchResults() {
             alert('Fehler: ' + err.message);
         }
     });
-
  
     //====================================================================================================================================
     //====================================================================================================================================
