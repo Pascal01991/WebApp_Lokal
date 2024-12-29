@@ -514,21 +514,19 @@ function dateToLocalString(date) {
     
         
     // Funktion zum Laden aller Kunden
-     async function loadClients() {
+    async function loadClients() {
         try {
-            const response = await fetch(`${BACKEND_URL}/clients`); // Einheitlicher Endpunkt
-            if (response.ok) {
-                const clients = await response.json(); // Daten laden
-                allClients = clients; // Aktualisiere die globale Variable allClients
-                displayClients(allClients); // Zeige die Kundenliste an
-                
-            } else {
-                console.error('Fehler beim Laden der Kunden:', response.statusText);
+            const response = await fetch(`${BACKEND_URL}/clients`);
+            if (!response.ok) {
+                throw new Error('Fehler beim Laden der Kunden');
             }
+            allClients = await response.json();
+            displayClients(allClients);
         } catch (err) {
-            console.error('Fehler beim Laden der Kunden:', err.message);
+            alert('Fehler: ' + err.message);
         }
     }
+    
 
 
     
@@ -1141,57 +1139,156 @@ function displaySearchResults() {
     //====================================================================================================================================
     //====================================================================================================================================
     
-    // Kundenformular und Terminformular beim Laden der Seite ausblenden
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('kundenFormular').style.display = 'none';
+/***************************************************
+ * 1) GRUNDLEGENDE SETUPS
+ ***************************************************/
+// Globale Variable für die Kundenliste
+let allClients = [];
+
+// Kundenformular und Terminformular beim Laden der Seite ausblenden
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('kundenFormular').style.display = 'none';
+
+    // Kundenliste laden beim Start
+    loadClients();  // allClients wird hier gefüllt
+    // Falls du das brauchst, auch:
+    loadAppointments();
 });
 
-    
-    // Event Listener für das Kundenformular
-    document.getElementById('clientForm').addEventListener('submit', async function(e) {
+
+/***************************************************
+ * 2) CLIENT-FORMULAR: ÖFFNEN, SCHLIESSEN, LEEREN
+ ***************************************************/
+
+// Button "Kunden anlegen" → Formular öffnen (NEU-Workflow)
+document.getElementById('openClientFormButton').addEventListener('click', () => {
+    // 1) Diesen Button ausblenden
+    document.getElementById('openClientFormButton').style.display = 'none';
+    // 2) Felder leeren
+    clearClientForm();
+    // 3) Formular anzeigen
+    showClientForm();
+    // 4) Button-Text = "Kunden hinzufügen"
+    const submitButton = document.querySelector('#clientForm button[type="submit"]');
+    submitButton.innerText = "Kunden hinzufügen";
+
+    // 5) Alten Listener entfernen und neuen Listener (POST) anhängen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.querySelector('#clientForm button[type="submit"]');
+    newSubmitButton.addEventListener('click', async (e) => {
         e.preventDefault();
-
-        // Kundeninformationen abrufen
-        const Vorname = document.getElementById('Vorname').value;
-        const Nachname = document.getElementById('Nachname').value;
-        const Strasse = document.getElementById('Strasse').value;
-        const Hausnummer = document.getElementById('Hausnummer').value;
-        const Postleitzahl = document.getElementById('Postleitzahl').value;
-        const Ort = document.getElementById('Ort').value;
-        const Telefon = document.getElementById('Telefon').value;
-        const Mail = document.getElementById('Mail').value;
-        
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/clients`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ Vorname, Nachname, Strasse, Hausnummer, Postleitzahl, Ort, Telefon, Mail })
-            });
-
-            if (response.ok) {
-                alert('Kunde erfolgreich hinzugefügt!');
-                loadClients();  // Kundenliste neu laden
-            } else {
-                alert('Fehler beim Hinzufügen des Kunden');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
+        await addNewClient(); // POST-Funktion
     });
+});
 
-    // Globale Variable für die Kundenliste
-    let allClients = [];
+// Funktion: Formular anzeigen (Animation)
+function showClientForm() {
+    const form = document.getElementById('kundenFormular');
+    form.classList.remove('hidden');   // Entfernt den Zustand "komplett unsichtbar"
+    form.style.display = 'block';      // Sichtbar machen
+    setTimeout(() => {
+        form.classList.add('show');    // Fügt die Transition ein
+    }, 10); 
+}
+
+// Klick auf "Abbrechen" → Formular schließen
+document.getElementById('cancelClientFormButton').addEventListener('click', function () {
+    hideClientForm();
+});
+
+// Funktion zum Ausblenden des Formulars (Abbrechen oder Erfolg)
+function hideClientForm() {
+    const form = document.getElementById('kundenFormular');
+    // Button "Kunden anlegen" wieder anzeigen
+    document.getElementById('openClientFormButton').style.display = 'inline-block';
+
+    // Smooth das Formular schließen
+    form.classList.remove('show');
+    setTimeout(() => {
+        form.classList.add('hidden'); 
+        form.style.display = 'none';
+    }, 300);
+
+    // Beschriftung zurück auf "Kunden hinzufügen"
+    const submitButton = document.querySelector('#clientForm button[type="submit"]');
+    submitButton.innerText = "Kunden hinzufügen";
+
+    // Felder leeren
+    clearClientForm();
+}
+
+// Formularfelder leeren
+function clearClientForm() {
+    document.getElementById('Vorname').value = '';
+    document.getElementById('Nachname').value = '';
+    document.getElementById('Strasse').value = '';
+    document.getElementById('Hausnummer').value = '';
+    document.getElementById('Postleitzahl').value = '';
+    document.getElementById('Ort').value = '';
+    document.getElementById('Telefon').value = '';
+    document.getElementById('Mail').value = '';
+}
 
 
-    // Funktion zum Anzeigen der Kundenliste
-    function displayClients(clients) {
-        console.log('Anzuzeigende Kunden:', clients); // Logge die Kunden
-        const clientsList = document.getElementById('clientsList');
-        console.log(clientsList);
-        clientsList.innerHTML = clients.map(client => `
+/***************************************************
+ * 3) NEUEN KUNDEN ANLEGEN (POST)
+ ***************************************************/
+
+// POST: Kunde hinzufügen
+async function addNewClient() {
+    // Kundeninformationen abrufen
+    const Vorname = document.getElementById('Vorname').value;
+    const Nachname = document.getElementById('Nachname').value;
+    const Strasse = document.getElementById('Strasse').value;
+    const Hausnummer = document.getElementById('Hausnummer').value;
+    const Postleitzahl = document.getElementById('Postleitzahl').value;
+    const Ort = document.getElementById('Ort').value;
+    const Telefon = document.getElementById('Telefon').value;
+    const Mail = document.getElementById('Mail').value;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                Vorname, 
+                Nachname, 
+                Strasse, 
+                Hausnummer, 
+                Postleitzahl, 
+                Ort, 
+                Telefon, 
+                Mail 
+            })
+        });
+
+        if (response.ok) {
+            alert('Kunde erfolgreich hinzugefügt!');
+            hideClientForm();
+            loadClients();  // Kundenliste neu laden
+        } else {
+            alert('Fehler beim Hinzufügen des Kunden');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+
+/***************************************************
+ * 4) KUNDENLISTE LADEN UND ANZEIGEN
+ ***************************************************/
+
+// Lade alle Clients (GET)
+//Bereits definiert unter Allgemeinen Funktionen
+
+// Funktion zum Anzeigen der Kundenliste
+function displayClients(clients) {
+    console.log('Anzuzeigende Kunden:', clients); 
+    const clientsList = document.getElementById('clientsList');
+    // HTML-Output
+    clientsList.innerHTML = clients
+        .map(client => `
             <div class="client-card">
                 <span class="client-info">${client.Vorname} ${client.Nachname}</span>
                 <span class="client-info">${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}</span>
@@ -1201,163 +1298,139 @@ function displaySearchResults() {
                     <button data-client-id="${client._id}" class="action-btn delete-client-btn" title="Löschen">🗑️</button>
                 </div>
             </div>
-        `).join('');
-          
-        // Event-Listener für die "Bearbeiten"-Buttons
-        document.querySelectorAll('.edit-client-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const clientId = btn.getAttribute('data-client-id');
-                editClient(clientId);  // ruft die globale Funktion (oder importierte) auf
-            });
+        `)
+        .join('');
+
+    // Event-Listener für "Bearbeiten"
+    document.querySelectorAll('.edit-client-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const clientId = btn.getAttribute('data-client-id');
+            editClient(clientId); 
         });
+    });
 
-        // Event-Listener für die "Löschen"-Buttons
-        document.querySelectorAll('.delete-client-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const clientId = btn.getAttribute('data-client-id');
-                deleteClient(clientId);
-            });
+    // Event-Listener für "Löschen"
+    document.querySelectorAll('.delete-client-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const clientId = btn.getAttribute('data-client-id');
+            deleteClient(clientId);
         });
-    }
-    
-    console.log('allClients' + allClients); // Logge die tatsächliche Kundenliste
-
-
-
-
-
-// Button KUNDEN ANLEGEN
-function showClientForm() {
-    const form = document.getElementById('kundenFormular');
-    form.classList.remove('hidden'); // Entfernt den Zustand "komplett unsichtbar"
-    form.style.display = 'block'; // Sichtbar machen
-    setTimeout(() => {
-        form.classList.add('show'); // Fügt die Transition ein
-    }, 10); // Leichter Delay, damit die Transition greift
-    document.getElementById('openClientFormButton').style.display = 'none'; // Button ausblenden
+    });
 }
 
 
+/***************************************************
+ * 5) KUNDEN BEARBEITEN (PUT)
+ ***************************************************/
 
-// Funktion zum Ausblenden des Formulars
-document.getElementById('cancelClientFormButton').addEventListener('click', function () {
-    const form = document.getElementById('kundenFormular');
-    const openButton = document.getElementById('openClientFormButton');
+async function editClient(clientId) {
+    // 1) Button "Kunden anlegen" ausblenden
+    document.getElementById('openClientFormButton').style.display = 'none';
 
-    // Button "Kunden anlegen" direkt sichtbar machen
-    openButton.style.display = 'inline-block';
-
-    // Smooth das Formular schließen
-    form.classList.remove('show');
-    setTimeout(() => {
-        form.classList.add('hidden'); // Versteckt das Formular komplett
-        form.style.display = 'none';
-    }, 300); // Nach Abschluss der Transition ausblenden
-});
-
-
-// Für "Termin erstellen" -->Formular öffnen
-document.getElementById('openClientFormButton').addEventListener('click', showClientForm);
-
-
-    // Kunden bearbeiten
-    async function editClient(clientId) {
-        showClientForm();    
-        const client = allClients.find(c => c._id === clientId);
-        if (!client) return alert('Kunde nicht gefunden');
-
-        document.getElementById('Vorname').value = client.Vorname;
-        document.getElementById('Nachname').value = client.Nachname;
-        document.getElementById('Strasse').value = client.Strasse;
-        document.getElementById('Hausnummer').value = client.Hausnummer;
-        document.getElementById('Postleitzahl').value = client.Postleitzahl;
-        document.getElementById('Ort').value = client.Ort;
-        document.getElementById('Telefon').value = client.Telefon;
-        document.getElementById('Mail').value = client.Mail;
-       
-
-        const submitButton = document.querySelector('#clientForm button[type="submit"]');
-        submitButton.innerText = "Änderungen speichern";
-        submitButton.onclick = async function (e) {
-            e.preventDefault();
-            const updatedClient = {
-                Vorname: document.getElementById('Vorname').value,
-                Nachname: document.getElementById('Nachname').value,
-                Strasse: document.getElementById('Strasse').value,
-                Hausnummer: document.getElementById('Hausnummer').value,
-                Postleitzahl: document.getElementById('Postleitzahl').value,
-                Ort: document.getElementById('Ort').value,
-                Telefon: document.getElementById('Telefon').value,
-                Mail: document.getElementById('Mail').value,
-                
-            };
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/clients/${clientId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedClient)
-                });
-
-                if (response.ok) {
-                    alert('Kunde erfolgreich aktualisiert');
-                    loadClients();
-                    submitButton.innerText = "Kunden hinzufügen";
-                    submitButton.onclick = null;
-                } else {
-                    alert('Fehler beim Aktualisieren des Kunden');
-                }
-            } catch (err) {
-                alert('Fehler: ' + err.message);
-            }
-        };
+    // 2) Client-Objekt finden
+    const client = allClients.find(c => c._id === clientId);
+    if (!client) {
+        alert('Kunde nicht gefunden');
+        return;
     }
 
-    // Kunden löschen
-    async function deleteClient(clientId) {
-        if (!confirm("Möchtest du diesen Kunden wirklich löschen?")) return;
+    // 3) Felder füllen
+    document.getElementById('Vorname').value = client.Vorname;
+    document.getElementById('Nachname').value = client.Nachname;
+    document.getElementById('Strasse').value = client.Strasse;
+    document.getElementById('Hausnummer').value = client.Hausnummer;
+    document.getElementById('Postleitzahl').value = client.Postleitzahl;
+    document.getElementById('Ort').value = client.Ort;
+    document.getElementById('Telefon').value = client.Telefon;
+    document.getElementById('Mail').value = client.Mail;
 
+    // 4) Formular anzeigen
+    showClientForm();
+
+    // 5) Button-Beschriftung "Änderungen speichern"
+    const submitButton = document.querySelector('#clientForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+
+    // 6) Alten Listener entfernen, neuen Listener anfügen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.querySelector('#clientForm button[type="submit"]');
+    newSubmitButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 7) Updated-Daten
+        const updatedClient = {
+            Vorname: document.getElementById('Vorname').value,
+            Nachname: document.getElementById('Nachname').value,
+            Strasse: document.getElementById('Strasse').value,
+            Hausnummer: document.getElementById('Hausnummer').value,
+            Postleitzahl: document.getElementById('Postleitzahl').value,
+            Ort: document.getElementById('Ort').value,
+            Telefon: document.getElementById('Telefon').value,
+            Mail: document.getElementById('Mail').value
+        };
+
+        // 8) PUT-Request
         try {
-            const response = await fetch(`${BACKEND_URL}/clients/${clientId}`, { method: 'DELETE' });
+            const response = await fetch(`${BACKEND_URL}/clients/${clientId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedClient)
+            });
+
             if (response.ok) {
-                alert('Kunde erfolgreich gelöscht');
-                loadClients();
+                alert('Kunde erfolgreich aktualisiert');
+                await loadClients(); 
+                hideClientForm();
             } else {
-                alert('Fehler beim Löschen des Kunden');
+                alert('Fehler beim Aktualisieren des Kunden');
             }
         } catch (err) {
             alert('Fehler: ' + err.message);
         }
-    }
-
-    // Suchfunktion für Kunden
-    const searchClientInput = document.getElementById('searchClient');
-    if (!searchClientInput) {
-        console.error("Das Element mit der ID 'searchClient' wurde nicht gefunden!");
-    } else {
-        searchClientInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const filteredClients = allClients.filter(client =>
-                client.Vorname.toLowerCase().includes(searchTerm) ||
-                client.Nachname.toLowerCase().includes(searchTerm) ||
-                client.Telefon.toLowerCase().includes(searchTerm) ||
-                client.Mail.toLowerCase().includes(searchTerm)
-            );
-            console.log('Gefilterte Kunden:', filteredClients);
-            displayClients(filteredClients);
-        });
-    }
-
-
-    
-
-
-
-    // Kundenliste laden und Suchfeld initialisieren beim Start
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAppointments();
-        loadClients();  // AllClients wird hier geladen
     });
+}
+
+
+/***************************************************
+ * 6) KUNDEN LÖSCHEN (DELETE)
+ ***************************************************/
+
+async function deleteClient(clientId) {
+    if (!confirm("Möchtest du diesen Kunden wirklich löschen?")) return;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/clients/${clientId}`, { method: 'DELETE' });
+        if (response.ok) {
+            alert('Kunde erfolgreich gelöscht');
+            await loadClients();
+        } else {
+            alert('Fehler beim Löschen des Kunden');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+
+/***************************************************
+ * 7) KUNDEN-SUCHE
+ ***************************************************/
+const searchClientInput = document.getElementById('searchClient');
+if (!searchClientInput) {
+    console.error("Das Element mit der ID 'searchClient' wurde nicht gefunden!");
+} else {
+    searchClientInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const filteredClients = allClients.filter(client =>
+            (client.Vorname || '').toLowerCase().includes(searchTerm) ||
+            (client.Nachname || '').toLowerCase().includes(searchTerm) ||
+            (client.Telefon || '').toLowerCase().includes(searchTerm) ||
+            (client.Mail || '').toLowerCase().includes(searchTerm)
+        );
+        displayClients(filteredClients);
+    });
+}
+
 //====================================================================================================================================
 //====================================================================================================================================
 // Absenzenverwaltung
