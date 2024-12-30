@@ -1572,7 +1572,13 @@ async function createNewHoliday() {
     } catch (err) {
         alert('Fehler: ' + err.message);
     }
+
+
 }
+
+    
+
+
 
 /**************************************************************
  * 6) Feiertag/Urlaub bearbeiten (PUT) => /absence/holidays/:index

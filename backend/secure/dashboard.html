@@ -202,7 +202,11 @@
                         </div>
                         <div>
                             <label>Genehmigungsstatus:</label>
-                            <input type="text" id="holidayStatus" placeholder="offen">
+                            <select id="holidayStatus" name="holidayStatus">
+                                <option value="Ausstehend">Ausstehend</option>
+                                <option value="Genehmigt">Genehmigt</option>
+                                <option value="Abgelehnt">Abgelehnt</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-actions">
@@ -210,6 +214,7 @@
                         <button type="button" id="cancelHolidayFormButton">Abbrechen</button>
                     </div>
                 </form>
+                
             </div>
         
             <!-- Filterbuttons für Jahre -->

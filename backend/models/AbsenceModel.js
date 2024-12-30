@@ -18,7 +18,7 @@ const absenceSchema = new mongoose.Schema({
             resource: String,    // Ressource, auf die sich die Absenz bezieht
             status: {            // Genehmigungsstatus
                 type: String,
-                enum: ['Genehmigt', 'Abgelehnt', 'Ausstehend'], // Zulässige Werte
+                enum: ['Genehmigt', 'Abgelehnt', 'Ausstehend', ''], // Zulässige Werte
                 default: 'Ausstehend'
             }
         }
