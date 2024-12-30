@@ -794,3 +794,54 @@ Absenzverwaltung
 .holiday-actions button:hover {
   background-color: var(--theme-color);
 }
+
+.holiday-card {
+  display: flex;
+  flex-direction: row;
+  
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 4px;
+  align-items: flex-start; /* Start, damit Zeile2 nicht verrutscht */
+}
+
+.holiday-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* Du kannst hier oder in jeder col-X-Klasse eine feste Breite eingeben */
+  margin-right: 10px;
+}
+
+/* Beispiel: 4 Spalten */
+.col-a { flex: 2; }
+.col-b { flex: 1; }
+.col-c { flex: 1.5; }
+.col-d { flex: 0.5; }
+
+/* Jede Zeile in einer Spalte */
+.line1 {
+  margin-bottom: 4px;
+}
+.line2 {
+  margin-bottom: 4px;
+}
+
+/* Buttons in Spalte D übereinander */
+.col-d button {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Filter-Button .active-Style */
+#filter2024.active,
+#filter2025.active {
+  background-color: var(--theme-color);
+  color: #fff;
+}
+/* Optionales Hover-Style */
+#filter2024:hover,
+#filter2025:hover {
+  background-color:var(--theme-color);
+  cursor: pointer;
+}

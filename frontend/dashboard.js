@@ -1461,57 +1461,280 @@ if (!searchClientInput) {
 //====================================================================================================================================
 //====================================================================================================================================
 
+
+
+/**************************************************************
+ * Absenzen-/Urlaubsverwaltung (Holidays) -- INDEX-BASIERT
+ **************************************************************/
+
 let allHolidays = []; // Globale Variable für Feiertage/Urlaube
 
-// Feiertage/Urlaube laden
+// DOM-Elemente
+const openHolidayFormButton = document.getElementById('openHolidayFormButton');
+const cancelHolidayFormButton = document.getElementById('cancelHolidayFormButton');
+const holidayFormContainer = document.getElementById('holidaysForm');
+const holidayForm = document.getElementById('holidayForm');
+const addHolidayButton = document.getElementById('addHolidayButton');
+
+// Für die Filter-Buttons (z. B. 2024, 2025) verwenden wir ein Set:
+let activeYears = new Set();
+
+/**************************************************************
+ * 1) Hilfsfunktion: Deutsche Datumsformatierung
+ **************************************************************/
+function formatGermanDate(dateString) {
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj)) return dateString; // Fallback
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}.${month}.${year}`;
+}
+
+/**************************************************************
+ * 2) Formular-Felder leeren
+ **************************************************************/
+function clearHolidayForm() {
+    document.getElementById('holidayDescription').value = '';
+    document.getElementById('holidayFromDate').value = '';
+    document.getElementById('holidayToDate').value = '';
+    document.getElementById('holidayResource').value = '';
+    document.getElementById('holidayStatus').value = '';
+}
+
+/**************************************************************
+ * 3) Formular anzeigen
+ **************************************************************/
+function showHolidayForm(isEditMode = false) {
+    // Container einblenden
+    holidayFormContainer.style.display = 'block';
+    setTimeout(() => {
+        holidayFormContainer.classList.add('show');
+    }, 10);
+
+    // Button-Beschriftung
+    const submitBtn = document.getElementById('addHolidayButton');
+    submitBtn.innerText = isEditMode ? 'Änderungen speichern' : 'Speichern';
+
+    // Alten Listener entfernen (Button klonen)
+    submitBtn.replaceWith(submitBtn.cloneNode(true));
+}
+
+/**************************************************************
+ * 4) Formular ausblenden
+ **************************************************************/
+function hideHolidayForm() {
+    holidayFormContainer.classList.remove('show');
+    setTimeout(() => {
+        holidayFormContainer.style.display = 'none';
+        // Button "Feiertag/Urlaub anlegen" wieder anzeigen
+        openHolidayFormButton.style.display = 'inline-block';
+    }, 300);
+
+    // Button zurücksetzen
+    const submitBtn = document.getElementById('addHolidayButton');
+    submitBtn.innerText = 'Speichern';
+
+    // Felder leeren
+    clearHolidayForm();
+}
+
+/**************************************************************
+ * 5) Feiertag/Urlaub neu anlegen (POST) => /settings/holidays
+ **************************************************************/
+async function createNewHoliday() {
+    const from = document.getElementById('holidayFromDate').value;
+    const to = document.getElementById('holidayToDate').value || from;
+    const description = document.getElementById('holidayDescription').value;
+    const resource = document.getElementById('holidayResource').value;
+    const status = document.getElementById('holidayStatus').value || 'Unbekannt';
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/settings/holidays`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from, to, description, resource, status }),
+        });
+
+        if (response.ok) {
+            await loadHolidays();
+            alert('Feiertag/Urlaub hinzugefügt');
+            hideHolidayForm();
+        } else {
+            alert('Fehler beim Hinzufügen (Status: ' + response.status + ')');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+/**************************************************************
+ * 6) Feiertag/Urlaub bearbeiten (PUT) => /holidays/:index
+ **************************************************************/
+async function editHoliday(index) {
+    // Button "Feiertag/Urlaub anlegen" ausblenden
+    openHolidayFormButton.style.display = 'none';
+
+    console.log(`editHoliday aufgerufen für Index: ${index}`);
+    console.log('Aktuelle Feiertage:', allHolidays);
+
+    const holiday = allHolidays[index];
+    if (!holiday) {
+        console.error('Feiertag/Urlaub nicht gefunden:', index);
+        return alert('Feiertag/Urlaub nicht gefunden');
+    }
+
+    console.log('Gefundener Feiertag:', holiday);
+
+    // Felder befüllen
+    document.getElementById('holidayDescription').value = holiday.description;
+    document.getElementById('holidayFromDate').value = holiday.from;
+    document.getElementById('holidayToDate').value = holiday.to;
+    document.getElementById('holidayResource').value = holiday.resource || '';
+    document.getElementById('holidayStatus').value = holiday.status || '';
+
+    // Formular (Edit-Modus) anzeigen
+    showHolidayForm(true);
+
+    // PUT-Listener
+    const newSubmitBtn = document.getElementById('addHolidayButton');
+    newSubmitBtn.innerText = 'Änderungen speichern';
+    newSubmitBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const updatedHoliday = {
+            from: document.getElementById('holidayFromDate').value,
+            to: document.getElementById('holidayToDate').value,
+            description: document.getElementById('holidayDescription').value,
+            resource: document.getElementById('holidayResource').value,
+            status: document.getElementById('holidayStatus').value,
+        };
+
+        try {
+            // Hier rufen wir index-basiert auf (siehe deine routes/settings.js)
+            const response = await fetch(`${BACKEND_URL}/settings/holidays/${index}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedHoliday),
+            });
+
+            if (response.ok) {
+                await loadHolidays();
+                alert('Feiertag/Urlaub erfolgreich aktualisiert');
+                hideHolidayForm();
+            } else {
+                alert('Fehler beim Aktualisieren (Status: ' + response.status + ')');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    });
+}
+
+/**************************************************************
+ * 7) Feiertag/Urlaub löschen (DELETE) => /holidays/:index
+ **************************************************************/
+async function deleteHoliday(index) {
+    const holiday = allHolidays[index];
+    if (!holiday) return alert('Feiertag/Urlaub nicht gefunden');
+
+    if (!confirm(`Möchten Sie den Feiertag/Urlaub "${holiday.description}" wirklich löschen?`)) return;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/settings/holidays/${index}`, {
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            await loadHolidays();
+            alert('Feiertag/Urlaub erfolgreich gelöscht');
+        } else {
+            alert('Fehler beim Löschen (Status: ' + response.status + ')');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+/**************************************************************
+ * 8) Formular-Events (Öffnen, Abbrechen)
+ **************************************************************/
+openHolidayFormButton.addEventListener('click', function() {
+    openHolidayFormButton.style.display = 'none';
+    clearHolidayForm();
+    showHolidayForm(false);
+
+    // POST-Listener
+    const submitBtn = document.getElementById('addHolidayButton');
+    submitBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await createNewHoliday();
+    });
+});
+
+cancelHolidayFormButton.addEventListener('click', function() {
+    hideHolidayForm();
+});
+
+/**************************************************************
+ * 9) Feiertage/Urlaube laden (GET) => /settings
+ **************************************************************/
 async function loadHolidays() {
     try {
         const response = await fetch(`${BACKEND_URL}/settings`);
         if (response.ok) {
             const settings = await response.json();
-            allHolidays = settings.holidays || []; // Feiertage speichern
+            allHolidays = settings.holidays || [];
             renderHolidays(allHolidays);
         } else {
-            console.error('Fehler beim Laden der Feiertage');
+            console.error('Fehler beim Laden der Feiertage:', response.status);
         }
     } catch (error) {
         console.error('Fehler beim Abrufen der Feiertage:', error);
     }
 }
 
-// Feiertage/Urlaube anzeigen
+/**************************************************************
+ * 10) Feiertage/Urlaube anzeigen (4 Spalten, 2 Zeilen)
+ *     => A, B, C, D
+ **************************************************************/
 function renderHolidays(holidays) {
     const holidaysList = document.getElementById('holidaysList');
     holidaysList.innerHTML = ''; // Liste zurücksetzen
 
     holidays.forEach((holiday, index) => {
+        const fromStr = formatGermanDate(holiday.from);
+        const toStr = formatGermanDate(holiday.to);
+
+        // Spalte A (Zeile 1: description, Zeile 2: leer)
+        // Spalte B (Zeile 1: "Von: ...", Zeile 2: "Bis: ...")
+        // Spalte C (Zeile 1: "Ressource:", Zeile 2: "Status:")
+        // Spalte D (Buttons übereinander)
         const holidayItem = document.createElement('div');
-        holidayItem.classList.add('holiday-item');
+        holidayItem.classList.add('holiday-card');
 
         holidayItem.innerHTML = `
-            <div class="holiday-column description-column">
-                <span>${holiday.description}</span>
+            <div class="holiday-col col-a">
+                <div class="line1">${holiday.description}</div>
+                <div class="line2"></div>
             </div>
-            <div class="holiday-column date-column">
-                <span>Von: ${holiday.from}</span>
-                <span>Bis: ${holiday.to}</span>
+            <div class="holiday-col col-b">
+                <div class="line1">Von: ${fromStr}</div>
+                <div class="line2">Bis: ${toStr}</div>
             </div>
-            <div class="holiday-column resource-column">
-                <span>Ressource: ${holiday.resource || 'Keine Ressource'}</span>
-                <span>Status: ${holiday.status || 'Unbekannt'}</span>
+            <div class="holiday-col col-c">
+                <div class="line1">Ressource: ${holiday.resource || 'Keine Ressource'}</div>
+                <div class="line2">Status: ${holiday.status || 'Unbekannt'}</div>
             </div>
-            <div class="holiday-column actions-column">
+            <div class="holiday-col col-d">
                 <button data-index="${index}" class="action-btn holiday-edit-btn" title="Bearbeiten">✏️</button>
                 <button data-index="${index}" class="action-btn holiday-delete-btn" title="Löschen">🗑️</button>
-
             </div>
         `;
 
         holidaysList.appendChild(holidayItem);
     });
 
-        
-    // Event-Listener für Feiertags-Buttons
+    // Events zum Bearbeiten/Löschen
     document.querySelectorAll('.holiday-edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const holidayIndex = btn.getAttribute('data-index');
@@ -1527,157 +1750,64 @@ function renderHolidays(holidays) {
     });
 }
 
+/**************************************************************
+ * 11) Toggle-Filterbuttons für Jahre
+ **************************************************************/
+const filterBtn2024 = document.getElementById('filter2024');
+const filterBtn2025 = document.getElementById('filter2025');
 
+filterBtn2024.addEventListener('click', () => toggleYearFilter(2024, filterBtn2024));
+filterBtn2025.addEventListener('click', () => toggleYearFilter(2025, filterBtn2025));
 
-// Anzeigen des Absenzenformulars
-function showHolidayForm() {
-    const form = document.getElementById('holidaysForm');
-    form.classList.remove('hidden');
-    form.style.display = 'block';
-    setTimeout(() => {
-        form.classList.add('show');
-    }, 10);
-    document.getElementById('openHolidayFormButton').style.display = 'none';
+function toggleYearFilter(year, btnElement) {
+    // Prüfen, ob year schon aktiv ist
+    if (activeYears.has(year)) {
+        // -> Entfernen, Button optisch deaktivieren
+        activeYears.delete(year);
+        btnElement.classList.remove('active');
+    } else {
+        // -> Hinzufügen, Button optisch aktivieren
+        activeYears.add(year);
+        btnElement.classList.add('active');
+    }
+    applyYearFilter();
 }
 
-// Formular ausblenden
-document.getElementById('cancelHolidayFormButton').addEventListener('click', () => {
-    const form = document.getElementById('holidaysForm');
-    form.classList.remove('show');
-    setTimeout(() => {
-        form.style.display = 'none';
-        document.getElementById('openHolidayFormButton').style.display = 'inline-block';
-    }, 300);
-});
+/**************************************************************
+ * 12) Filter-Logik anwenden
+ **************************************************************/
+function applyYearFilter() {
+    if (activeYears.size === 0) {
+        // Kein Filter aktiv
+        renderHolidays(allHolidays);
+        return;
+    }
 
-// Absenz anlegen
-document.getElementById('openHolidayFormButton').addEventListener('click', showHolidayForm);
-
-// Feiertag/Urlaub hinzufügen
-document.getElementById('addHolidayButton').addEventListener('click', async (e) => {
-    e.preventDefault();
-    const from = document.getElementById('holidayFromDate').value;
-    const to = document.getElementById('holidayToDate').value || from;
-    const description = document.getElementById('holidayDescription').value;
-    const resource = document.getElementById('holidayResource').value;
-    const status = document.getElementById('holidayStatus').value || 'Unbekannt';
-
-    const response = await fetch(`${BACKEND_URL}/settings/holidays`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, description, resource, status }),
+    // Zeige nur die Holidays, die mind. eines der aktiven Jahre berühren
+    const filtered = allHolidays.filter(holiday => {
+        const fromYear = new Date(holiday.from).getFullYear();
+        const toYear = new Date(holiday.to).getFullYear();
+        for (let y of activeYears) {
+            if (fromYear <= y && toYear >= y) return true;
+        }
+        return false;
     });
 
-    if (response.ok) {
-        await loadHolidays();
-        alert('Feiertag/Urlaub hinzugefügt');
-    } else {
-        alert('Fehler beim Hinzufügen');
-    }
-});
-
-// Feiertag/Urlaub bearbeiten
-window.editHoliday = async function (index) {
-    console.log(`editHoliday aufgerufen für Index: ${index}`);
-    console.log('Aktuelle Feiertage:', allHolidays); // Logge den Inhalt der Liste
-
-    const holiday = allHolidays[index];
-    if (!holiday) {
-        console.error('Feiertag/Urlaub nicht gefunden:', index);
-        return alert('Feiertag/Urlaub nicht gefunden');
-    }
-
-    console.log('Gefundener Feiertag:', holiday);
-
-    // Formular öffnen
-    showHolidayForm();
-
-    // Daten ins Formular übertragen
-    document.getElementById('holidayDescription').value = holiday.description;
-    document.getElementById('holidayFromDate').value = holiday.from;
-    document.getElementById('holidayToDate').value = holiday.to;
-    document.getElementById('holidayResource').value = holiday.resource || '';
-    document.getElementById('holidayStatus').value = holiday.status || '';
-
-    const submitButton = document.getElementById('addHolidayButton');
-    submitButton.innerText = "Änderungen speichern";
-    submitButton.onclick = async function (e) {
-        e.preventDefault();
-        const updatedHoliday = {
-            description: document.getElementById('holidayDescription').value,
-            from: document.getElementById('holidayFromDate').value,
-            to: document.getElementById('holidayToDate').value,
-            resource: document.getElementById('holidayResource').value,
-            status: document.getElementById('holidayStatus').value,
-        };
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/settings/holidays/${holiday._id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedHoliday),
-            });
-
-            if (response.ok) {
-                await loadHolidays();
-                submitButton.innerText = "Speichern";
-                submitButton.onclick = null;
-                alert('Feiertag/Urlaub erfolgreich aktualisiert');
-            } else {
-                alert('Fehler beim Aktualisieren');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    };
-};
-
-
-// Feiertag/Urlaub löschen
-async function deleteHoliday(index) {
-    const holiday = allHolidays[index];
-    if (!holiday) return alert('Feiertag/Urlaub nicht gefunden');
-
-    if (!confirm(`Möchten Sie den Feiertag/Urlaub "${holiday.description}" wirklich löschen?`)) return;
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/settings/holidays/${holiday._id}`, { method: 'DELETE' });
-        if (response.ok) {
-            await loadHolidays();
-            alert('Feiertag/Urlaub erfolgreich gelöscht');
-        } else {
-            alert('Fehler beim Löschen');
-        }
-    } catch (err) {
-        alert('Fehler: ' + err.message);
-    }
+    renderHolidays(filtered);
 }
 
-// Standardmäßig "Bis" auf "Von" setzen
+/**************************************************************
+ * 13) Standardmäßig "Bis" auf "Von" setzen
+ **************************************************************/
 document.getElementById('holidayFromDate').addEventListener('change', (e) => {
     const fromDate = e.target.value;
     document.getElementById('holidayToDate').value = fromDate;
 });
 
-// Initial laden
+/**************************************************************
+ * 14) Initial laden
+ **************************************************************/
 loadHolidays();
-
-// Filterbuttons für Jahre
-document.getElementById('filter2024').addEventListener('click', () => filterHolidays(2024));
-document.getElementById('filter2025').addEventListener('click', () => filterHolidays(2025));
-
-function filterHolidays(year) {
-    const filteredHolidays = allHolidays.filter(holiday => {
-        const fromYear = new Date(holiday.from).getFullYear();
-        const toYear = new Date(holiday.to).getFullYear();
-        return fromYear <= year && toYear >= year;
-    });
-
-    renderHolidays(filteredHolidays);
-}
-
-
-
 
 
     //====================================================================================================================================
