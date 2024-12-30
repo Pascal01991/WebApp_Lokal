@@ -1,14 +1,14 @@
 const { getStartOfWeek, generateTimeSlots, updateSlotAvailability, dateToLocalString } = require('../utils/availabilityUtils');
 const Appointment = require('../models/appointmentModel');
 
-const Settings = require('../models/AbsenceModel'); // Importieren des Modells
+const Absence = require('../models/AbsenceModel'); // Importieren des Modells
 
 async function fetchHolidaysFromDatabase() {
     try {
-        const settings = await Settings.findOne();
-        if (settings && settings.holidays) {
-            console.log('Feiertage aus der Datenbank geladen:', settings.holidays);
-            return settings.holidays;
+        const absence = await Absence.findOne();
+        if (absence && absence.holidays) {
+            console.log('Feiertage aus der Datenbank geladen:', absence.holidays);
+            return absence.holidays;
         }
         console.warn('Keine Feiertage in der Datenbank gefunden.');
         return [];

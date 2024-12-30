@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const Settings = require('../models/AbsenceModel');
+const Absence = require('../models/AbsenceModel');
 
 // Alle Einstellungen abrufen
 router.get('/', async (req, res) => {
     try {
-        const settings = await Settings.findOne();
-        if (!settings) return res.status(404).json({ error: 'Einstellungen nicht gefunden' });
-        res.json(settings);
+        const absence = await Absence.findOne();
+        if (!absence) return res.status(404).json({ error: 'Einstellungen nicht gefunden' });
+        res.json(absence);
     } catch (error) {
         res.status(500).json({ error: 'Fehler beim Abrufen der Einstellungen' });
     }
@@ -30,16 +30,16 @@ router.post('/holidays', async (req, res) => {
             status: status || 'Ausstehend'
         };
 
-        let settings = await Settings.findOne();
+        let absence = await Absence.findOne();
 
-        if (!settings) {
-            settings = new Settings({ workingHours: {}, holidays: [] });
+        if (!absence) {
+            absence = new Absence({ workingHours: {}, holidays: [] });
         }
 
-        settings.holidays.push(newHoliday);
-        await settings.save();
+        absence.holidays.push(newHoliday);
+        await absence.save();
 
-        res.status(201).json(settings.holidays);
+        res.status(201).json(absence.holidays);
     } catch (error) {
         console.error('Fehler beim Hinzufügen des Feiertags:', error);
         res.status(500).json({ error: 'Fehler beim Hinzufügen des Feiertags' });
@@ -60,22 +60,22 @@ router.put('/holidays/:index', async (req, res) => {
         const { from, to, description } = req.body;
         console.log(`Eingehende Daten - From: ${from}, To: ${to}, Description: ${description}`);
 
-        let settings = await Settings.findOne();
-        if (!settings) {
+        let absence = await Absence.findOne();
+        if (!absence) {
             console.error('Einstellungen nicht gefunden');
             return res.status(404).json({ error: 'Einstellungen nicht gefunden' });
         }
 
-        if (!settings.holidays[index]) {
+        if (!absence.holidays[index]) {
             console.error(`Feiertag an Index ${index} nicht gefunden`);
             return res.status(404).json({ error: 'Feiertag nicht gefunden' });
         }
 
-        settings.holidays[index] = { from, to, description };
-        await settings.save();
+        absence.holidays[index] = { from, to, description };
+        await absence.save();
 
-        console.log('Aktualisierte Feiertage:', settings.holidays);
-        res.json(settings.holidays);
+        console.log('Aktualisierte Feiertage:', absence.holidays);
+        res.json(absence.holidays);
     } catch (error) {
         console.error('Fehler beim Bearbeiten des Feiertags:', error);
         res.status(500).json({ error: 'Fehler beim Bearbeiten des Feiertags' });
@@ -90,23 +90,23 @@ router.delete('/holidays/:index', async (req, res) => {
         console.log('Index:', req.params.index);
 
         const index = parseInt(req.params.index, 10);
-        let settings = await Settings.findOne();
+        let absence = await Absence.findOne();
 
-        if (!settings) {
+        if (!absence) {
             console.error('Einstellungen nicht gefunden');
             return res.status(404).json({ error: 'Einstellungen nicht gefunden' });
         }
 
-        if (!settings.holidays[index]) {
+        if (!absence.holidays[index]) {
             console.error(`Feiertag an Index ${index} nicht gefunden`);
             return res.status(404).json({ error: 'Feiertag nicht gefunden' });
         }
 
         // Feiertag entfernen
-        settings.holidays.splice(index, 1);
-        await settings.save();
+        absence.holidays.splice(index, 1);
+        await absence.save();
 
-        res.json(settings.holidays);
+        res.json(absence.holidays);
     } catch (error) {
         console.error('Fehler beim Löschen des Feiertags:', error);
         res.status(500).json({ error: 'Fehler beim Löschen des Feiertags' });

@@ -1462,9 +1462,10 @@ if (!searchClientInput) {
 //====================================================================================================================================
 
 
-
 /**************************************************************
- * Absenzen-/Urlaubsverwaltung (Holidays) -- INDEX-BASIERT
+ * Absenzen-/Urlaubsverwaltung (Holidays)
+ *   Basierend auf:
+ *   app.use('/api/absence', absenceRoutes);
  **************************************************************/
 
 let allHolidays = []; // Globale Variable für Feiertage/Urlaube
@@ -1474,7 +1475,6 @@ const openHolidayFormButton = document.getElementById('openHolidayFormButton');
 const cancelHolidayFormButton = document.getElementById('cancelHolidayFormButton');
 const holidayFormContainer = document.getElementById('holidaysForm');
 const holidayForm = document.getElementById('holidayForm');
-const addHolidayButton = document.getElementById('addHolidayButton');
 
 // Für die Filter-Buttons (z. B. 2024, 2025) verwenden wir ein Set:
 let activeYears = new Set();
@@ -1499,7 +1499,8 @@ function clearHolidayForm() {
     document.getElementById('holidayFromDate').value = '';
     document.getElementById('holidayToDate').value = '';
     document.getElementById('holidayResource').value = '';
-    document.getElementById('holidayStatus').value = '';
+    document.getElementById('holidayStatus').value = ''; 
+    // <- Dann landet "Ausstehend" als Default (siehe unten)
 }
 
 /**************************************************************
@@ -1512,7 +1513,6 @@ function showHolidayForm(isEditMode = false) {
         holidayFormContainer.classList.add('show');
     }, 10);
 
-    // Button-Beschriftung
     const submitBtn = document.getElementById('addHolidayButton');
     submitBtn.innerText = isEditMode ? 'Änderungen speichern' : 'Speichern';
 
@@ -1540,17 +1540,21 @@ function hideHolidayForm() {
 }
 
 /**************************************************************
- * 5) Feiertag/Urlaub neu anlegen (POST) => /settings/holidays
+ * 5) Feiertag/Urlaub neu anlegen (POST) => /absence/holidays
  **************************************************************/
 async function createNewHoliday() {
     const from = document.getElementById('holidayFromDate').value;
     const to = document.getElementById('holidayToDate').value || from;
     const description = document.getElementById('holidayDescription').value;
     const resource = document.getElementById('holidayResource').value;
-    const status = document.getElementById('holidayStatus').value || 'Unbekannt';
+    // Als Fallback "Ausstehend" statt "Unbekannt", 
+    // damit es ins Enum ['Genehmigt','Abgelehnt','Ausstehend'] passt
+    const statusRaw = document.getElementById('holidayStatus').value;
+    const status = statusRaw ? statusRaw : 'Ausstehend';
 
     try {
-        const response = await fetch(`${BACKEND_URL}/settings/holidays`, {
+        // => /api/absence/holidays (Kleinschreibung!)
+        const response = await fetch(`${BACKEND_URL}/absence/holidays`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ from, to, description, resource, status }),
@@ -1558,8 +1562,10 @@ async function createNewHoliday() {
 
         if (response.ok) {
             await loadHolidays();
+            renderCalendar();
             alert('Feiertag/Urlaub hinzugefügt');
             hideHolidayForm();
+            
         } else {
             alert('Fehler beim Hinzufügen (Status: ' + response.status + ')');
         }
@@ -1569,7 +1575,7 @@ async function createNewHoliday() {
 }
 
 /**************************************************************
- * 6) Feiertag/Urlaub bearbeiten (PUT) => /holidays/:index
+ * 6) Feiertag/Urlaub bearbeiten (PUT) => /absence/holidays/:index
  **************************************************************/
 async function editHoliday(index) {
     // Button "Feiertag/Urlaub anlegen" ausblenden
@@ -1591,7 +1597,7 @@ async function editHoliday(index) {
     document.getElementById('holidayFromDate').value = holiday.from;
     document.getElementById('holidayToDate').value = holiday.to;
     document.getElementById('holidayResource').value = holiday.resource || '';
-    document.getElementById('holidayStatus').value = holiday.status || '';
+    document.getElementById('holidayStatus').value = holiday.status || 'Ausstehend';
 
     // Formular (Edit-Modus) anzeigen
     showHolidayForm(true);
@@ -1607,12 +1613,12 @@ async function editHoliday(index) {
             to: document.getElementById('holidayToDate').value,
             description: document.getElementById('holidayDescription').value,
             resource: document.getElementById('holidayResource').value,
-            status: document.getElementById('holidayStatus').value,
+            status: document.getElementById('holidayStatus').value || 'Ausstehend',
         };
 
         try {
-            // Hier rufen wir index-basiert auf (siehe deine routes/settings.js)
-            const response = await fetch(`${BACKEND_URL}/settings/holidays/${index}`, {
+            // => /api/absence/holidays/:index
+            const response = await fetch(`${BACKEND_URL}/absence/holidays/${index}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedHoliday),
@@ -1620,6 +1626,7 @@ async function editHoliday(index) {
 
             if (response.ok) {
                 await loadHolidays();
+                renderCalendar();
                 alert('Feiertag/Urlaub erfolgreich aktualisiert');
                 hideHolidayForm();
             } else {
@@ -1632,7 +1639,7 @@ async function editHoliday(index) {
 }
 
 /**************************************************************
- * 7) Feiertag/Urlaub löschen (DELETE) => /holidays/:index
+ * 7) Feiertag/Urlaub löschen (DELETE) => /absence/holidays/:index
  **************************************************************/
 async function deleteHoliday(index) {
     const holiday = allHolidays[index];
@@ -1641,7 +1648,8 @@ async function deleteHoliday(index) {
     if (!confirm(`Möchten Sie den Feiertag/Urlaub "${holiday.description}" wirklich löschen?`)) return;
 
     try {
-        const response = await fetch(`${BACKEND_URL}/settings/holidays/${index}`, {
+        // => /api/absence/holidays/:index
+        const response = await fetch(`${BACKEND_URL}/absence/holidays/${index}`, {
             method: 'DELETE'
         });
         if (response.ok) {
@@ -1676,14 +1684,15 @@ cancelHolidayFormButton.addEventListener('click', function() {
 });
 
 /**************************************************************
- * 9) Feiertage/Urlaube laden (GET) => /settings
+ * 9) Feiertage/Urlaube laden (GET) => /absence
  **************************************************************/
 async function loadHolidays() {
     try {
-        const response = await fetch(`${BACKEND_URL}/settings`);
+        // => /api/absence (Kleinschreibung, ohne "A" groß)
+        const response = await fetch(`${BACKEND_URL}/absence`);
         if (response.ok) {
-            const settings = await response.json();
-            allHolidays = settings.holidays || [];
+            const absence = await response.json();
+            allHolidays = absence.holidays || [];
             renderHolidays(allHolidays);
         } else {
             console.error('Fehler beim Laden der Feiertage:', response.status);
@@ -1695,7 +1704,6 @@ async function loadHolidays() {
 
 /**************************************************************
  * 10) Feiertage/Urlaube anzeigen (4 Spalten, 2 Zeilen)
- *     => A, B, C, D
  **************************************************************/
 function renderHolidays(holidays) {
     const holidaysList = document.getElementById('holidaysList');
@@ -1723,7 +1731,7 @@ function renderHolidays(holidays) {
             </div>
             <div class="holiday-col col-c">
                 <div class="line1">Ressource: ${holiday.resource || 'Keine Ressource'}</div>
-                <div class="line2">Status: ${holiday.status || 'Unbekannt'}</div>
+                <div class="line2">Status: ${holiday.status || 'Ausstehend'}</div>
             </div>
             <div class="holiday-col col-d">
                 <button data-index="${index}" class="action-btn holiday-edit-btn" title="Bearbeiten">✏️</button>
@@ -1741,7 +1749,6 @@ function renderHolidays(holidays) {
             editHoliday(holidayIndex);
         });
     });
-
     document.querySelectorAll('.holiday-delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const holidayIndex = btn.getAttribute('data-index');
@@ -1760,13 +1767,12 @@ filterBtn2024.addEventListener('click', () => toggleYearFilter(2024, filterBtn20
 filterBtn2025.addEventListener('click', () => toggleYearFilter(2025, filterBtn2025));
 
 function toggleYearFilter(year, btnElement) {
-    // Prüfen, ob year schon aktiv ist
     if (activeYears.has(year)) {
-        // -> Entfernen, Button optisch deaktivieren
+        // Entfernen, Button inaktiv
         activeYears.delete(year);
         btnElement.classList.remove('active');
     } else {
-        // -> Hinzufügen, Button optisch aktivieren
+        // Hinzufügen, Button aktiv
         activeYears.add(year);
         btnElement.classList.add('active');
     }
@@ -1778,12 +1784,10 @@ function toggleYearFilter(year, btnElement) {
  **************************************************************/
 function applyYearFilter() {
     if (activeYears.size === 0) {
-        // Kein Filter aktiv
+        // Kein Filter
         renderHolidays(allHolidays);
         return;
     }
-
-    // Zeige nur die Holidays, die mind. eines der aktiven Jahre berühren
     const filtered = allHolidays.filter(holiday => {
         const fromYear = new Date(holiday.from).getFullYear();
         const toYear = new Date(holiday.to).getFullYear();
@@ -1792,7 +1796,6 @@ function applyYearFilter() {
         }
         return false;
     });
-
     renderHolidays(filtered);
 }
 

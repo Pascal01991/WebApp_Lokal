@@ -63,9 +63,11 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 // Einfache Route
 app.get('/', (req, res) => res.send('API läuft'));
 
-//Settings
-const settingsRoutes = require('./routes/settings');
-app.use('/api/settings', settingsRoutes);
+//Absence
+const absenceRoutes = require('./routes/Absence');
+app.use('/api/absence', absenceRoutes);
+    
+
 
 // Auth-Routen
 app.use('/api/auth', authRoutes); // Authentifizierungsrouten

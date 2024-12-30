@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const settingsSchema = new mongoose.Schema({
+const absenceSchema = new mongoose.Schema({
     workingHours: {
         type: Map,
         of: {
@@ -25,6 +25,6 @@ const settingsSchema = new mongoose.Schema({
     ]
 });
 
-const Settings = mongoose.model('Settings', settingsSchema);
+const Absence = mongoose.model('Absence', absenceSchema);
 
-module.exports = Settings;
+module.exports = Absence;
