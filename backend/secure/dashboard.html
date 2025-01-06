@@ -73,45 +73,182 @@
       <!-- Button zum Öffnen des Formulars  -->
       <button id="openAppointmentFormButton">Termin erstellen</button>
 
-      <!-- Terminformular, standardmäßig ausgeblendet -->
-        <div id="TerminFormular" style="display: none;">
-            <form id="appointmentForm">
-                <!-- Kundendaten (Spalte A) -->
-                <div class="form-column customer-info">
-                    <div id="customer-search">
-                        <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
-                        <div id="searchClientForApointment"></div>
-                    </div>
-                    <div><label>Kundennummer:</label> <span id="KundennummerzumTerminDisplay"></span></div>
-                    <div><label>Name:</label> <span id="KundenName"></span></div>
-                    <div><label>Adresse:</label> <span id="KundenAdresse"></span></div>
-                    <div><label>Telefon:</label> <span id="KundenTelefon"></span></div>
-                    <div><label>Mail:</label> <span id="KundenMail"></span></div>
-                    <input type="hidden" id="KundennummerzumTermin" />
+      <!-- Terminformular -->
+<div id="TerminFormular" style="display: none;">
+    <form id="appointmentForm">
+        <!-- ===================================== -->
+        <!-- 1) Auftraggeber & Rechnungsempfänger  -->
+        <!-- ===================================== -->
+        <h3>Auftraggeber &amp; Rechnungsempfänger:</h3>
+        
+        <!-- Auftraggeber-Suche + Datenanzeige -->
+        <div class="customer-info-compact">
+            <!-- Suchfeld für Auftraggeber -->
+            <div id="customer-search">
+                <input type="text" id="searchCustomerInput" placeholder="Kunden suchen...">
+                <div id="searchClientForApointment" style="display:none;"></div>
+            </div>
+            
+            <!-- Auftraggeber-Daten compact -->
+            <div class="auftraggeber-daten">
+                <div>
+                    <label>Kundennummer:</label>
+                    <span id="KundennummerzumTerminDisplay"></span>
                 </div>
-
-                <!-- Termindetails (Spalte B) -->
-                <div class="form-column appointment-details">
-                    <div><label>Datum & Uhrzeit:</label><input type="datetime-local" id="dateTime" required></div>
-                    <div><label>Dauer:</label><input type="number" id="duration" placeholder="Dauer in Minuten" required></div>
-                    <div><label>Dienstleistung:</label><input type="text" id="Dienstleistung" required></div>
-                    <div><label>Preis:</label><input type="number" id="Preis" required></div>
-                    <div><label>Abrechnungsstatus:</label><input type="text" id="Abrechnungsstatus" required></div>
+                <div>
+                    <label>Name:</label>
+                    <span id="KundenName"></span>
                 </div>
-
-                <!-- Beschreibung (Spalte C) -->
-                <div class="form-column description">
-                    <div><label>Beschreibung:</label><textarea id="description" required></textarea></div>
-                    <button type="submit">Termin hinzufügen</button>
-                    <button type="button" id="CancelAppointmentFormButton">Abbrechen</button>
+                <div>
+                    <label>Adresse:</label>
+                    <span id="KundenAdresse"></span>
                 </div>
-
-             
-
-                <!-- Verstecktes Feld zur Speicherung der Kundennummer -->
-                
-            </form>
+                <div>
+                    <label>Telefon:</label>
+                    <span id="KundenTelefon"></span>
+                </div>
+                <div>
+                    <label>Mail:</label>
+                    <span id="KundenMail"></span>
+                </div>
+            </div>
+            
+            <!-- Button für abweichenden Rechnungsempfänger -->
+            <button type="button" id="abweichenderRechnungsempfaengerButton">
+                Abweichender Rechnungsempfänger
+            </button>
         </div>
+
+        <!-- Versteckter Block für den abweichenden Rechnungsempfänger -->
+        <div id="abweichenderRechnungsempfaengerBlock" style="display: none;">
+            <hr>
+            <h4>Abweichender Rechnungsempfänger</h4>
+            <!-- Suchfeld für Rechnungsempfänger -->
+            <div id="invoice-search">
+                <input type="text" id="searchInvoiceInput" placeholder="Rechnungsempfänger suchen...">
+                <div id="searchClientForInvoice" style="display:none;"></div>
+            </div>
+            
+            <!-- Datenanzeige des abweichenden Empfängers -->
+            <div class="rechnungsempfaenger-daten">
+                <div>
+                    <label>Nr.:</label>
+                    <span id="RechnungsempfaengerNummerDisplay"></span>
+                </div>
+                <div>
+                    <label>Name:</label>
+                    <span id="RechnungsempfaengerName"></span>
+                </div>
+                <div>
+                    <label>Adresse:</label>
+                    <span id="RechnungsempfaengerAdresse"></span>
+                </div>
+                <div>
+                    <label>Telefon:</label>
+                    <span id="RechnungsempfaengerTelefon"></span>
+                </div>
+                <div>
+                    <label>Mail:</label>
+                    <span id="RechnungsempfaengerMail"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- 2) Termindetails                     -->
+        <!-- ===================================== -->
+        <div class="form-column appointment-details">
+            <!-- Start- und Endtermin statt "Datum & Uhrzeit" -->
+            <div>
+                <label for="startDateTime">Starttermin:</label>
+                <input type="datetime-local" id="startDateTime" required>
+            </div>
+            <div>
+                <label for="endDateTime">Endtermin:</label>
+                <input type="datetime-local" id="endDateTime">
+            </div>
+
+            <!-- Dauer in Stunden & Minuten -->
+            <div>
+                <label>Dauer (h / min):</label>
+                <input type="number" id="durationHours" placeholder="h" min="0" value="0">
+                <input type="number" id="durationMinutes" placeholder="min" min="0" value="0">
+            </div>
+
+            <!-- Dienstleistung, Preis, Abrechnungsstatus -->
+            <div>
+                <label>Dienstleistung:</label>
+                <input type="text" id="Dienstleistung" required>
+            </div>
+            <div>
+                <label>Preis:</label>
+                <input type="number" id="Preis" required>
+            </div>
+            <div>
+                <label>Abrechnungsstatus:</label>
+                <input type="text" id="Abrechnungsstatus" required>
+            </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- 3)Abwicklung                          -->
+        <!-- ===================================== -->
+        <div class="form-column additional-fields">
+            <div>
+                <label>Erfasst durch:</label>
+                <input type="text" id="erfasstDurch">
+            </div>
+            <div>
+                <label>Verknüpftes Projekt (ID):</label>
+                <input type="number" id="projektId">
+            </div>
+            <div>
+                <label>Verrechnungs-Typ:</label>
+                <select id="verrechnungsTyp">
+                    <option value="">-- bitte wählen --</option>
+                    <option value="Verrechnung an Kunde">Verrechnung an Kunde</option>
+                    <option value="Vertragsleistung">Vertragsleistung</option>
+                    <option value="Garantie">Garantie</option>
+                    <option value="Kulanz">Kulanz</option>
+                </select>
+            </div>
+            <div>
+                <label>Erbringungsstatus:</label>
+                <select id="erbringungsStatus">
+                    <option value="">-- bitte wählen --</option>
+                    <option value="Geplant">Geplant</option>
+                    <option value="in Erbringung">in Erbringung</option>
+                    <option value="Ausgeführt">Ausgeführt</option>
+                    <option value="Abgerechnet">Abgerechnet</option>
+                </select>
+            </div>
+            <div>
+                <label>Faktura - Bemerkung:</label>
+                <textarea id="fakturaBemerkung"></textarea>
+            </div>
+            <div>
+                <label>Faktura - Nummer:</label>
+                <input type="text" id="fakturaNummer">
+            </div>
+        </div>
+
+        <!-- ===================================== -->
+        <!-- 4) Beschreibung                       -->
+        <!-- ===================================== -->
+        <div class="form-column description">
+            <div>
+                <label>Beschreibung:</label>
+                <textarea id="description" required></textarea>
+            </div>
+            <button type="submit">Termin hinzufügen</button>
+            <button type="button" id="CancelAppointmentFormButton">Abbrechen</button>
+        </div>
+
+        <!-- Versteckte Felder für IDs, falls benötigt -->
+        <input type="hidden" id="KundennummerzumTermin" />
+    </form>
+</div>
+
       
 
         

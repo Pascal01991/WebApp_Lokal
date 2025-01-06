@@ -31,28 +31,31 @@ async function editAppointment(appointmentId) {
 
     // 3) Formularfelder für den Termin befüllen
     document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin || '';
-    // ...
-    setLocalDateTimeInput(appointment.dateTime);
-    document.getElementById('duration').value = appointment.duration || '';
+
+    // Start & Endzeit ins datetime-local-Feld packen
+    setLocalDateTimeInput(appointment.startDateTime, 'startDateTime');
+    setLocalDateTimeInput(appointment.endDateTime,   'endDateTime');
+
+    // Falls `appointment.duration` in Minuten kommt, verteilen auf Stunden/Minuten
+    const totalMinutes = parseInt(appointment.duration, 10) || 0;
+    document.getElementById('durationHours').value = Math.floor(totalMinutes / 60);
+    document.getElementById('durationMinutes').value = totalMinutes % 60;
+
     document.getElementById('Dienstleistung').value = appointment.Dienstleistung || '';
     document.getElementById('Preis').value = appointment.Preis || '';
     document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
     document.getElementById('description').value = appointment.description || '';
 
-    // 4) den zugehörigen Kunden suchen und Kundendaten befüllen
-    //     (Voraussetzung: `allClients` ist geladen.)
+    // 4) Den zugehörigen Kunden suchen und Kundendaten befüllen
     const client = allClients.find(c => c.Kundennummer === appointment.KundennummerzumTermin);
     if (client) {
-        document.getElementById('KundennummerzumTermin').value = client.Kundennummer
+        document.getElementById('KundennummerzumTermin').value = client.Kundennummer;
         document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
         document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
         document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
         document.getElementById('KundenTelefon').textContent = client.Telefon || '';
         document.getElementById('KundenMail').textContent = client.Mail || '';
-        // Falls du das Feld .MailAppointment hast:
-        // document.getElementById('MailAppointment').value = client.Mail || '';
     } else {
-        // Falls kein passender Kunde gefunden wird
         document.getElementById('KundenName').textContent = 'Kunde nicht gefunden';
         document.getElementById('KundenAdresse').textContent = '';
         document.getElementById('KundenTelefon').textContent = '';
@@ -62,18 +65,28 @@ async function editAppointment(appointmentId) {
     // 5) Formular anzeigen (Edit-Modus)
     showAppointmentForm(true);
 
-    // 6) Button "Änderungen speichern" → PUT
+    // 6) Button "Änderungen speichern" (PUT) neu binden
     const submitButton = appointmentForm.querySelector('button[type="submit"]');
-    submitButton.replaceWith(submitButton.cloneNode(true));
+    submitButton.replaceWith(submitButton.cloneNode(true));  // Event-Listener entfernen
     const newSubmitButton = appointmentForm.querySelector('button[type="submit"]');
     newSubmitButton.innerText = 'Änderungen speichern';
     newSubmitButton.addEventListener('click', async (e) => {
         e.preventDefault();
 
+        // Neue Start- und Endzeit auslesen
+        const startVal = document.getElementById('startDateTime').value;  // z.B. "2025-01-02T10:00"
+        const endVal   = document.getElementById('endDateTime').value;    // z.B. "2025-01-02T11:30"
+
+        // Dauer in Stunden/Minuten => Gesamtminuten
+        const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
+        const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
+        const totalDuration = hours * 60 + mins;
+
         const updatedAppointment = {
             KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
-            dateTime: document.getElementById('dateTime').value,
-            duration: document.getElementById('duration').value,
+            startDateTime: startVal,
+            endDateTime: endVal,
+            duration: totalDuration,
             Dienstleistung: document.getElementById('Dienstleistung').value,
             Preis: document.getElementById('Preis').value,
             Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
@@ -102,6 +115,7 @@ async function editAppointment(appointmentId) {
         }
     });
 }
+
 
 
     //Button für Löschen des Termins
@@ -242,18 +256,17 @@ async function editAppointment(appointmentId) {
         const calendar = document.getElementById('calendar');
         calendar.innerHTML = '';
     
-        // Feiertage und Slots initialisieren
         // Slots asynchron vom Backend laden
         const slots = await fetchAvailableSlots();
         if (!slots.length) {
             console.warn('Keine Slots zum Anzeigen gefunden.');
             return;
         }
-
+    
         const startOfWeek = getStartOfWeek(currentDate);
     
         // Tagesüberschriften erstellen
-        calendar.appendChild(document.createElement('div')); // Leere Ecke für die Zeitspalte
+        calendar.appendChild(document.createElement('div')); // Leere Ecke
         for (let i = 0; i < 7; i++) {
             const day = new Date(startOfWeek);
             day.setDate(startOfWeek.getDate() + i);
@@ -263,10 +276,12 @@ async function editAppointment(appointmentId) {
             calendar.appendChild(dayHeader);
         }
     
-        // Erstelle eine Map für schnelle Slot-Suche
+        // Map für Slots
         const slotsMap = {};
         slots.forEach(slot => {
-            const date = new Date(slot.dateTime);
+            // Annahme: slot.startDateTime oder slot.dateTime
+            // Hier belassen wir "slot.dateTime" nur, wenn das Backend so heißt:
+            const date = new Date(slot.startDateTime);
             const hour = date.getHours();
             const minute = date.getMinutes();
             const key = `${slot.dayIndex}-${hour}-${minute}`;
@@ -274,7 +289,7 @@ async function editAppointment(appointmentId) {
         });
     
         const allTimes = slots.map(slot => {
-            const date = new Date(slot.dateTime);
+            const date = new Date(slot.startDateTime);
             return date.getHours() * 60 + date.getMinutes();
         });
     
@@ -283,11 +298,12 @@ async function editAppointment(appointmentId) {
     
         const startHour = Math.floor(minTime / 60);
         const endHour = Math.ceil(maxTime / 60);
-    
+console.log('startHour:'+ startHour);
         const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
         const slotsPerHour = 60 / defaultLength;
-    
+    console.log('rendercalendar')
         for (let hour = startHour; hour <= endHour; hour++) {
+console.log('for schleife hour ++')
             const timeLabel = document.createElement('div');
             timeLabel.classList.add('time-slot');
             timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
@@ -322,7 +338,6 @@ async function editAppointment(appointmentId) {
                     if (slot) {
                         if (slot.isHoliday) {
                             slotDiv.classList.add('unavailable-holiday');
-                            
                         } else if (slot.isAvailable) {
                             slotDiv.classList.add('available-slot');
                         } else {
@@ -332,7 +347,7 @@ async function editAppointment(appointmentId) {
                         slotDiv.classList.add('unavailable-slot');
                     }
     
-                    // Klick-Event hinzufügen
+                    // Klick-Event
                     slotDiv.addEventListener('click', function () {
                         handleSlotClick(startOfWeek, i, hour, minute, defaultLength);
                     });
@@ -350,37 +365,39 @@ async function editAppointment(appointmentId) {
     
     
     
+    
     function findOverlappingAppointments(appointments) {
-    const overlappingGroups = [];
-
-    appointments.forEach(app => {
-        const appStart = new Date(app.dateTime);
-        const appEnd = new Date(appStart.getTime() + app.duration * 60000);
-
-        let addedToGroup = false;
-
-        // Überprüfe, ob der Termin zu einer bestehenden Gruppe gehört
-        overlappingGroups.forEach(group => {
-            for (const existingApp of group) {
-                const existingStart = new Date(existingApp.dateTime);
-                const existingEnd = new Date(existingStart.getTime() + existingApp.duration * 60000);
-
-                if (appStart < existingEnd && appEnd > existingStart) {
-                    group.push(app); // Füge den Termin zur Gruppe hinzu
-                    addedToGroup = true;
-                    break;
+        const overlappingGroups = [];
+    
+        appointments.forEach(app => {
+            const appStart = new Date(app.startDateTime);
+            const appEnd = new Date(appStart.getTime() + app.duration * 60000);
+    
+            let addedToGroup = false;
+    
+            // Überprüfe, ob der Termin zu einer bestehenden Gruppe gehört
+            overlappingGroups.forEach(group => {
+                for (const existingApp of group) {
+                    const existingStart = new Date(existingApp.startDateTime);
+                    const existingEnd = new Date(existingStart.getTime() + existingApp.duration * 60000);
+    
+                    if (appStart < existingEnd && appEnd > existingStart) {
+                        group.push(app);
+                        addedToGroup = true;
+                        break;
+                    }
                 }
+            });
+    
+            // Falls keine passende Gruppe gefunden wurde, erstelle eine neue
+            if (!addedToGroup) {
+                overlappingGroups.push([app]);
             }
         });
-
-        // Falls keine passende Gruppe gefunden wurde, erstelle eine neue Gruppe
-        if (!addedToGroup) {
-            overlappingGroups.push([app]);
-        }
-    });
-
-    return overlappingGroups;
-}
+    
+        return overlappingGroups;
+    }
+    
 
 ///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
 //Nach nochmaliger Nachfrage diese Funktion vermutlich besser nur im Backend!
@@ -401,7 +418,6 @@ function dateToLocalString(date) {
         selectedDate.setHours(hour, minute, 0, 0);
     
         const workingHoursForDay = workingHours[getDayName(selectedDate).toLowerCase()];
-    
         let alertMessage = null;
     
         // Arbeitszeitprüfung
@@ -411,7 +427,7 @@ function dateToLocalString(date) {
     
         // Konfliktprüfung
         const overlappingAppointment = allAppointments.some(app => {
-            const appStart = new Date(app.dateTime);
+            const appStart = new Date(app.startDateTime);
             const appEnd = new Date(appStart.getTime() + app.duration * 60000);
             const slotEnd = new Date(selectedDate.getTime() + defaultLength * 60000);
             return (selectedDate < appEnd && appStart < slotEnd);
@@ -425,34 +441,25 @@ function dateToLocalString(date) {
             alert(alertMessage);
         }
     
-        // Formular öffnen und Felder ausfüllen, unabhängig von Konflikten
+        // Formular öffnen und Felder ausfüllen
         showAppointmentForm();
     
-        // Korrekte Zeit setzen
-        setLocalDateTimeInput(dateToLocalString(selectedDate));
-        document.getElementById('duration').value = defaultLength;
+        // Startzeit in das Feld packen:
+        // Hier wandeln wir "selectedDate" in "YYYY-MM-DDTHH:mm" um:
+        const localDateTimeStr = dateToLocalString(selectedDate);  // -> z.B. "2025-01-02T09:15"
+        document.getElementById('startDateTime').value = localDateTimeStr;
+    
+        // Endtermin optional leer oder fix
+        document.getElementById('endDateTime').value = '';
+    
+        // Dauer-Default in Stunden/Minuten
+        const defHours = Math.floor(defaultLength / 60);
+        const defMins = defaultLength % 60;
+        document.getElementById('durationHours').value = defHours;
+        document.getElementById('durationMinutes').value = defMins;
     }
     
 
-    
-    
-    //Zeitslots für externe Buchungsplattform bereitstellen
-    function getAvailableSlotsForExport() {
-        const slots = generateTimeSlots();
-        updateSlotAvailability(slots, allAppointments);
-    
-        // Filtern der verfügbaren Slots
-        const availableSlots = slots.filter(slot => slot.isAvailable);
-    
-        // Formatieren der Daten
-        return availableSlots.map(slot => {
-            return {    
-                dateTime: dateToLocalString(slot.dateTime),
-                duration: slot.duration
-            };
-        });
-    }
-    
     
     
     
@@ -513,7 +520,7 @@ function dateToLocalString(date) {
 // Nun kannst du auf die clients-Daten in displayAppointmentsOnCalendar zugreifen:
 async function displayAppointmentsOnCalendar() {
     const startOfWeek = getStartOfWeek(currentDate);
-
+    
     // Lade die Clients nur einmal, falls noch nicht geschehen
     if (!clients || clients.length === 0) {
         const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
@@ -522,10 +529,13 @@ async function displayAppointmentsOnCalendar() {
 
     // Filtere Termine der aktuellen Woche
     const appointmentsThisWeek = allAppointments.filter(app => {
-        const appStartDate = new Date(app.dateTime);
-        return appStartDate >= startOfWeek && appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const appStartDate = new Date(app.startDateTime);
+        return appStartDate >= startOfWeek && 
+               appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+               
     });
-
+    console.log(appointmentsThisWeek.length);
+    console.log (appointmentsThisWeek);
     // Finde Gruppen überlappender Termine
     const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
 
@@ -534,9 +544,19 @@ async function displayAppointmentsOnCalendar() {
         const groupSize = group.length;
 
         group.forEach((app, index) => {
-            const appStartDate = new Date(app.dateTime);
-            const appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
+            // Start/End aus DB
+            const appStartDate = new Date(app.startDateTime);
+            let appEndDate;
+            if (app.endDateTime) {
+                // Falls im DB-Eintrag bereits endDateTime existiert
+                appEndDate = new Date(app.endDateTime);
+            } else {
+                // Sonst fallback: start + duration
+                appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
+            }
+console.log('forEach')
             const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
+console.log(appStartDate)
             const startHour = appStartDate.getHours();
             const endHour = appEndDate.getHours();
 
@@ -544,90 +564,98 @@ async function displayAppointmentsOnCalendar() {
                 const calendar = document.getElementById('calendar');
                 const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
                 const hourCell = calendar.querySelector(cellSelector);
+                
+console.log('for Schleife let hour');
 
                 if (hourCell) {
-                    if (hour === startHour) {
-                        // Erstelle das Termin-Element nur einmal in der ersten Stunde
+                    console.log(hourCell);
+                    console.log('if HourCell');
+                    if (hour === startHour) 
+                        {
+                            console.log('if hour === startHour');
+                        // Nur einmal "drawen" in der ersten Stunde
                         const appointmentDiv = document.createElement('div');
                         appointmentDiv.classList.add('appointment');
                         appointmentDiv.setAttribute('data-app-id', app._id);
 
-                        // Berechne die Dauer in Stunden
+                        // Berechne die Gesamtstunden zwischen Start & Ende
                         const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
-                        
 
-                        // Setze CSS-Eigenschaften für das Termin-Element
+                        // CSS
                         appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
                         appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
                         appointmentDiv.style.height = `${durationHours * 100}%`;
-                        appointmentDiv.style.width = `${100 / groupSize}%`; // Breite teilen
-                        appointmentDiv.style.left = `${(100 / groupSize) * index}%`; // Position basierend auf Index
+                        appointmentDiv.style.width = `${100 / groupSize}%`;
+                        appointmentDiv.style.left = `${(100 / groupSize) * index}%`;
                         appointmentDiv.style.zIndex = '2';
-                       
 
-                        // Erstelle die Icon-Container
+                        // Icons
                         const iconContainer = document.createElement('div');
                         iconContainer.classList.add('appointment-icons');
                         iconContainer.innerHTML = `
                             <span class="icon edit-icon" title="Bearbeiten">✏️</span>
                             <span class="icon delete-icon" title="Löschen">🗑️</span>
                         `;
-
-                        // Event-Handler für Icons
                         iconContainer.querySelector('.edit-icon').addEventListener('click', () => {
-                            editAppointment(app._id); // Bearbeiten-Funktion
+                            editAppointment(app._id);
                         });
                         iconContainer.querySelector('.delete-icon').addEventListener('click', () => {
-                            deleteAppointment(app._id); // Löschen-Funktion
+                            deleteAppointment(app._id);
                         });
 
-                        // Inhalte des Termins
+                        // Inhalte
                         const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
                         const appointmentContent = document.createElement('div');
                         appointmentContent.innerHTML = `
                             <div>
                                 ${clientAppointment
                                     ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
-                                    <br>
-                                    ${app.Preis} ${app.Dienstleistung}`
-                                    : "Kunde nicht gefunden"}
+                                       <br>
+                                       ${app.Preis} ${app.Dienstleistung}`
+                                    : "Kunde nicht gefunden"
+                                }
                             </div>`;
 
-                        // Füge Icons und Inhalte hinzu
                         appointmentDiv.appendChild(iconContainer);
                         appointmentDiv.appendChild(appointmentContent);
 
-                        // Füge das Termin-Element der ersten Zelle hinzu
                         hourCell.appendChild(appointmentDiv);
+                        console.log('ifHour_true')
+                    }
+                    else {
+                        console.log('ifHour_false');
                     }
                 }
+                
             }
         });
     });
 
-    //Überschneidende Termine identifizieren
+    // Interne Funktion zur Erkennung von Überschneidungen:
     function logOverlappingAppointments() {
-        const startOfWeek = getStartOfWeek(currentDate);
         const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
 
         const appointmentsThisWeek = allAppointments.filter(app => {
-            const appStart = new Date(app.dateTime);
+            const appStart = new Date(app.startDateTime);
             return appStart >= startOfWeek && appStart < endOfWeek;
         });
 
         const overlappingAppointments = [];
 
-        // Vergleiche jedes Terminpaar, um Überlappungen zu finden
         for (let i = 0; i < appointmentsThisWeek.length; i++) {
             for (let j = i + 1; j < appointmentsThisWeek.length; j++) {
                 const appA = appointmentsThisWeek[i];
                 const appB = appointmentsThisWeek[j];
 
-                const startA = new Date(appA.dateTime);
-                const endA = new Date(startA.getTime() + appA.duration * 60000);
+                const startA = new Date(appA.startDateTime);
+                const endA = appA.endDateTime
+                    ? new Date(appA.endDateTime)
+                    : new Date(startA.getTime() + appA.duration * 60000);
 
-                const startB = new Date(appB.dateTime);
-                const endB = new Date(startB.getTime() + appB.duration * 60000);
+                const startB = new Date(appB.startDateTime);
+                const endB = appB.endDateTime
+                    ? new Date(appB.endDateTime)
+                    : new Date(startB.getTime() + appB.duration * 60000);
 
                 // Prüfen auf Überlappung
                 if (startA < endB && startB < endA) {
@@ -637,9 +665,9 @@ async function displayAppointmentsOnCalendar() {
         }
     }
 
-    // Rufen Sie diese Funktion nach dem Laden der Termine auf
     logOverlappingAppointments();
 }
+
 
 
 
@@ -697,7 +725,7 @@ const cancelAppointmentFormButton = document.getElementById('CancelAppointmentFo
  * (A) Formular-Felder leeren,
  *     inkl. Kundendaten (Kundennummer, Name, Adresse usw.).
  */
-function clearAppointmentForm() {
+function clearAppointmentForm() { 
     document.getElementById('KundennummerzumTermin').value = '';
     document.getElementById('KundennummerzumTerminDisplay').textContent = '';
     document.getElementById('KundenName').textContent = '';
@@ -705,13 +733,23 @@ function clearAppointmentForm() {
     document.getElementById('KundenTelefon').textContent = '';
     document.getElementById('KundenMail').textContent = '';
 
-    document.getElementById('dateTime').value = '';
-    document.getElementById('duration').value = '';
+    // Neu statt dateTime
+    document.getElementById('startDateTime').value = '';
+    document.getElementById('endDateTime').value = '';
+
+    // Neu statt duration
+    document.getElementById('durationHours').value = '0';
+    document.getElementById('durationMinutes').value = '0';
+
     document.getElementById('Dienstleistung').value = '';
     document.getElementById('Preis').value = '';
     document.getElementById('Abrechnungsstatus').value = '';
     document.getElementById('description').value = '';
+
+    document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
+    // ...
 }
+
 
 /**
  * (B) Formular anzeigen (Unterschied: Neu vs. Edit)
@@ -758,14 +796,18 @@ function hideAppointmentForm() {
 async function createNewAppointment() {
     // Termin-Daten sammeln
     const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
-    const dateTime = document.getElementById('dateTime').value;
-    const duration = document.getElementById('duration').value;
+    const startVal = document.getElementById('startDateTime').value;  // datetime-local
+    const endVal   = document.getElementById('endDateTime').value;    // datetime-local
+
+    // Dauer
+    const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
+    const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
+    const totalDuration = hours * 60 + mins;
+
     const Dienstleistung = document.getElementById('Dienstleistung').value;
     const Preis = document.getElementById('Preis').value;
     const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
     const description = document.getElementById('description').value;
-    // Falls du MailAppointment nutzt:
-    // const MailAppointment = document.getElementById('MailAppointment').value || '';
 
     try {
         const response = await fetch(`${BACKEND_URL}/appointments`, {
@@ -776,13 +818,13 @@ async function createNewAppointment() {
             },
             body: JSON.stringify({
                 KundennummerzumTermin,
-                dateTime,
-                duration,
+                startDateTime: startVal,
+                endDateTime: endVal,
+                duration: totalDuration,
                 Dienstleistung,
                 Preis,
                 Abrechnungsstatus,
                 description
-                // MailAppointment
             })
         });
 
@@ -797,6 +839,7 @@ async function createNewAppointment() {
         alert('Fehler: ' + err.message);
     }
 }
+
 
 
 
@@ -869,6 +912,11 @@ async function displayAppointments(appointments) {
     const appointmentsList = document.getElementById('appointmentsList');
     appointmentsList.innerHTML = appointments.map(app => {
         const client = clients.find(c => c.Kundennummer === app.KundennummerzumTermin);
+        const appStart = new Date(app.startDateTime);
+        // Falls Endtermin existiert:
+        const appEnd = app.endDateTime ? new Date(app.endDateTime)
+                                       : new Date(appStart.getTime() + (app.duration * 60000));
+
         return `
             <div class="termin-card">
                 <!-- Spalte A: Kundendaten -->
@@ -879,8 +927,11 @@ async function displayAppointments(appointments) {
                 </div>
                 <!-- Spalte B: Termindetails -->
                 <div class="termin-info">
-                    <div>${new Date(app.dateTime).toLocaleDateString()} 
-                         ${new Date(app.dateTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                    <div>
+                        ${appStart.toLocaleDateString()} 
+                        ${appStart.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                        -
+                        ${appEnd.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                     </div>
                     <div>${app.Dienstleistung} (${app.duration} Min)</div>
                     <div>${app.description}</div>
@@ -916,6 +967,7 @@ async function displayAppointments(appointments) {
     });
 }
 
+
 /**************************************************************
  * (J) FILTER-FUNKTIONEN, SUCHE, ETC. (unverändert)
  **************************************************************/
@@ -926,25 +978,25 @@ function filterAppointments() {
     const searchTerm = document.getElementById('searchAppointment').value.toLowerCase();
     const today = new Date();
 
-    // Zuerst: Termine nach den aktivierten Buttons filtern
+    // 1) Termine nach "Zukunft/Vergangenheit" filtern
     let filteredAppointments = allAppointments.filter(app => {
-        const appDate = new Date(app.dateTime);
+        const appDate = new Date(app.startDateTime);
 
-        // Wenn beide Filter inaktiv sind, alle Termine durchlassen
+        // Keine Filter = alle Termine
         if (!filterFutureActive && !filterPastActive) return true;
 
-        // Filterbedingungen anwenden
+        // Filterbedingungen
         if (filterFutureActive && appDate >= today) return true;
         if (filterPastActive && appDate < today) return true;
 
-        return false; // Termin ausschließen, wenn keine Bedingung passt
+        return false;
     });
 
-    // Zweitens: Filterung nach dem Suchbegriff innerhalb der zuvor gefilterten Ergebnisse
+    // 2) Nach Suchbegriff filtern
     filteredAppointments = filteredAppointments.filter(app => {
         const client = allClients.find(c => c.Kundennummer === app.KundennummerzumTermin);
 
-        // Überprüfen, ob der Suchbegriff in den Kundendaten gefunden wird
+        // Kunde gefunden?
         return (
             (client && client.Vorname && client.Vorname.toLowerCase().includes(searchTerm)) ||
             (client && client.Nachname && client.Nachname.toLowerCase().includes(searchTerm)) ||
@@ -955,16 +1007,17 @@ function filterAppointments() {
         );
     });
 
-    // Sortieren der Ergebnisse nach Nähe zum heutigen Datum
+    // 3) Sortieren nach Nähe zum heutigen Datum
     filteredAppointments.sort((a, b) => {
-        const dateA = new Date(a.dateTime);
-        const dateB = new Date(b.dateTime);
+        const dateA = new Date(a.startDateTime);
+        const dateB = new Date(b.startDateTime);
         return Math.abs(dateA - today) - Math.abs(dateB - today);
     });
 
-    // Gefilterte und sortierte Ergebnisse anzeigen
+    // 4) Anzeigen
     displayAppointments(filteredAppointments);
 }
+
 
 document.getElementById('filterPast').addEventListener('click', function () {
     filterPastActive = !filterPastActive;
@@ -990,27 +1043,17 @@ document.getElementById('searchAppointment').addEventListener('input', function 
 /**************************************************************
  * (K) HILFSFUNKTION: setLocalDateTimeInput
  **************************************************************/
-function setLocalDateTimeInput(dateTimeLocalStr) {
-    // Dein bereits vorhandener Code...
-    // Wandelt "YYYY-MM-DDTHH:mm:ss" in ein datetime-local-Eingabeformat
-    // und setzt document.getElementById('dateTime').value = ...
-    const [datePart, timePart] = dateTimeLocalStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-
-    const timeParts = timePart.split(':').map(Number);
-    const hour = timeParts[0];
-    const minute = timeParts[1];
-    const second = timeParts[2] || 0;
-
-    const date = new Date(year, month - 1, day, hour, minute, second);
-    if (isNaN(date.getTime())) {
-        console.error("Ungültiges Datum:", dateTimeLocalStr);
+function setLocalDateTimeInput(dateTimeLocalStr, elementId) {
+    if (!dateTimeLocalStr) {
+        document.getElementById(elementId).value = '';
         return;
     }
-
-    const localDateTime = `${year.toString().padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-    document.getElementById('dateTime').value = localDateTime;
+    // Beispiel: "2025-01-02T10:00:00.000Z" => slice(0,16) => "2025-01-02T10:00"
+    const localDateTime = dateTimeLocalStr.slice(0,16);
+    document.getElementById(elementId).value = localDateTime;
 }
+
+
 
 /**************************************************************
  * (L) WEITERE SUCH-FUNKTIONEN, KUNDENSUCHE, ETC.
@@ -1018,52 +1061,48 @@ function setLocalDateTimeInput(dateTimeLocalStr) {
  **************************************************************/
 // Funktion zur Anzeige der Suchergebnisse mit angewendeten Filtern und Sortierung
 function displaySearchResults() {
-    const searchResultsContainer = document.getElementById('searchClientForApointment'); // Zielcontainer
-    searchResultsContainer.innerHTML = ''; // Alte Ergebnisse löschen
-    
-    // Prüfen, ob es Ergebnisse gibt
-    if (appointmentsList.length === 0) {
-        console.log("Anzahl der Suchergebnisse:", appointmentsList.length);
-        searchResultsContainer.style.display = 'none'; // Container ausblenden, wenn keine Ergebnisse
-        return;
-    }
-    else {
-        console.log("Keine suchergebnisse Gefunden, Anzahl der Suchergebnisse:", appointmentsList.length);
-    }
-        
-    // Datum von heute für den Filtervergleich
-    const today = new Date();
+    const searchResultsContainer = document.getElementById('searchClientForApointment');
+    searchResultsContainer.innerHTML = ''; 
 
-    // Filter und Sortieren der Suchergebnisse
+    // Wenn keine Ergebnisse
+    if (searchResults.length === 0) {
+        console.log("Anzahl der Suchergebnisse:", searchResults.length);
+        searchResultsContainer.style.display = 'none';
+        return;
+    } else {
+        // Hier steht "Keine suchergebnisse Gefunden" => evtl. unglücklich
+        console.log("Suchergebnisse gefunden:", searchResults.length);
+    }
+
+    // Falls du hier *Termine* filterst, ersetze "client.startDateTime" 
+    // Falls du hier *Kunden* filterst, entferne den Zeitvergleich
+    const today = new Date();
     let filteredResults = searchResults
         .filter(client => {
-            // Wenn beide Filter deaktiviert sind, zeige alle Termine an
+            // Wenn dein Filter (Future/Past) auf *Terminen* basiert, 
+            // müsstest du client.startDateTime haben. Sonst => auskommentieren
             if (!filterFutureActive && !filterPastActive) return true;
 
-            const appointmentDate = new Date(client.dateTime); // Annahme: client hat dateTime-Eigenschaft
-
-            // Filter basierend auf Aktivierung
+            const appointmentDate = new Date(client.startDateTime || null);
             if (filterFutureActive && appointmentDate >= today) return true;
             if (filterPastActive && appointmentDate < today) return true;
 
             return false;
         })
         .sort((a, b) => {
-            const dateA = new Date(a.dateTime);
-            const dateB = new Date(b.dateTime);
-            return Math.abs(dateA - today) - Math.abs(dateB - today); // Sortieren nach Nähe zum heutigen Datum
+            const dateA = new Date(a.startDateTime || null);
+            const dateB = new Date(b.startDateTime || null);
+            return Math.abs(dateA - today) - Math.abs(dateB - today);
         });
 
-
-
-    // Anzeige der gefilterten und sortierten Ergebnisse
-    searchResultsContainer.style.display = 'block'; // Container anzeigen
+    // Anzeige
+    searchResultsContainer.style.display = 'block';
     filteredResults.forEach(client => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('search-result-item');
         resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
 
-        // Kundendaten und Auswahl-Logik
+        // Klick => Kundendaten übernehmen
         resultItem.addEventListener('click', () => {
             document.getElementById('KundennummerzumTermin').value = client.Kundennummer;
             document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
@@ -1071,14 +1110,16 @@ function displaySearchResults() {
             document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
             document.getElementById('KundenTelefon').textContent = client.Telefon;
             document.getElementById('KundenMail').textContent = client.Mail;
-            searchResultsContainer.innerHTML = ''; // Ergebnisse leeren
-            searchResultsContainer.style.display = 'none'; // Container ausblenden
-            document.getElementById('searchCustomerInput').value = ''; // Eingabefeld zurücksetzen
+
+            searchResultsContainer.innerHTML = '';
+            searchResultsContainer.style.display = 'none';
+            document.getElementById('searchCustomerInput').value = '';
         });
 
         searchResultsContainer.appendChild(resultItem);
     });
 }
+
 
 //Kundensuche innerhalb der Terminverwaltung:
     // Filtered search results for customer search
@@ -1119,42 +1160,265 @@ function displaySearchResults() {
             document.getElementById('searchCustomerInput').value = ''; // Optional: Eingabefeld zurücksetzen
         }
     });
-    
+        
     
     // Submit-Event-Listener für das Terminformular
-    document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-        // Termin-Daten sammeln
-        const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
-        const dateTime = document.getElementById('dateTime').value;
-        const duration = document.getElementById('duration').value;
-        const Dienstleistung = document.getElementById('Dienstleistung').value;
-        const Preis = document.getElementById('Preis').value;
-        const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
-        const description = document.getElementById('description').value;
+    // 1) Termin-Daten sammeln
+    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
 
+    const startVal = document.getElementById('startDateTime').value;  // datetime-local, z.B. "2025-01-02T10:00"
+    const endVal   = document.getElementById('endDateTime').value;    // datetime-local, z.B. "2025-01-02T11:30"
+
+    // Aus Stunden/Minuten die Gesamtdauer in Minuten berechnen
+    const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
+    const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
+    const totalDuration = hours * 60 + mins;
+
+    const Dienstleistung = document.getElementById('Dienstleistung').value;
+    const Preis = document.getElementById('Preis').value;
+    const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
+    const description = document.getElementById('description').value;
+
+    // 2) Request-Body zusammenstellen
+    const newAppointment = {
+        KundennummerzumTermin,
+        startDateTime: startVal,
+        endDateTime: endVal,
+        duration: totalDuration,   // WICHTIG: im Backend speichern wir die Gesamt-Minuten
+        Dienstleistung,
+        Preis,
+        Abrechnungsstatus,
+        description
+    };
+    
         try {
+            // 3) POST an dein Backend
             const response = await fetch(`${BACKEND_URL}/appointments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ KundennummerzumTermin, dateTime, duration, Dienstleistung, Preis, Abrechnungsstatus, description })
+                body: JSON.stringify(newAppointment)
             });
 
-            if (response.ok) {
-                alert('Termin erfolgreich hinzugefügt!');
-                loadAppointments();
-            } else {
-                alert('Fehler beim Hinzufügen des Termins');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
+        if (response.ok) {
+            alert('Termin erfolgreich hinzugefügt!');
+            // 4) Termine neu laden
+            loadAppointments();
+            // ggf. Formular verstecken oder leeren
+            // hideAppointmentForm();
+        } else {
+            alert('Fehler beim Hinzufügen des Termins');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+});
+
+
+    /***************************************************
+     Logik für Abweichender Rechnungsempfänger
+    ***************************************************/
+    
+    // Block ein- und ausblenden
+    document.getElementById('abweichenderRechnungsempfaengerButton')
+    .addEventListener('click', function() {
+        const block = document.getElementById('abweichenderRechnungsempfaengerBlock');
+        // Wenn der Block ausgeblendet ist, dann anzeigen, sonst ausblenden
+        if (block.style.display === 'none' || block.style.display === '') {
+            block.style.display = 'block';
+        } else {
+            block.style.display = 'none';
         }
     });
- 
+
+        //Suche für Rechnungsempfänger
+    // Ähnlich wie 'searchCustomerInput', nur für den Rechnungsempfänger
+document.getElementById('searchInvoiceInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    
+    // Beispiel: wir nehmen dieselbe allClients-Liste oder eine andere, je nach System
+    searchResultsInvoice = allClients
+        .filter(client => 
+            client.Vorname.toLowerCase().includes(searchTerm) ||
+            client.Nachname.toLowerCase().includes(searchTerm) ||
+            client.Ort.toLowerCase().includes(searchTerm) ||
+            client.Telefon.toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 5);
+
+    displayInvoiceSearchResults();
+});
+
+function displayInvoiceSearchResults() {
+    const container = document.getElementById('searchClientForInvoice');
+    container.innerHTML = '';
+
+    if (searchResultsInvoice.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    container.style.display = 'block';
+
+    searchResultsInvoice.forEach(client => {
+        const resultItem = document.createElement('div');
+        resultItem.classList.add('search-result-item');
+        resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
+
+        // Klick-Event: Daten übernehmen
+        resultItem.addEventListener('click', () => {
+            document.getElementById('RechnungsempfaengerNummerDisplay').textContent 
+                = String(client.Kundennummer).padStart(6, '0');
+            document.getElementById('RechnungsempfaengerName').textContent 
+                = `${client.Vorname} ${client.Nachname}`;
+            document.getElementById('RechnungsempfaengerAdresse').textContent 
+                = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
+            document.getElementById('RechnungsempfaengerTelefon').textContent 
+                = client.Telefon;
+            document.getElementById('RechnungsempfaengerMail').textContent 
+                = client.Mail;
+
+            // Falls du das in der DB speichern willst:
+            // ...
+            // z.B. versteckte Inputs oder speichere beim Absenden
+
+            // Aufräumen
+            container.innerHTML = '';
+            container.style.display = 'none';
+            document.getElementById('searchInvoiceInput').value = '';
+        });
+
+        container.appendChild(resultItem);
+    });
+}
+
+
+
+
+//Starttermin/Endtermin und Stunden/Minuten berechnen
+const startInput = document.getElementById('startDateTime');
+const endInput = document.getElementById('endDateTime');
+const durationHoursInput = document.getElementById('durationHours');
+const durationMinutesInput = document.getElementById('durationMinutes');
+
+// Funktion, die den Endtermin berechnet
+function calculateEndDateTime() {
+    const startValue = startInput.value; 
+    if (!startValue) return; // Nichts zu berechnen, falls Starttermin leer
+    
+    let hours = parseInt(durationHoursInput.value) || 0;
+    let mins = parseInt(durationMinutesInput.value) || 0;
+
+    const startDate = new Date(startValue);
+    // add hours & minutes
+    startDate.setHours(startDate.getHours() + hours);
+    startDate.setMinutes(startDate.getMinutes() + mins);
+
+    // Endtermin in <input type="datetime-local"> umwandeln
+    // datetime-local nimmt das Format YYYY-MM-DDThh:mm
+    endInput.value = startDate.toISOString().slice(0,16); 
+}
+
+// Wenn sich Stunden/Minuten ändern => Endtermin berechnen
+durationHoursInput.addEventListener('change', calculateEndDateTime);
+durationMinutesInput.addEventListener('change', calculateEndDateTime);
+// Alternativ onBlur / onKeyUp, je nach Bedarf
+
+// Wenn Starttermin geändert wurde und bereits Stunden/Minuten vorhanden => Endtermin neu berechnen
+startInput.addEventListener('change', calculateEndDateTime);
+
+
+
+
+//Dauer berechnen aus Starttermin + Endtermin
+function calculateDuration() {
+    const startValue = startInput.value;
+    const endValue = endInput.value;
+    if (!startValue || !endValue) return;
+
+    const startDate = new Date(startValue);
+    const endDate = new Date(endValue);
+
+    // Differenz in Minuten
+    let diffMinutes = (endDate - startDate) / 1000 / 60; 
+    if (diffMinutes < 0) diffMinutes = 0; // keine negative Dauer
+
+    // Stunden & Minuten
+    const hours = Math.floor(diffMinutes / 60);
+    const mins = diffMinutes % 60;
+
+    durationHoursInput.value = hours;
+    durationMinutesInput.value = mins;
+}
+
+// Wann rufen wir calculateDuration auf?
+// z.B. wenn sich endDateTime ändert:
+endInput.addEventListener('change', calculateDuration);
+
+//Senden & Speichern im Backend
+document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Start-/Endtermin
+    const startVal = document.getElementById('startDateTime').value;
+    const endVal = document.getElementById('endDateTime').value;
+
+    // Als Date-Objekt für das Backend
+    const startDateObj = startVal ? new Date(startVal) : null;
+    const endDateObj = endVal ? new Date(endVal) : null;
+
+    // Dauer
+    let totalMinutes = 0;
+    const hours = parseInt(document.getElementById('durationHours').value) || 0;
+    const mins = parseInt(document.getElementById('durationMinutes').value) || 0;
+    totalMinutes = hours * 60 + mins;
+
+    // Alle weiteren Felder
+    const data = {
+      startDateTime: startDateObj,
+      endDateTime: endDateObj,
+      duration: totalMinutes,
+      description: document.getElementById('description').value,
+      KundennummerzumTermin: parseInt(document.getElementById('KundennummerzumTermin').value) || 0,
+      Preis: document.getElementById('Preis').value,
+      Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
+      Dienstleistung: document.getElementById('Dienstleistung').value,
+      erfasstDurch: document.getElementById('erfasstDurch').value,
+      projektId: parseInt(document.getElementById('projektId').value) || null,
+      verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
+      erbringungsStatus: document.getElementById('erbringungsStatus').value,
+      fakturaBemerkung: document.getElementById('fakturaBemerkung').value,
+      fakturaNummer: document.getElementById('fakturaNummer').value
+      // usw...
+    };
+
+    // Falls abweichender Rechnungsempfänger ausgewählt wurde:
+    const reNr = document.getElementById('RechnungsempfaengerNummerDisplay').textContent;
+    if (reNr) {
+      data.rechnungsEmpfaengerNummer = parseInt(reNr) || null;
+      data.rechnungsEmpfaengerName = document.getElementById('RechnungsempfaengerName').textContent;
+      data.rechnungsEmpfaengerAdresse = document.getElementById('RechnungsempfaengerAdresse').textContent;
+      data.rechnungsEmpfaengerTelefon = document.getElementById('RechnungsempfaengerTelefon').textContent;
+      data.rechnungsEmpfaengerMail = document.getElementById('RechnungsempfaengerMail').textContent;
+    }
+
+    // Nun per Fetch oder AJAX an dein Backend senden
+    console.log('Termin-Daten zur Speicherung:', data);
+    // z.B.:
+    // fetch('/api/appointments', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(data)
+    // }).then(...)
+
+});
+
+
+
     //====================================================================================================================================
     //====================================================================================================================================
     //====================================================================================================================================

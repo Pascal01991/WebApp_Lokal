@@ -23,7 +23,9 @@ async function fetchHolidaysFromDatabase() {
 
 async function getSlots(req, res) {
     try {
+        // Das aktuelle Datum aus dem Query-Parameter
         const requestedDate = new Date(req.query.currentDate);
+
         const startOfWeek = getStartOfWeek(requestedDate);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(endOfWeek.getDate() + 6);
@@ -35,35 +37,36 @@ async function getSlots(req, res) {
         const holidays = await fetchHolidaysFromDatabase();
         console.log('Geladene Feiertage:', holidays);
 
-        // Generiere Slots für die angefragte Woche
+        // Slots (Zeitfenster) generieren
         const slots = generateTimeSlots(holidays, startOfWeek, endOfWeek);
         console.log('Generierte Slots vor Filterung:', slots);
 
-        // Filtere Slots für die aktuelle Woche
+        // Slots filtern, damit sie nur innerhalb der Woche liegen
         const filteredSlots = slots.filter(slot => {
-            const slotDate = new Date(slot.dateTime);
+            const slotDate = new Date(slot.startDateTime); 
             return slotDate >= startOfWeek && slotDate <= endOfWeek;
         });
 
         console.log('Gefilterte Slots für die Woche:', filteredSlots);
 
+        // Für die Ausgabe formatieren
         const formattedSlots = filteredSlots.map(slot => ({
             dayIndex: slot.dayIndex,
-            dateTime: dateToLocalString(new Date(slot.dateTime)),
+            // Wir behalten den Namen "startDateTime" hier, oder du wandelst es in LocalString um
+            startDateTime: dateToLocalString(new Date(slot.startDateTime)),
             duration: slot.duration,
             isAvailable: slot.isAvailable,
-            isHoliday: slot.isHoliday,
+            isHoliday: slot.isHoliday
         }));
 
         console.log('Formatierte Slots:', formattedSlots);
-
         res.json(formattedSlots);
+
     } catch (error) {
         console.error('Fehler beim Berechnen der Slots:', error);
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
 }
-
 
 
 

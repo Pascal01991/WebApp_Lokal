@@ -18,27 +18,62 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        console.log("POST Request empfangen:", req.body);  // Prüfen, ob die Daten korrekt empfangen werden
+        console.log("POST Request empfangen:", req.body);
 
-        const { duration, dateTime, description, KundennummerzumTermin, Preis, Abrechnungsstatus, MailAppointment, Dienstleistung } = req.body;
+        // Wir lesen jetzt startDateTime, optional endDateTime und duration etc.
+        const {
+            startDateTime,
+            endDateTime,
+            duration,
+            description,
+            KundennummerzumTermin,
+            Preis,
+            Abrechnungsstatus,
+            MailAppointment,
+            Dienstleistung
+        } = req.body;
 
-        // Überprüfen, ob die Felder vorhanden sind
-        if (!duration || !dateTime || !description) {
-            return res.status(400).json({ msg: "Fehlende Felder: Titel, Datum oder Beschreibung" });
+        // Validierung (Pflichtfelder)
+        // Bisher stand dort "!duration || !dateTime || !description"
+        // Jetzt prüfen wir "!startDateTime"
+        if (!startDateTime || !duration || !description) {
+            return res.status(400).json({
+                msg: "Fehlende Felder: startDateTime, duration oder description"
+            });
         }
 
-        const newAppointment = new Appointment({ duration, dateTime, description, KundennummerzumTermin, Preis, Abrechnungsstatus, MailAppointment, Dienstleistung });
+        // Neues Appointment-Objekt anlegen
+        const newAppointment = new Appointment({
+            // Pflicht:
+            startDateTime,
+            duration,
+            description,
+
+            // Optionale Felder:
+            endDateTime,
+            KundennummerzumTermin,
+            Preis,
+            Abrechnungsstatus,
+            MailAppointment,
+            Dienstleistung
+        });
+
+        // Speichern
         await newAppointment.save();
 
-        console.log("Neuer Termin gespeichert:", newAppointment);  // Prüfen, ob der Termin korrekt gespeichert wird
+        console.log("Neuer Termin gespeichert:", newAppointment);
         console.log("POST Request empfangen:", req.body);
-        console.log("Schema: ", Appointment.schema.paths);  // Zeigt alle Felder im Schema an
+        console.log("Schema: ", Appointment.schema.paths);
 
         res.status(201).json(newAppointment);
+
     } catch (err) {
         console.error("Fehler beim Speichern des Termins:", err.message);
-        console.error(err.stack); // Zeigt den Stacktrace des Fehlers
-        res.status(500).json({ msg: 'Fehler beim Hinzufügen des Termins', error: err.message });
+        console.error(err.stack);
+        res.status(500).json({
+            msg: 'Fehler beim Hinzufügen des Termins',
+            error: err.message
+        });
     }
 });
 

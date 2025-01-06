@@ -81,53 +81,55 @@ function isDateInHoliday(date, holidays) {
 
     //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
     function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
-    const slots = [];
-    const defaultLength = 30;
-
-    console.log('Generiere Slots für den Zeitraum:', startOfWeek.toISOString(), '-', endOfWeek.toISOString());
-    console.log('Geladene Feiertage:', holidays);
-
-    // Iteriere über die Tage der Woche
-    for (let i = 0; i < 7; i++) {
-        const day = new Date(startOfWeek);
-        day.setDate(startOfWeek.getDate() + i);
-
-        // Überspringe Tage außerhalb des Enddatums
-        if (day > endOfWeek) break;
-
-        const dayName = getDayName(day).toLowerCase();
-        if (!workingHours[dayName] || !workingHours[dayName].active) continue;
-
-        const periods = ['morning', 'afternoon'];
-        periods.forEach(period => {
-            const start = workingHours[dayName][period]?.start;
-            const end = workingHours[dayName][period]?.end;
-
-            if (start && end) {
-                const startMinutes = parseTime(start);
-                const endMinutes = parseTime(end);
-
-                for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultLength) {
-                    const slotTime = new Date(day);
-                    slotTime.setHours(0, minutes, 0, 0);
-
-                    const isInHoliday = isDateInHoliday(slotTime, holidays);
-                    console.log(`Slot geprüft: ${slotTime.toISOString()}, Feiertag: ${isInHoliday}`);
-
-                    slots.push({
-                        dayIndex: i,
-                        dateTime: slotTime,
-                        duration: defaultLength,
-                        isAvailable: !isInHoliday,
-                        isHoliday: isInHoliday,
-                    });
+        const slots = [];
+        const defaultLength = 30; // z.B. 30 Minuten
+    
+        console.log('Generiere Slots für den Zeitraum:', startOfWeek.toISOString(), '-', endOfWeek.toISOString());
+        console.log('Geladene Feiertage:', holidays);
+    
+        // Über die Tage der Woche iterieren
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(startOfWeek);
+            day.setDate(startOfWeek.getDate() + i);
+    
+            if (day > endOfWeek) break;  // Außerhalb der Woche, Abbruch
+    
+            const dayName = getDayName(day).toLowerCase();
+            if (!workingHours[dayName] || !workingHours[dayName].active) continue;
+    
+            // Morgens/Nachmittags
+            const periods = ['morning', 'afternoon'];
+            periods.forEach(period => {
+                const start = workingHours[dayName][period]?.start;
+                const end = workingHours[dayName][period]?.end;
+    
+                if (start && end) {
+                    const startMinutes = parseTime(start);
+                    const endMinutes = parseTime(end);
+    
+                    for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultLength) {
+                        const slotTime = new Date(day);
+                        slotTime.setHours(0, minutes, 0, 0);
+    
+                        const isInHoliday = isDateInHoliday(slotTime, holidays);
+                        console.log(`Slot geprüft: ${slotTime.toISOString()}, Feiertag: ${isInHoliday}`);
+    
+                        slots.push({
+                            dayIndex: i,
+                            // statt dateTime => startDateTime
+                            startDateTime: slotTime,
+                            duration: defaultLength,
+                            isAvailable: !isInHoliday,
+                            isHoliday: isInHoliday
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
+    
+        return slots;
     }
-
-    return slots;
-}
+    
 
     
     

@@ -477,6 +477,21 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 }
 
 
+/*Ergänzung zusätzliche Termin - Felder*/
+.customer-info-compact,
+.auftraggeber-daten {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Nur minimaler Abstand */
+}
+
+.customer-info-compact > button {
+  margin-top: 5px;
+}
+
+/* usw. – hier kannst du Abstände reduzieren */
+
+
 
 /*====================================================================================================================================
 TERMINVERWALTUNG SCROLLBARE LISTE
