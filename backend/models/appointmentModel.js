@@ -4,12 +4,12 @@ const mongoose = require('mongoose');
 const appointmentSchema = new mongoose.Schema({
     // Starttermin
     startDateTime: {
-        type: Date,
+        type: String,
         required: true
     },
     // Endtermin
     endDateTime: {
-        type: Date,
+        type: String,
         required: false // Kann optional sein, falls noch nicht festgelegt
     },
     // Dauer in Minuten (im Backend/DB speichern wir nur Minuten)

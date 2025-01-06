@@ -1166,51 +1166,82 @@ function displaySearchResults() {
 document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    // 1) Termin-Daten sammeln
-    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
+    // 1) Auftraggeber- und Rechnungsempfänger-Nummern sammeln
+    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value || ''; 
+    // Rechnungsempfänger (nur die Nummer)
+    // Achtung: Falls das Feld leer ist, parseInt("") => NaN => wir nehmen dann null
+    let rechnungsEmpfaengerNummer = parseInt(document.getElementById('RechnungsempfaengerNummerDisplay').textContent, 10);
+    if (isNaN(rechnungsEmpfaengerNummer)) {
+        rechnungsEmpfaengerNummer = null;
+    }
 
-    const startVal = document.getElementById('startDateTime').value;  // datetime-local, z.B. "2025-01-02T10:00"
-    const endVal   = document.getElementById('endDateTime').value;    // datetime-local, z.B. "2025-01-02T11:30"
+    // 2) Start- und Endtermin
+    const startVal = document.getElementById('startDateTime').value;  // z.B. "2025-01-02T10:00"
+    const endVal   = document.getElementById('endDateTime').value;    // z.B. "2025-01-02T11:30"
 
-    // Aus Stunden/Minuten die Gesamtdauer in Minuten berechnen
+    // 3) Dauer (Stunden + Minuten => Gesamt-Minuten)
     const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
     const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
     const totalDuration = hours * 60 + mins;
 
+    // 4) Weitere Pflicht-/Zusatzfelder
     const Dienstleistung = document.getElementById('Dienstleistung').value;
     const Preis = document.getElementById('Preis').value;
     const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
     const description = document.getElementById('description').value;
 
-    // 2) Request-Body zusammenstellen
+    // 5) Neue Felder (Abwicklung)
+    const erfasstDurch = document.getElementById('erfasstDurch').value;
+    // Projekt-ID als Number (falls leer => null)
+    let projektId = parseInt(document.getElementById('projektId').value, 10);
+    if (isNaN(projektId)) {
+        projektId = null;
+    }
+
+    const verrechnungsTyp = document.getElementById('verrechnungsTyp').value;
+    const erbringungsStatus = document.getElementById('erbringungsStatus').value;
+    const fakturaBemerkung = document.getElementById('fakturaBemerkung').value;
+    const fakturaNummer = document.getElementById('fakturaNummer').value;
+
+    // 6) Request-Body (Mongoose-Felder) zusammenstellen
     const newAppointment = {
+        // Standard-Felder
         KundennummerzumTermin,
         startDateTime: startVal,
         endDateTime: endVal,
-        duration: totalDuration,   // WICHTIG: im Backend speichern wir die Gesamt-Minuten
+        duration: totalDuration,
         Dienstleistung,
         Preis,
         Abrechnungsstatus,
-        description
+        description,
+
+        // Abwicklung
+        erfasstDurch,
+        projektId,
+        verrechnungsTyp,
+        erbringungsStatus,
+        fakturaBemerkung,
+        fakturaNummer,
+
+        // Abweichender Rechnungsempfänger
+        rechnungsEmpfaengerNummer
     };
-    
-        try {
-            // 3) POST an dein Backend
-            const response = await fetch(`${BACKEND_URL}/appointments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(newAppointment)
-            });
+
+    try {
+        // 7) POST an dein Backend
+        const response = await fetch(`${BACKEND_URL}/appointments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(newAppointment)
+        });
 
         if (response.ok) {
             alert('Termin erfolgreich hinzugefügt!');
-            // 4) Termine neu laden
+            // ggf. neu laden/ Formular verstecken
             loadAppointments();
-            // ggf. Formular verstecken oder leeren
-            // hideAppointmentForm();
         } else {
             alert('Fehler beim Hinzufügen des Termins');
         }
@@ -1299,65 +1330,119 @@ function displayInvoiceSearchResults() {
 
 
 
-//Starttermin/Endtermin und Stunden/Minuten berechnen
+
+/* 
+  ================ HILFSFUNKTIONEN ================
+  1) parseLocalDateTime(str): 
+     Zerlegt "YYYY-MM-DDTHH:mm" in {y, m, d, hh, mm} (Zahlen).
+  2) buildLocalDateTime(y,m,d,hh,mm): 
+     Baut aus Jahr,Monat,Tag,Stunde,Minute wieder einen "YYYY-MM-DDTHH:mm"-String.
+*/
+function parseLocalDateTime(str) {
+    // Beispiel: "2025-01-02T10:30"
+    const [datePart, timePart] = str.split('T'); 
+    // datePart = "2025-01-02", timePart = "10:30"
+    const [y, m, d] = datePart.split('-').map(Number);
+    const [hh, mm] = timePart.split(':').map(Number);
+    return { y, m, d, hh, mm };
+}
+
+function buildLocalDateTime(y, m, d, hh, mm) {
+    // Jahr, Monat, Tag, Stunde, Minute in jeweils 2- bzw. 4-stellige Strings umwandeln
+    const year  = String(y).padStart(4, '0');
+    const month = String(m).padStart(2, '0');
+    const day   = String(d).padStart(2, '0');
+    const hour  = String(hh).padStart(2, '0');
+    const min   = String(mm).padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${min}`;
+}
+
+/* 
+   ================ HAUPTFUNKTIONEN ================
+   - calculateEndDateTime(): 
+       Addiert (durationHours + durationMinutes) zum Starttermin 
+       und schreibt das Ergebnis in das Feld "endDateTime".
+
+   - calculateDuration():
+       Ermittelt die Differenz (in h/min) zwischen startDateTime und endDateTime 
+       und schreibt sie in durationHours / durationMinutes.
+*/
+
+// Referenzen auf die HTML-Elemente
 const startInput = document.getElementById('startDateTime');
 const endInput = document.getElementById('endDateTime');
 const durationHoursInput = document.getElementById('durationHours');
 const durationMinutesInput = document.getElementById('durationMinutes');
 
-// Funktion, die den Endtermin berechnet
+/**
+ * Addiert (hours + mins) zum Starttermin und setzt das Endtermin-Feld.
+ */
 function calculateEndDateTime() {
     const startValue = startInput.value; 
     if (!startValue) return; // Nichts zu berechnen, falls Starttermin leer
-    
-    let hours = parseInt(durationHoursInput.value) || 0;
-    let mins = parseInt(durationMinutesInput.value) || 0;
 
-    const startDate = new Date(startValue);
-    // add hours & minutes
-    startDate.setHours(startDate.getHours() + hours);
-    startDate.setMinutes(startDate.getMinutes() + mins);
+    // 1) Stunden/Minuten auslesen
+    const addHours = parseInt(durationHoursInput.value, 10) || 0;
+    const addMins  = parseInt(durationMinutesInput.value, 10) || 0;
 
-    // Endtermin in <input type="datetime-local"> umwandeln
-    // datetime-local nimmt das Format YYYY-MM-DDThh:mm
-    endInput.value = startDate.toISOString().slice(0,16); 
+    // 2) Start-String zerlegen
+    const { y, m, d, hh, mm } = parseLocalDateTime(startValue);
+
+    // 3) Stunden/Minuten addieren (ohne Tages-/Monatsüberlauf)
+    let newHour = hh + addHours;
+    let newMin  = mm + addMins;
+    // Falls die Minuten über 59 gehen
+    if (newMin >= 60) {
+        const overflow = Math.floor(newMin / 60);
+        newHour += overflow;
+        newMin = newMin % 60;
+    }
+
+    // (Da wir max. 8h brauchen, ignorieren wir, wenn newHour >= 24.)
+
+    // 4) Endtermin zusammenbauen
+    endInput.value = buildLocalDateTime(y, m, d, newHour, newMin);
 }
 
-// Wenn sich Stunden/Minuten ändern => Endtermin berechnen
-durationHoursInput.addEventListener('change', calculateEndDateTime);
-durationMinutesInput.addEventListener('change', calculateEndDateTime);
-// Alternativ onBlur / onKeyUp, je nach Bedarf
-
-// Wenn Starttermin geändert wurde und bereits Stunden/Minuten vorhanden => Endtermin neu berechnen
-startInput.addEventListener('change', calculateEndDateTime);
-
-
-
-
-//Dauer berechnen aus Starttermin + Endtermin
+/**
+ * Errechnet aus startDateTime und endDateTime die Gesamtdauer in (h / min).
+ */
 function calculateDuration() {
     const startValue = startInput.value;
     const endValue = endInput.value;
     if (!startValue || !endValue) return;
 
-    const startDate = new Date(startValue);
-    const endDate = new Date(endValue);
+    // 1) Beide Strings zerlegen
+    const { y: sy, m: sm, d: sd, hh: sh, mm: smin } = parseLocalDateTime(startValue);
+    const { y: ey, m: em, d: ed, hh: eh, mm: emin } = parseLocalDateTime(endValue);
 
-    // Differenz in Minuten
-    let diffMinutes = (endDate - startDate) / 1000 / 60; 
-    if (diffMinutes < 0) diffMinutes = 0; // keine negative Dauer
+    // 2) Gesamt-Minuten ab Mitternacht (jeweils)
+    const startTotal = sh * 60 + smin;
+    const endTotal   = eh * 60 + emin;
 
-    // Stunden & Minuten
+    // 3) Differenz (falls negativ => 0)
+    let diffMinutes = endTotal - startTotal;
+    if (diffMinutes < 0) diffMinutes = 0;
+
+    // 4) In h / min umwandeln
     const hours = Math.floor(diffMinutes / 60);
-    const mins = diffMinutes % 60;
+    const mins  = diffMinutes % 60;
 
-    durationHoursInput.value = hours;
-    durationMinutesInput.value = mins;
+    durationHoursInput.value   = String(hours);
+    durationMinutesInput.value = String(mins);
 }
 
-// Wann rufen wir calculateDuration auf?
-// z.B. wenn sich endDateTime ändert:
+// Events: Wenn sich Stunden/Minuten ändern => Endtermin berechnen
+durationHoursInput.addEventListener('change', calculateEndDateTime);
+durationMinutesInput.addEventListener('change', calculateEndDateTime);
+
+// Wenn Starttermin geändert => Endtermin neu berechnen
+startInput.addEventListener('change', calculateEndDateTime);
+
+// Wenn Endtermin geändert => Dauer neu berechnen
 endInput.addEventListener('change', calculateDuration);
+
+
 
 //Senden & Speichern im Backend
 document.getElementById('appointmentForm').addEventListener('submit', function(e) {
