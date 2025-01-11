@@ -364,7 +364,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 #appointmentForm {
   display: flex;
   gap: 20px; /* Abstand zwischen den Spalten */
-  max-width: 100%;
+  max-width: 1100px;
   box-sizing: border-box;
   background-color: var(--background-medium);
   height: 100%; /* Verfügbaren Platz füllen */

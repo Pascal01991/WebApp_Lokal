@@ -30,7 +30,16 @@ router.post('/', async (req, res) => {
             Preis,
             Abrechnungsstatus,
             MailAppointment,
-            Dienstleistung
+            Dienstleistung,
+            erfasstDurch,
+            projektId,
+            verrechnungsTyp,
+            erbringungsStatus,
+            fakturaBemerkung,
+            fakturaNummer,
+    
+            // Abweichender Rechnungsempfänger
+            rechnungsEmpfaengerNummer
         } = req.body;
 
         // Validierung (Pflichtfelder)
@@ -55,7 +64,20 @@ router.post('/', async (req, res) => {
             Preis,
             Abrechnungsstatus,
             MailAppointment,
-            Dienstleistung
+            Dienstleistung,
+    
+            // Abwicklung
+            erfasstDurch,
+            projektId,
+            verrechnungsTyp,
+            erbringungsStatus,
+            fakturaBemerkung,
+            fakturaNummer,
+    
+            // Abweichender Rechnungsempfänger
+            rechnungsEmpfaengerNummer
+
+
         });
 
         // Speichern

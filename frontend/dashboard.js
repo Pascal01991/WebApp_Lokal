@@ -46,6 +46,15 @@ async function editAppointment(appointmentId) {
     document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
     document.getElementById('description').value = appointment.description || '';
 
+    document.getElementById('erfasstDurch').value = appointment.erfasstDurch || '';
+    document.getElementById('projektId').value = appointment.projektId || '';
+    document.getElementById('verrechnungsTyp').value = appointment.verrechnungsTyp || '';
+    document.getElementById('erbringungsStatus').value = appointment.erbringungsStatus || '';
+    document.getElementById('rechnungsEmpfaengerNummer').value = appointment.rechnungsEmpfaengerNummer || '';
+    document.getElementById('fakturaNummer').value = appointment.fakturaNummer || '';
+    document.getElementById('fakturaBemerkung').value = appointment.fakturaBemerkung || '';
+    
+
     // 4) Den zugehörigen Kunden suchen und Kundendaten befüllen
     const client = allClients.find(c => c.Kundennummer === appointment.KundennummerzumTermin);
     if (client) {
@@ -90,7 +99,14 @@ async function editAppointment(appointmentId) {
             Dienstleistung: document.getElementById('Dienstleistung').value,
             Preis: document.getElementById('Preis').value,
             Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
-            description: document.getElementById('description').value
+            description: document.getElementById('description').value,
+            erfasstDurch: document.getElementById('erfasstDurch').value,
+            projektId: document.getElementById('projektId').value,
+            verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
+            erbringungsStatus: document.getElementById('erbringungsStatus').value,
+            rechnungsEmpfaengerNummer: document.getElementById('rechnungsEmpfaengerNummer').value,
+            fakturaNummer: document.getElementById('fakturaNummer').value,
+            fakturaBemerkung: document.getElementById('fakturaBemerkung').value
         };
 
         try {
@@ -809,6 +825,16 @@ async function createNewAppointment() {
     const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
     const description = document.getElementById('description').value;
 
+    const erfasstDurch = document.getElementById('erfasstDurch').value;
+    const projektId = document.getElementById('projektId').value;
+    const verrechnungsTyp = document.getElementById('verrechnungsTyp').value;
+    const erbringungsStatus = document.getElementById('erbringungsStatus').value;
+    const rechnungsEmpfaengerNummer = document.getElementById('rechnungsEmpfaengerNummer').value;
+    const fakturaNummer = document.getElementById('fakturaNummer').value;
+    const fakturaBemerkung = document.getElementById('fakturaBemerkung').value;
+
+
+
     try {
         const response = await fetch(`${BACKEND_URL}/appointments`, {
             method: 'POST',
@@ -824,12 +850,34 @@ async function createNewAppointment() {
                 Dienstleistung,
                 Preis,
                 Abrechnungsstatus,
-                description
+                description,
+                erfasstDurch,
+                projektId,
+                verrechnungsTyp,
+                erbringungsStatus,
+                fakturaBemerkung,
+                fakturaNummer,
+                rechnungsEmpfaengerNummer
             })
         });
 
         if (response.ok) {
             alert('Termin erfolgreich hinzugefügt!');
+            console.log(KundennummerzumTermin,
+                startVal,
+                endVal,
+                totalDuration,
+                Dienstleistung,
+                Preis,
+                Abrechnungsstatus,
+                description,
+                erfasstDurch,
+                projektId,
+                verrechnungsTyp,
+                erbringungsStatus,
+                fakturaBemerkung,
+                fakturaNummer,
+                rechnungsEmpfaengerNummer);
             hideAppointmentForm();
             loadAppointments(); // Termine neu laden
         } else {
@@ -1171,9 +1219,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     // Rechnungsempfänger (nur die Nummer)
     // Achtung: Falls das Feld leer ist, parseInt("") => NaN => wir nehmen dann null
     let rechnungsEmpfaengerNummer = parseInt(document.getElementById('RechnungsempfaengerNummerDisplay').textContent, 10);
-    if (isNaN(rechnungsEmpfaengerNummer)) {
-        rechnungsEmpfaengerNummer = null;
-    }
+    
 
     // 2) Start- und Endtermin
     const startVal = document.getElementById('startDateTime').value;  // z.B. "2025-01-02T10:00"
