@@ -71,6 +71,49 @@ async function editAppointment(appointmentId) {
         document.getElementById('KundenMail').textContent = '';
     }
 
+     // 4.5 RechnungsEmpfänger Daten laden
+     document.getElementById('rechnungsEmpfaengerNummer').value 
+     = appointment.rechnungsEmpfaengerNummer || '';
+
+    // Falls du die <span>-Felder hast
+    // => Display-Nummer direkt befüllen, z.B.:
+    if (appointment.rechnungsEmpfaengerNummer) {
+        // Suche den passenden Client
+        const recClient = allClients.find(c => c.Kundennummer === appointment.rechnungsEmpfaengerNummer);
+
+        // Block einblenden
+        const block = document.getElementById('abweichenderRechnungsempfaengerBlock');
+        if (block) block.style.display = 'block';
+
+        if (recClient) {
+            document.getElementById('RechnungsempfaengerNummerDisplay').textContent 
+                = String(recClient.Kundennummer).padStart(6, '0');
+            document.getElementById('RechnungsempfaengerName').textContent 
+                = `${recClient.Vorname} ${recClient.Nachname}`;
+            document.getElementById('RechnungsempfaengerAdresse').textContent 
+                = `${recClient.Strasse} ${recClient.Hausnummer}, ${recClient.Postleitzahl} ${recClient.Ort}`;
+            document.getElementById('RechnungsempfaengerTelefon').textContent 
+                = recClient.Telefon;
+            document.getElementById('RechnungsempfaengerMail').textContent 
+                = recClient.Mail;
+        } else {
+            // Falls die Nummer nicht zu einem bekannten Client passt
+            document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
+            document.getElementById('RechnungsempfaengerName').textContent = 'Nicht gefunden';
+            document.getElementById('RechnungsempfaengerAdresse').textContent = '';
+            document.getElementById('RechnungsempfaengerTelefon').textContent = '';
+            document.getElementById('RechnungsempfaengerMail').textContent = '';
+        }
+    } else {
+        // Falls keine rechnungsEmpfaengerNummer => Block ausblenden
+        document.getElementById('abweichenderRechnungsempfaengerBlock').style.display = 'none';
+        document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
+        document.getElementById('RechnungsempfaengerName').textContent = '';
+        document.getElementById('RechnungsempfaengerAdresse').textContent = '';
+        document.getElementById('RechnungsempfaengerTelefon').textContent = '';
+        document.getElementById('RechnungsempfaengerMail').textContent = '';
+    }
+
     // 5) Formular anzeigen (Edit-Modus)
     showAppointmentForm(true);
 
