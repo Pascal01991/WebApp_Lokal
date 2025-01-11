@@ -1298,14 +1298,17 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
 
 
     /***************************************************
-     Logik für Abweichender Rechnungsempfänger
-    ***************************************************/
-    
-    // Block ein- und ausblenden
-    document.getElementById('abweichenderRechnungsempfaengerButton')
+ * Logik für Abweichender Rechnungsempfänger
+ ***************************************************/
+const invoiceSearchInput = document.getElementById('searchInvoiceInput');
+const invoiceResultsContainer = document.getElementById('searchClientForInvoice');
+let searchResultsInvoice = [];
+
+// Block ein- und ausblenden per Button
+document.getElementById('abweichenderRechnungsempfaengerButton')
     .addEventListener('click', function() {
         const block = document.getElementById('abweichenderRechnungsempfaengerBlock');
-        // Wenn der Block ausgeblendet ist, dann anzeigen, sonst ausblenden
+        // Einfach umschalten
         if (block.style.display === 'none' || block.style.display === '') {
             block.style.display = 'block';
         } else {
@@ -1313,12 +1316,19 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
         }
     });
 
-        //Suche für Rechnungsempfänger
-    // Ähnlich wie 'searchCustomerInput', nur für den Rechnungsempfänger
-document.getElementById('searchInvoiceInput').addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
+// Suche für Rechnungsempfänger (analog zur Kundensuche)
+invoiceSearchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase().trim();
     
-    // Beispiel: wir nehmen dieselbe allClients-Liste oder eine andere, je nach System
+    // Wenn nichts eingegeben => Container ausblenden & Array leeren
+    if (searchTerm === '') {
+        invoiceResultsContainer.style.display = 'none';
+        invoiceResultsContainer.innerHTML = '';
+        searchResultsInvoice = [];
+        return;
+    }
+
+    // Hier wird gefiltert (allClients kann identisch sein wie bei Kundensuche)
     searchResultsInvoice = allClients
         .filter(client => 
             client.Vorname.toLowerCase().includes(searchTerm) ||
@@ -1331,22 +1341,36 @@ document.getElementById('searchInvoiceInput').addEventListener('input', function
     displayInvoiceSearchResults();
 });
 
-function displayInvoiceSearchResults() {
-    const container = document.getElementById('searchClientForInvoice');
-    container.innerHTML = '';
+// Escape-Taste schließt ebenfalls das Ergebnisfenster
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        invoiceResultsContainer.style.display = 'none';
+        invoiceResultsContainer.innerHTML = '';
+        invoiceSearchInput.value = '';
+        searchResultsInvoice = [];
+    }
+});
 
+/**
+ * Zeigt die Suchergebnisse für den abweichenden Rechnungsempfänger
+ */
+function displayInvoiceSearchResults() {
+    invoiceResultsContainer.innerHTML = '';
+
+    // Keine Ergebnisse?
     if (searchResultsInvoice.length === 0) {
-        container.style.display = 'none';
+        invoiceResultsContainer.style.display = 'none';
         return;
     }
-    container.style.display = 'block';
+    invoiceResultsContainer.style.display = 'block';
 
+    // Ergebnisse auflisten
     searchResultsInvoice.forEach(client => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('search-result-item');
         resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
 
-        // Klick-Event: Daten übernehmen
+        // Klick => Daten übernehmen
         resultItem.addEventListener('click', () => {
             document.getElementById('RechnungsempfaengerNummerDisplay').textContent 
                 = String(client.Kundennummer).padStart(6, '0');
@@ -1359,17 +1383,14 @@ function displayInvoiceSearchResults() {
             document.getElementById('RechnungsempfaengerMail').textContent 
                 = client.Mail;
 
-            // Falls du das in der DB speichern willst:
-            // ...
-            // z.B. versteckte Inputs oder speichere beim Absenden
-
             // Aufräumen
-            container.innerHTML = '';
-            container.style.display = 'none';
-            document.getElementById('searchInvoiceInput').value = '';
+            invoiceResultsContainer.innerHTML = '';
+            invoiceResultsContainer.style.display = 'none';
+            invoiceSearchInput.value = '';
+            searchResultsInvoice = [];
         });
 
-        container.appendChild(resultItem);
+        invoiceResultsContainer.appendChild(resultItem);
     });
 }
 
