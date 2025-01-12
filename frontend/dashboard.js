@@ -736,12 +736,10 @@ async function renderCalendar() {
       return appStartDate >= startOfWeek && appStartDate < endOfWeek;
     });
   
-    console.log('Anzahl dieser Woche:', appointmentsThisWeek.length);
-    console.log('Termine dieser Woche:', appointmentsThisWeek);
   
     // Finde Gruppen überlappender Termine (falls du das Feature brauchst)
     const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
-  
+console.log('Behandle Termin und Behandle appStartDate Log einblenden um +GMT Zeitzonen Thematik zu bereinigen'); //weiter unten im code "Behandle Termin" sowie "Behandele appStartDate"
     // Platziere jede Gruppe im Kalender
     overlappingGroups.forEach(group => {
       const groupSize = group.length;
@@ -757,7 +755,7 @@ async function renderCalendar() {
         const startHour = appStartDate.getHours();
         const endHour = appEndDate.getHours();
         
-        console.log('Behandle Termin:', appStartDate, 'Tag-Index:', dayIndex);
+        //console.log('Behandle Termin:', appStartDate, 'Tag-Index:', dayIndex);
   
         // Für jede Stunde zwischen StartHour und EndHour
         for (let hour = startHour; hour <= endHour; hour++) {
@@ -790,8 +788,7 @@ async function renderCalendar() {
               appointmentDiv.style.backgroundColor = getUserColor(app.Ressource);
                 
               // Console-Check
-              console.log('Farbe:', appointmentDiv.style.backgroundColor + 'app.Ressource:' + app.Ressource);
-  
+                
               // Icons
               const iconContainer = document.createElement('div');
               iconContainer.classList.add('appointment-icons');
@@ -1061,7 +1058,7 @@ async function displayAppointmentsOnCalendar() {
             }
 
             const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
-console.log(appStartDate)
+//console.log('Behandele appStartDate:' + appStartDate)
             const startHour = appStartDate.getHours();
             const endHour = appEndDate.getHours();
 
@@ -1620,7 +1617,6 @@ function displaySearchResults() {
 
     // Wenn keine Ergebnisse
     if (searchResults.length === 0) {
-        console.log("Anzahl der Suchergebnisse:", searchResults.length);
         searchResultsContainer.style.display = 'none';
         return;
     } else {
