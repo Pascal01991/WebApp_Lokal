@@ -216,7 +216,8 @@ async function editAppointment(appointmentId) {
     
     let currentDate = new Date();
     let allAppointmentsCalendar = [];
-
+    
+    let dayView = false;                         // false = Wochenansicht, true = Tagesansicht
 
 
     //speicherung der arbeitszeiten
@@ -257,6 +258,122 @@ async function editAppointment(appointmentId) {
             afternoon: { start: null, end: null }
         }
     };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Beispiel: Falls du die "Ressource" namentlich so in app hast:
+    function getUserColor(resourceName) {
+        // resourceName = "user1", "user2", "user3", ...
+        // Falls du mehr Benutzer hast, füge sie hier hinzu
+        switch (resourceName) {
+        case "user1": return "var(--user1)";
+        case "user2": return "var(--user2)";
+        case "user3": return "var(--user3)";
+        case "user4": return "var(--user4)";
+        case "user5": return "var(--user5)";
+        default:      return "var(--user1)"; // fallback
+        }
+    }
+
+
+
+
+
+
+    /*******************************************************
+     * Initialisierung
+     *******************************************************/
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Buttons / CheckBox-EventListener etc. setzen:
+        document.getElementById('viewToggle').addEventListener('change', toggleView);
+        document.getElementById('prevBtn').addEventListener('click', () => {
+        if (dayView) {
+            // Tagesansicht -> 1 Tag zurück
+            currentDate.setDate(currentDate.getDate() - 1);
+        } else {
+            // Wochenansicht -> 7 Tage zurück
+            currentDate.setDate(currentDate.getDate() - 7);
+        }
+        renderCalendar(); 
+        });
+        document.getElementById('nextBtn').addEventListener('click', () => {
+        if (dayView) {
+            // Tagesansicht -> 1 Tag vor
+            currentDate.setDate(currentDate.getDate() + 1);
+        } else {
+            // Wochenansicht -> 7 Tage vor
+            currentDate.setDate(currentDate.getDate() + 7);
+        }
+        renderCalendar();
+        });
+    
+        // Checkboxen für Benutzer
+        const userCheckboxes = document.querySelectorAll('.user-checkbox');
+        userCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            // Wenn eine Checkbox sich ändert, Kalender neu rendern
+            renderCalendar();
+        });
+        });
+    
+        // Hier könntest du Clients oder Termine laden, z.B.:
+        //   allAppointments = await fetchAppointmentsFromBackend();
+        //   clients = await fetchClientsFromBackend();
+        //   ...
+        //   Danach:
+        renderCalendar();
+    });
+
+
+    /*******************************************************
+     * Umschalten: Tagesansicht <-> Wochenansicht
+     *******************************************************/
+    function toggleView() {
+        const toggle = document.getElementById('viewToggle');
+        dayView = toggle.checked; // z.B. wenn 'checked' == true => Wochenansicht, 
+                                //     aber du kannst es auch umdrehen
+        updateNavigationButtons();
+        renderCalendar();
+    }
+    
+    /**
+     * Passt die Beschriftung der Vor/Zurück-Buttons an.
+     * Je nach dayView entweder "Tag" oder "Woche".
+     */
+    function updateNavigationButtons() {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        if (dayView) {
+        prevBtn.textContent = "Vorheriger Tag";
+        nextBtn.textContent = "Nächster Tag";
+        } else {
+        prevBtn.textContent = "Vorherige Woche";
+        nextBtn.textContent = "Nächste Woche";
+        }
+    }
+
+
+
+
+
+
     
     ///Diese Fumktion haben wir ins Backend kopiert, hier kann die später wohl rausgelöscht werden
         // Hilfsfunktion, um eine Zeitangabe (HH:MM) in Minuten seit Mitternacht umzuwandeln
@@ -313,120 +430,443 @@ async function editAppointment(appointmentId) {
     
 
 
-    
-
-    async function renderCalendar() {
-        const calendar = document.getElementById('calendar');
-        calendar.innerHTML = '';
-    
-        // Slots asynchron vom Backend laden
-        const slots = await fetchAvailableSlots();
-        if (!slots.length) {
-            console.warn('Keine Slots zum Anzeigen gefunden.');
-            return;
-        }
-    
-        const startOfWeek = getStartOfWeek(currentDate);
-    
-        // Tagesüberschriften erstellen
-        calendar.appendChild(document.createElement('div')); // Leere Ecke
-        for (let i = 0; i < 7; i++) {
-            const day = new Date(startOfWeek);
-            day.setDate(startOfWeek.getDate() + i);
-            const dayHeader = document.createElement('div');
-            dayHeader.classList.add('day-header');
-            dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
-            calendar.appendChild(dayHeader);
-        }
-    
-        // Map für Slots
-        const slotsMap = {};
-        slots.forEach(slot => {
-            // Annahme: slot.startDateTime oder slot.dateTime
-            // Hier belassen wir "slot.dateTime" nur, wenn das Backend so heißt:
-            const date = new Date(slot.startDateTime);
-            const hour = date.getHours();
-            const minute = date.getMinutes();
-            const key = `${slot.dayIndex}-${hour}-${minute}`;
-            slotsMap[key] = slot;
-        });
-    
-        const allTimes = slots.map(slot => {
-            const date = new Date(slot.startDateTime);
-            return date.getHours() * 60 + date.getMinutes();
-        });
-    
-        const minTime = Math.min(...allTimes);
-        const maxTime = Math.max(...allTimes);
-    
-        const startHour = Math.floor(minTime / 60);
-        const endHour = Math.ceil(maxTime / 60);
-console.log('startHour:'+ startHour);
-        const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-        const slotsPerHour = 60 / defaultLength;
-    console.log('rendercalendar')
-        for (let hour = startHour; hour <= endHour; hour++) {
-console.log('for schleife hour ++')
-            const timeLabel = document.createElement('div');
-            timeLabel.classList.add('time-slot');
-            timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
-            calendar.appendChild(timeLabel);
-    
-            for (let i = 0; i < 7; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('hour-cell');
-                cell.style.position = 'relative';
-    
-                cell.dataset.dayIndex = i;
-                cell.dataset.hour = hour;
-    
-                const cellContainer = document.createElement('div');
-                cellContainer.style.position = 'relative';
-                cellContainer.style.height = '100%';
-    
-                for (let s = 0; s < slotsPerHour; s++) {
-                    const minute = s * defaultLength;
-                    const key = `${i}-${hour}-${minute}`;
-                    const slot = slotsMap[key];
-    
-                    const slotDiv = document.createElement('div');
-                    slotDiv.classList.add('time-slot-div');
-                    slotDiv.style.position = 'absolute';
-                    slotDiv.style.top = (s * (100 / slotsPerHour)) + '%';
-                    slotDiv.style.height = (100 / slotsPerHour) + '%';
-                    slotDiv.style.left = '0';
-                    slotDiv.style.right = '0';
-                    slotDiv.style.zIndex = '1';
-    
-                    if (slot) {
-                        if (slot.isHoliday) {
-                            slotDiv.classList.add('unavailable-holiday');
-                        } else if (slot.isAvailable) {
-                            slotDiv.classList.add('available-slot');
-                        } else {
-                            slotDiv.classList.add('unavailable-slot');
-                        }
-                    } else {
-                        slotDiv.classList.add('unavailable-slot');
-                    }
-    
-                    // Klick-Event
-                    slotDiv.addEventListener('click', function () {
-                        handleSlotClick(startOfWeek, i, hour, minute, defaultLength);
-                    });
-    
-                    cellContainer.appendChild(slotDiv);
-                }
-    
-                cell.appendChild(cellContainer);
-                calendar.appendChild(cell);
+/*******************************************************
+ * Haupt-Funktion: renderCalendar()
+ * -> Ruft je nach Modus renderDay oder renderWeek auf
+ *******************************************************/
+async function renderCalendar() {
+    if (dayView) {
+      renderDay();
+    } else {
+      renderWeek();
+    }
+  }
+  
+  /*******************************************************
+   * Tagesansicht
+   * -> Zeigt nur den aktuellen Tag an
+   * -> Jeder aktivierte Benutzer bekommt seine eigene Spalte
+   *******************************************************/
+  async function renderDay() {
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = ''; // Alles leeren
+  
+    // Aktiven Tag bestimmen
+    const day = new Date(currentDate);
+    day.setHours(0, 0, 0, 0);
+  
+    // 1) Finde die ausgewählten Benutzer
+    const selectedUsers = getSelectedUsers(); 
+    // selectedUsers z.B. ["user1", "user2", "user3"]
+  
+    // 2) Layout (Grid): 1 Spalte für die Zeiten + N Spalten für Benutzer
+    calendar.style.gridTemplateColumns = `80px repeat(${selectedUsers.length}, 1fr)`;
+  
+    // Überschrift: Leer-Ecke oben links
+    const emptyCorner = document.createElement('div');
+    emptyCorner.textContent = ""; 
+    calendar.appendChild(emptyCorner);
+  
+    // Dann pro Benutzer einen Header
+    for (let userResource of selectedUsers) {
+      const dayHeader = document.createElement('div');
+      dayHeader.classList.add('day-header');
+      // z.B. "Benutzer 1 - 12.01.2025"
+      dayHeader.textContent = `${userResource.toUpperCase()} - ${formatDate(day)}`;
+      calendar.appendChild(dayHeader);
+    }
+  
+    // 3) Termin-Slots aufbauen (z.B. 0-23 Uhr) - Angelehnt an dein Render-Prinzip
+    //    Hier ein einfaches Beispiel, du kannst dein fetchAvailableSlots() etc. einbauen
+    const startHour = 6;  // oder dynamisch
+    const endHour = 20;   // oder dynamisch
+    const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+    const slotsPerHour = 60 / defaultLength;
+  
+    for (let hour = startHour; hour <= endHour; hour++) {
+      // Spalte 0: Zeit
+      const timeLabel = document.createElement('div');
+      timeLabel.classList.add('time-slot');
+      timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
+      calendar.appendChild(timeLabel);
+  
+      // Dann pro Benutzer 1 Spalte
+      for (let userResource of selectedUsers) {
+        const cell = document.createElement('div');
+        cell.classList.add('hour-cell');
+        cell.dataset.hour = hour;
+        cell.dataset.resource = userResource;
+  
+        // Falls du hier dein "Grid" für 15-min-Blöcke einbauen willst:
+        //   -> time-slot-div ...
+        //   -> handleSlotClick(...) ...
+        // (Optional, je nachdem wie du es in der Wochenansicht machst)
+  
+        calendar.appendChild(cell);
+      }
+    }
+  
+    // 4) Nun Termine platzieren (nur für diesen Tag und nur für die selektierten Benutzer)
+    displayDayAppointments(day, selectedUsers);
+  }
+  
+  /**
+   * Termine in der Tagesansicht platzieren
+   */
+  function displayDayAppointments(day, selectedUsers) {
+    // Filter: Nur Termine, die an diesem Tag liegen
+    const dayStart = new Date(day);
+    const dayEnd = new Date(day);
+    dayEnd.setHours(23,59,59,999);
+  
+    // Bsp.: Hole alle appointments, deren Start <= dayEnd und Ende >= dayStart
+    const dayAppointments = allAppointments.filter(app => {
+      const start = new Date(app.startDateTime);
+      const end   = app.endDateTime ? new Date(app.endDateTime) :
+                      new Date(start.getTime() + app.duration * 60000);
+      // Check, ob Resource in selectedUsers enthalten
+      const inSelectedUser = selectedUsers.includes(appointment.Resource); 
+      // Check, ob Tag = day
+      const overlapsDay = (start <= dayEnd && end >= dayStart);
+      return inSelectedUser && overlapsDay;
+    });
+  
+    // Platziere diese Termine in den hour-cells
+    const calendar = document.getElementById('calendar');
+  
+    dayAppointments.forEach(app => {
+      const start = new Date(app.startDateTime);
+      const end = app.endDateTime ? new Date(app.endDateTime)
+                                  : new Date(start.getTime() + app.duration*60000);
+      const hour = start.getHours();
+  
+      // Finde passendes hour-cell in DOM
+      const selector = `.hour-cell[data-hour='${hour}'][data-resource='${appointment.Resource}']`;
+      const hourCell = calendar.querySelector(selector);
+      if (!hourCell) return;
+  
+      // Termin-Div erzeugen
+      const appointmentDiv = document.createElement('div');
+      appointmentDiv.classList.add('appointment');
+      // Benutzerfarbe
+      appointmentDiv.style.backgroundColor = getUserColor(appointment.Resource);
+  
+      // Dauer in Stunden (z.B. für height-Berechnung)
+      const durationHours = (end - start) / (1000*60*60);
+      // top-Anteil = (Minutenstart / 60) * 100%
+      const offsetTop = (start.getMinutes()/60)*100;
+  
+      // Hier eine einfache Variante: 
+      //   Jeder Termin füllt die hour-cell. 
+      //   Falls du mehrere Blöcke innerhalb der Stunde hast, 
+      //   müsstest du es feiner staffeln:
+      appointmentDiv.style.top = offsetTop + "%";
+      appointmentDiv.style.height = (durationHours * 100) + "%";
+      appointmentDiv.style.position = "absolute";
+      appointmentDiv.style.left = "0";
+      appointmentDiv.style.right = "0";
+      appointmentDiv.style.zIndex = "2";
+  
+      // Optional: Inhalt
+      appointmentDiv.textContent = `${appointment.Resource} - ${formatTime(start)} / ${app.Dienstleistung ?? ''}`;
+  
+      // Icons etc. – wie in deiner Wochenansicht
+      // ...
+      hourCell.appendChild(appointmentDiv);
+    });
+  }
+  
+  /*******************************************************
+   * Wochenansicht
+   * -> im Prinzip dein vorhandenes renderCalendar() => rename
+   *******************************************************/
+  async function renderWeek() {
+    console.log("=== renderWeek() aufgerufen ===");
+  
+    // Zuerst Kalender-HTML leeren
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '';
+  
+    // 1) Slots asynchron vom Backend laden
+    const slots = await fetchAvailableSlots();
+    if (!slots.length) {
+      console.warn('Keine Slots zum Anzeigen gefunden (eventuell keine Arbeitszeiten definiert?).');
+    }
+  
+    // 2) Woche bestimmen
+    const startOfWeek = getStartOfWeek(currentDate);
+  
+    // 3) Grid-Layout: 8 Spalten (Zeitspalte + 7 Tage)
+    calendar.style.gridTemplateColumns = '80px repeat(7, 1fr)';
+  
+    // Leere Ecke oben links
+    const emptyCorner = document.createElement('div');
+    emptyCorner.textContent = "";
+    calendar.appendChild(emptyCorner);
+  
+    // Tagesüberschriften (Montag - Sonntag)
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(day.getDate() + i);
+      const dayHeader = document.createElement('div');
+      dayHeader.classList.add('day-header');
+      dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
+      calendar.appendChild(dayHeader);
+    }
+  
+    // 4) Map für Slots anlegen (um hinterher schnell abzufragen, ob holiday/available)
+    const slotsMap = {};
+    // In deinem ursprünglichen Code hieß es z.B.: 
+    //   const date = new Date(slot.startDateTime);
+    //   dayIndex = slot.dayIndex oder per Rechnen
+    // Wir bauen hier eine Map mit "Schlüssel" = `tagIndex-stunde-minute`
+    slots.forEach(slot => {
+      // dayIndex aus slot ermitteln – je nachdem, wie dein Backend die Slots liefert.
+      // Oft ist es so, dass "slot.dayIndex = 0..6" (Mo=0?), oder wir rechnen aus dem Datum:
+      const date = new Date(slot.startDateTime);
+      const dayIndex = (date.getDay() + 6) % 7; // Montag=0
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+      const key = `${dayIndex}-${hour}-${minute}`;
+  
+      slotsMap[key] = slot; 
+    });
+  
+    // 5) Start-/Endzeit der Woche herausfinden oder einfach festlegen
+    // Du kannst das natürlich dynamisch anhand der Slots bestimmen.
+    const allTimes = slots.map(slot => {
+      const d = new Date(slot.startDateTime);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+    const minTime = (allTimes.length ? Math.min(...allTimes) : 8*60);  // fallback 8:00
+    const maxTime = (allTimes.length ? Math.max(...allTimes) : 18*60); // fallback 18:00
+  
+    const startHour = Math.floor(minTime / 60);
+    const endHour = Math.ceil(maxTime / 60);
+  
+    // 6) defaultLength (z.B. 15 min pro Slot)
+    const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+    const slotsPerHour = 60 / defaultLength;
+  
+    // 7) Zeilen erzeugen: Stunde + 7 Spalten
+    for (let hour = startHour; hour <= endHour; hour++) {
+      // Zeit-Spalte links
+      const timeLabel = document.createElement('div');
+      timeLabel.classList.add('time-slot');
+      timeLabel.textContent = (hour < 10 ? '0'+hour : hour) + ':00';
+      calendar.appendChild(timeLabel);
+  
+      // 7 Tage -> i=0..6
+      for (let i = 0; i < 7; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('hour-cell');
+        cell.style.position = 'relative';
+        cell.dataset.dayIndex = i;
+        cell.dataset.hour = hour;
+        // Container für die Slots pro Stunde
+        const cellContainer = document.createElement('div');
+        cellContainer.style.position = 'relative';
+        cellContainer.style.height = '100%';
+  
+        // Innerhalb jeder Stunde die einzelnen 15min Blöcke (oder 10/5 min, je nach defaultLength)
+        for (let s = 0; s < slotsPerHour; s++) {
+          const minute = s * defaultLength;
+          const key = `${i}-${hour}-${minute}`;
+          const slotInfo = slotsMap[key];
+  
+          // Div für diesen Slot
+          const slotDiv = document.createElement('div');
+          slotDiv.classList.add('time-slot-div');
+          slotDiv.style.position = 'absolute';
+          slotDiv.style.top = (s * (100 / slotsPerHour)) + '%';
+          slotDiv.style.height = (100 / slotsPerHour) + '%';
+          slotDiv.style.left = '0';
+          slotDiv.style.right = '0';
+          slotDiv.style.zIndex = '1';
+  
+          // Prüfe holiday/available/unavailable etc.
+          if (slotInfo) {
+            if (slotInfo.isHoliday) {
+              slotDiv.classList.add('unavailable-holiday');
+            } else if (slotInfo.isAvailable) {
+              slotDiv.classList.add('available-slot');
+            } else {
+              slotDiv.classList.add('unavailable-slot');
             }
+          } else {
+            // kein Slot -> unavailable
+            slotDiv.classList.add('unavailable-slot');
+          }
+  
+          // Klick-Event -> handleSlotClick
+          slotDiv.addEventListener('click', function() {
+            // i = dayIndex, hour, minute, defaultLength
+            handleSlotClick(startOfWeek, i, hour, minute, defaultLength);
+          });
+  
+          cellContainer.appendChild(slotDiv);
         }
+  
+        cell.appendChild(cellContainer);
+        calendar.appendChild(cell);
+      }
+    }
+  
+    // 8) Jetzt die Termine in die Zellen "malen"
+    displayWeekAppointments(startOfWeek);
+  }
+  
+  
+  /**
+   * Termine für die Woche platzieren
+   */
+  async function displayWeekAppointments(startOfWeek) {
+    console.log('displayWeekAppointments ausgeführt');
     
-        displayAppointmentsOnCalendar();
+    // Lade die Clients nur einmal, falls noch nicht geschehen
+    if (!clients || clients.length === 0) {
+      const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
+      clients = await clientsResponse.json();
+    }
+  
+    // Filtere Termine dieser Woche (Montag bis Sonntag)
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const appointmentsThisWeek = allAppointments.filter(app => {
+      const appStartDate = new Date(app.startDateTime);
+      return appStartDate >= startOfWeek && appStartDate < endOfWeek;
+    });
+  
+    console.log('Anzahl dieser Woche:', appointmentsThisWeek.length);
+    console.log('Termine dieser Woche:', appointmentsThisWeek);
+  
+    // Finde Gruppen überlappender Termine (falls du das Feature brauchst)
+    const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
+  
+    // Platziere jede Gruppe im Kalender
+    overlappingGroups.forEach(group => {
+      const groupSize = group.length;
+      group.forEach((app, index) => {
+        // Start/End aus DB
+        const appStartDate = new Date(app.startDateTime);
+        const appEndDate = app.endDateTime
+          ? new Date(app.endDateTime)
+          : new Date(appStartDate.getTime() + app.duration * 60000);
+  
+        // Berechne, an welchem Tag im Grid das liegt (Montag=0, Sonntag=6)
+        const dayIndex = (appStartDate.getDay() + 6) % 7;
+        const startHour = appStartDate.getHours();
+        const endHour = appEndDate.getHours();
+        
+        console.log('Behandle Termin:', appStartDate, 'Tag-Index:', dayIndex);
+  
+        // Für jede Stunde zwischen StartHour und EndHour
+        for (let hour = startHour; hour <= endHour; hour++) {
+          const calendar = document.getElementById('calendar');
+          // Achtung: Template-String mit Backticks!
+          const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
+          const hourCell = calendar.querySelector(cellSelector);
+  
+          if (hourCell) {
+            // Zeichne den Termin nur einmal in der ersten Stunde
+            if (hour === startHour) {
+              const appointmentDiv = document.createElement('div');
+              appointmentDiv.classList.add('appointment');
+              appointmentDiv.setAttribute('data-app-id', app._id);
+  
+              // Gesamtdauer in Stunden
+              const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
+  
+              // Dynamische CSS (z.B. für mehrere überlappende Termine)
+              // Achtung: überall Backticks benutzen!
+              appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
+              appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
+              appointmentDiv.style.height = `${durationHours * 100}%`;
+              appointmentDiv.style.width = `${100 / groupSize}%`;
+              appointmentDiv.style.left = `${(100 / groupSize) * index}%`;
+              appointmentDiv.style.zIndex = '2';
+  
+              // Terminfarbe basierend auf dem Resource-Feld
+              // (Passe das ggf. auf app.Ressource an, falls du das anders nennst)
+              appointmentDiv.style.backgroundColor = getUserColor(app.Ressource);
+                
+              // Console-Check
+              console.log('Farbe:', appointmentDiv.style.backgroundColor + 'app.Ressource:' + app.Ressource);
+  
+              // Icons
+              const iconContainer = document.createElement('div');
+              iconContainer.classList.add('appointment-icons');
+              iconContainer.innerHTML = `
+                <span class="icon edit-icon" title="Bearbeiten">✏️</span>
+                <span class="icon delete-icon" title="Löschen">🗑️</span>
+              `;
+              // Klicks
+              iconContainer.querySelector('.edit-icon').addEventListener('click', () => {
+                editAppointment(app._id);
+              });
+              iconContainer.querySelector('.delete-icon').addEventListener('click', () => {
+                deleteAppointment(app._id);
+              });
+  
+              // Text-Inhalt (Client + Dienstleistung)
+              // Benutze wieder Backticks für HTML + Variablen
+              const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+              const appointmentContent = document.createElement('div');
+              appointmentContent.innerHTML = `
+                <div>
+                  ${
+                    clientAppointment 
+                      ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
+                         <br>
+                         ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}`
+                      : "Kunde nicht gefunden"
+                  }
+                </div>
+              `;
+  
+              appointmentDiv.appendChild(iconContainer);
+              appointmentDiv.appendChild(appointmentContent);
+              hourCell.appendChild(appointmentDiv);
+            }
+          }
+        }
+      });
+    });
+  
+    // Interne Funktion zur Erkennung von Überschneidungen
+    function logOverlappingAppointments() {
+      // Falls du hier noch etwas debuggen willst ...
+    }
+    logOverlappingAppointments();
+  }
+  
+
+    /*******************************************************
+     * Hilfsfunktionen
+     *******************************************************/
+
+    /**
+     * Gibt ein Array der ausgewählten User-Resources (z.B. ["user1", "user2"]) zurück.
+     */
+    function getSelectedUsers() {
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        const selected = [];
+        checkboxes.forEach(ch => {
+        if (ch.checked) {
+            selected.push(ch.value);
+        }
+        });
+        return selected;
     }
     
-    
+            /**
+     * Formatierte Zeit (HH:MM)
+     */
+    function formatTime(date) {
+        const h = date.getHours().toString().padStart(2,'0');
+        const min = date.getMinutes().toString().padStart(2,'0');
+        return `${h}:${min}`;
+    }
+        
     
     
     function findOverlappingAppointments(appointments) {
@@ -585,7 +1025,7 @@ function dateToLocalString(date) {
 // Nun kannst du auf die clients-Daten in displayAppointmentsOnCalendar zugreifen:
 async function displayAppointmentsOnCalendar() {
     const startOfWeek = getStartOfWeek(currentDate);
-    
+    console.log('displayAppointmentsOnCalendar() ausgeführt');
     // Lade die Clients nur einmal, falls noch nicht geschehen
     if (!clients || clients.length === 0) {
         const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
@@ -619,7 +1059,7 @@ async function displayAppointmentsOnCalendar() {
                 // Sonst fallback: start + duration
                 appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
             }
-console.log('forEach')
+
             const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
 console.log(appStartDate)
             const startHour = appStartDate.getHours();
@@ -630,14 +1070,13 @@ console.log(appStartDate)
                 const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
                 const hourCell = calendar.querySelector(cellSelector);
                 
-console.log('for Schleife let hour');
+
 
                 if (hourCell) {
-                    console.log(hourCell);
-                    console.log('if HourCell');
+
                     if (hour === startHour) 
                         {
-                            console.log('if hour === startHour');
+                            
                         // Nur einmal "drawen" in der ersten Stunde
                         const appointmentDiv = document.createElement('div');
                         appointmentDiv.classList.add('appointment');
@@ -685,10 +1124,10 @@ console.log('for Schleife let hour');
                         appointmentDiv.appendChild(appointmentContent);
 
                         hourCell.appendChild(appointmentDiv);
-                        console.log('ifHour_true')
+                        
                     }
                     else {
-                        console.log('ifHour_false');
+                        
                     }
                 }
                 
@@ -745,16 +1184,7 @@ console.log('for Schleife let hour');
     initializeAppointments();
     
 
-    // Event-Listener für die Wochennavigation
-    document.getElementById('prevBtn').addEventListener('click', () => {
-        currentDate.setDate(currentDate.getDate() - 7);
-        renderCalendar();
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-        currentDate.setDate(currentDate.getDate() + 7);
-        renderCalendar();
-    });
+ 
 
 
 
@@ -1811,7 +2241,6 @@ async function addNewClient() {
 
 // Funktion zum Anzeigen der Kundenliste
 function displayClients(clients) {
-    console.log('Anzuzeigende Kunden:', clients); 
     const clientsList = document.getElementById('clientsList');
     // HTML-Output
     clientsList.innerHTML = clients
