@@ -442,139 +442,267 @@ async function renderCalendar() {
     }
   }
   
-  /*******************************************************
-   * Tagesansicht
-   * -> Zeigt nur den aktuellen Tag an
-   * -> Jeder aktivierte Benutzer bekommt seine eigene Spalte
-   *******************************************************/
-  async function renderDay() {
-    const calendar = document.getElementById('calendar');
-    calendar.innerHTML = ''; // Alles leeren
+/*******************************************************
+ * Tagesansicht
+ * -> Zeigt nur den aktuellen Tag an
+ * -> Jeder aktivierte Benutzer bekommt seine eigene Spalte
+ *******************************************************/
+async function renderDay() {
+    console.log("=== renderDay() aufgerufen ===");
   
-    // Aktiven Tag bestimmen
+    // Kalender leeren
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '';
+  
+    // Slots vom Backend holen (falls du Feiertage/Verfügbarkeiten anzeigen willst)
+    const slots = await fetchAvailableSlots();
+    if (!slots.length) {
+      console.warn('Keine Slots zum Anzeigen gefunden (Tagesansicht).');
+    }
+  
+    // Aktuellen Tag bestimmen (z.B. "2025-01-12" ab 00:00)
     const day = new Date(currentDate);
     day.setHours(0, 0, 0, 0);
   
-    // 1) Finde die ausgewählten Benutzer
-    const selectedUsers = getSelectedUsers(); 
-    // selectedUsers z.B. ["user1", "user2", "user3"]
+    // Array aller ausgewählten Benutzer (["user1", "user2", ...])
+    const selectedUsers = getSelectedUsers();
   
-    // 2) Layout (Grid): 1 Spalte für die Zeiten + N Spalten für Benutzer
+    // Grid: 1 Zeitspalte + pro Benutzer 1 Spalte
     calendar.style.gridTemplateColumns = `80px repeat(${selectedUsers.length}, 1fr)`;
   
-    // Überschrift: Leer-Ecke oben links
+    // Leere Ecke oben links
     const emptyCorner = document.createElement('div');
-    emptyCorner.textContent = ""; 
+    emptyCorner.textContent = "";
     calendar.appendChild(emptyCorner);
   
-    // Dann pro Benutzer einen Header
+    // Tages-Header je Benutzer
     for (let userResource of selectedUsers) {
       const dayHeader = document.createElement('div');
       dayHeader.classList.add('day-header');
-      // z.B. "Benutzer 1 - 12.01.2025"
       dayHeader.textContent = `${userResource.toUpperCase()} - ${formatDate(day)}`;
       calendar.appendChild(dayHeader);
     }
   
-    // 3) Termin-Slots aufbauen (z.B. 0-23 Uhr) - Angelehnt an dein Render-Prinzip
-    //    Hier ein einfaches Beispiel, du kannst dein fetchAvailableSlots() etc. einbauen
-    const startHour = 6;  // oder dynamisch
-    const endHour = 20;   // oder dynamisch
+    // Slots in eine Map packen, damit wir auf holiday/available/unavailable prüfen können
+    // Schlüssel = "userX-hour-minute", da wir hier pro BenutzerSpalte gehen
+    const slotsMap = {};
+  
+    // Filter die Slots nur für **diesen einen Tag** 
+    // (falls dein Backend Slots für mehrere Tage liefert)
+    const daySlots = slots.filter(slot => {
+      const slotDate = new Date(slot.startDateTime);
+      return slotDate.toDateString() === day.toDateString();
+    });
+  
+    // Pro daySlot ermitteln wir: welcher User? welche Stunde? welche Minute?
+    // Das setzt natürlich voraus, dass dein Slot-Objekt sagt, **welcher Benutzer** gemeint ist.
+    // Falls dein Backend das anders regelt, musst du es anpassen.
+    daySlots.forEach(slot => {
+      const date = new Date(slot.startDateTime);
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+  
+      // Beispiel: slot.ressource oder slot.userResource?
+      // Wir nehmen an, du hast ein Feld "slot.ressource" = "user1", ...
+      const slotUser = slot.ressource; 
+      const key = `${slotUser}-${hour}-${minute}`;
+      slotsMap[key] = slot;
+    });
+  
+    // Ermittel Start-/Endstunde dynamisch anhand daySlots oder fallback 6 - 20
+    let startHour = 6;
+    let endHour = 20;
+    if (daySlots.length > 0) {
+      // Minimale Zeit
+      const allTimes = daySlots.map(slot => {
+        const d = new Date(slot.startDateTime);
+        return d.getHours() * 60 + d.getMinutes();
+      });
+      const minTime = Math.min(...allTimes);
+      const maxTime = Math.max(...allTimes);
+      startHour = Math.floor(minTime / 60);
+      endHour = Math.ceil(maxTime / 60);
+    }
+  
+    // defaultLength z.B. 15 Min
     const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
     const slotsPerHour = 60 / defaultLength;
   
+    // Jetzt pro Stunde => pro Benutzer => pro 15min-Block
     for (let hour = startHour; hour <= endHour; hour++) {
-      // Spalte 0: Zeit
+      // Zeit-Spalte
       const timeLabel = document.createElement('div');
       timeLabel.classList.add('time-slot');
       timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
       calendar.appendChild(timeLabel);
   
-      // Dann pro Benutzer 1 Spalte
+      // Pro Benutzer
       for (let userResource of selectedUsers) {
         const cell = document.createElement('div');
         cell.classList.add('hour-cell');
+        cell.style.position = 'relative';
+        cell.dataset.userResource = userResource;
         cell.dataset.hour = hour;
-        cell.dataset.resource = userResource;
   
-        // Falls du hier dein "Grid" für 15-min-Blöcke einbauen willst:
-        //   -> time-slot-div ...
-        //   -> handleSlotClick(...) ...
-        // (Optional, je nachdem wie du es in der Wochenansicht machst)
+        // Container (damit man absolute Positionierung drin machen kann)
+        const cellContainer = document.createElement('div');
+        cellContainer.style.position = 'relative';
+        cellContainer.style.height = '100%';
   
+        // Schleife über die Blöcke (z.B. 15-Min-Schritte)
+        for (let s = 0; s < slotsPerHour; s++) {
+          const minute = s * defaultLength;
+          const key = `${userResource}-${hour}-${minute}`;
+          const slotInfo = slotsMap[key];
+  
+          const slotDiv = document.createElement('div');
+          slotDiv.classList.add('time-slot-div');
+          slotDiv.style.position = 'absolute';
+          slotDiv.style.top = (s * (100 / slotsPerHour)) + '%';
+          slotDiv.style.height = (100 / slotsPerHour) + '%';
+          slotDiv.style.left = '0';
+          slotDiv.style.right = '0';
+          slotDiv.style.zIndex = '1';
+  
+          // Prüfe holiday / available / unavailable
+          if (slotInfo) {
+            if (slotInfo.isHoliday) {
+              slotDiv.classList.add('unavailable-holiday');
+            } else if (slotInfo.isAvailable) {
+              slotDiv.classList.add('available-slot');
+            } else {
+              slotDiv.classList.add('unavailable-slot');
+            }
+          } else {
+            // kein passender Slot => unavailable
+            slotDiv.classList.add('unavailable-slot');
+          }
+  
+          // Klick-Event (handleSlotClick)
+          slotDiv.addEventListener('click', function () {
+            // handleSlotClick( day, userResource, hour, minute, defaultLength ) 
+            // => Du kannst dir Tag/Benutzer hier so übergeben, wie du es brauchst
+            //   oder analog zur Wochenansicht: handleSlotClick(startOfWeek, dayIndex, hour, minute,...)
+            //   In der Tagesansicht brauchst du keinen dayIndex - oder du nimmst "0".
+            handleSlotClick(day, 0, hour, minute, defaultLength);
+          });
+  
+          cellContainer.appendChild(slotDiv);
+        }
+        cell.appendChild(cellContainer);
         calendar.appendChild(cell);
       }
     }
   
-    // 4) Nun Termine platzieren (nur für diesen Tag und nur für die selektierten Benutzer)
+    // Abschließend die Termine platzieren
     displayDayAppointments(day, selectedUsers);
   }
+  
   
   /**
    * Termine in der Tagesansicht platzieren
    */
-  function displayDayAppointments(day, selectedUsers) {
-    // Filter: Nur Termine, die an diesem Tag liegen
+  /**
+ * Termine in der Tagesansicht platzieren
+ */
+function displayDayAppointments(day, selectedUsers) {
+    // 1) Finde alle Termine, die an *diesem Tag* sind
     const dayStart = new Date(day);
     const dayEnd = new Date(day);
-    dayEnd.setHours(23,59,59,999);
+    dayEnd.setHours(23, 59, 59, 999);
   
-    // Bsp.: Hole alle appointments, deren Start <= dayEnd und Ende >= dayStart
-    const dayAppointments = allAppointments.filter(app => {
+    // Filter: nur Termine, die in selectedUsers und innerhalb dieses Tages liegen
+    const appointmentsThisDay = allAppointments.filter(app => {
       const start = new Date(app.startDateTime);
-      const end   = app.endDateTime ? new Date(app.endDateTime) :
-                      new Date(start.getTime() + app.duration * 60000);
-      // Check, ob Resource in selectedUsers enthalten
-      const inSelectedUser = selectedUsers.includes(appointment.Resource); 
-      // Check, ob Tag = day
+      const end = app.endDateTime
+        ? new Date(app.endDateTime)
+        : new Date(start.getTime() + app.duration * 60000);
+  
+      // Check Resource
+      // Falls dein Feld "app.Ressource" lautet, nimm 'app.Ressource'
+      const inSelectedUser = selectedUsers.includes(app.Ressource);
+  
+      // Check Datum
       const overlapsDay = (start <= dayEnd && end >= dayStart);
+  
       return inSelectedUser && overlapsDay;
     });
   
-    // Platziere diese Termine in den hour-cells
-    const calendar = document.getElementById('calendar');
+    // 2) Finde überlappende Termine (damit wir sie nebeneinander platzieren können)
+    const overlappingGroups = findOverlappingAppointments(appointmentsThisDay);
   
-    dayAppointments.forEach(app => {
-      const start = new Date(app.startDateTime);
-      const end = app.endDateTime ? new Date(app.endDateTime)
-                                  : new Date(start.getTime() + app.duration*60000);
-      const hour = start.getHours();
+    // 3) Platziere jede Gruppe
+    overlappingGroups.forEach(group => {
+      const groupSize = group.length;
+      group.forEach((app, index) => {
+        const appStart = new Date(app.startDateTime);
+        const appEnd = app.endDateTime
+          ? new Date(app.endDateTime)
+          : new Date(appStart.getTime() + app.duration * 60000);
   
-      // Finde passendes hour-cell in DOM
-      const selector = `.hour-cell[data-hour='${hour}'][data-resource='${appointment.Resource}']`;
-      const hourCell = calendar.querySelector(selector);
-      if (!hourCell) return;
+        const hour = appStart.getHours();
+        // Finde die passende hour-cell:
+        //   in der Tagesansicht haben wir ein data-userResource + data-hour
+        const userResource = app.Ressource; // z.B. "user3"
+        const selector = `.hour-cell[data-hour='${hour}'][data-user-resource='${userResource}']`;
+        const hourCell = document.querySelector(selector);
+        if (!hourCell) return;
   
-      // Termin-Div erzeugen
-      const appointmentDiv = document.createElement('div');
-      appointmentDiv.classList.add('appointment');
-      // Benutzerfarbe
-      appointmentDiv.style.backgroundColor = getUserColor(appointment.Resource);
+        // Termin-DIV erzeugen
+        const appointmentDiv = document.createElement('div');
+        appointmentDiv.classList.add('appointment');
+        appointmentDiv.setAttribute('data-app-id', app._id);
   
-      // Dauer in Stunden (z.B. für height-Berechnung)
-      const durationHours = (end - start) / (1000*60*60);
-      // top-Anteil = (Minutenstart / 60) * 100%
-      const offsetTop = (start.getMinutes()/60)*100;
+        // CSS: z.B. zeitlich korrekt positionieren
+        const durationHours = (appEnd - appStart) / (1000*60*60);
+        appointmentDiv.style.position = "absolute";
+        appointmentDiv.style.top = `${(appStart.getMinutes() / 60) * 100}%`;
+        appointmentDiv.style.height = `${durationHours * 100}%`;
+        appointmentDiv.style.width = `${100 / groupSize}%`;
+        appointmentDiv.style.left = `${(100 / groupSize) * index}%`;
+        appointmentDiv.style.zIndex = "2";
   
-      // Hier eine einfache Variante: 
-      //   Jeder Termin füllt die hour-cell. 
-      //   Falls du mehrere Blöcke innerhalb der Stunde hast, 
-      //   müsstest du es feiner staffeln:
-      appointmentDiv.style.top = offsetTop + "%";
-      appointmentDiv.style.height = (durationHours * 100) + "%";
-      appointmentDiv.style.position = "absolute";
-      appointmentDiv.style.left = "0";
-      appointmentDiv.style.right = "0";
-      appointmentDiv.style.zIndex = "2";
+        // Farbe
+        appointmentDiv.style.backgroundColor = getUserColor(app.Ressource);
   
-      // Optional: Inhalt
-      appointmentDiv.textContent = `${appointment.Resource} - ${formatTime(start)} / ${app.Dienstleistung ?? ''}`;
+        // Inhalt (Kunde, Dienstleistung etc.)
+        // Falls du "app.KundennummerzumTermin" hast, suche den Client:
+        const clientAppointment = clients.find(c => c.Kundennummer === app.KundennummerzumTermin);
   
-      // Icons etc. – wie in deiner Wochenansicht
-      // ...
-      hourCell.appendChild(appointmentDiv);
+        // Icons
+        const iconContainer = document.createElement('div');
+        iconContainer.classList.add('appointment-icons');
+        iconContainer.innerHTML = `
+          <span class="icon edit-icon" title="Bearbeiten">✏️</span>
+          <span class="icon delete-icon" title="Löschen">🗑️</span>
+        `;
+        iconContainer.querySelector('.edit-icon').addEventListener('click', () => {
+          editAppointment(app._id);
+        });
+        iconContainer.querySelector('.delete-icon').addEventListener('click', () => {
+          deleteAppointment(app._id);
+        });
+  
+        const appointmentContent = document.createElement('div');
+        appointmentContent.innerHTML = `
+          <div>
+            ${
+              clientAppointment
+                ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong><br>
+                   ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}`
+                : "Kunde nicht gefunden"
+            }
+          </div>
+        `;
+  
+        appointmentDiv.appendChild(iconContainer);
+        appointmentDiv.appendChild(appointmentContent);
+  
+        hourCell.appendChild(appointmentDiv);
+      });
     });
   }
+  
   
   /*******************************************************
    * Wochenansicht
