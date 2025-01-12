@@ -47,6 +47,8 @@ async function editAppointment(appointmentId) {
     document.getElementById('description').value = appointment.description || '';
 
     document.getElementById('erfasstDurch').value = appointment.erfasstDurch || '';
+    document.getElementById('letzterBearbeiter').value = appointment.letzterBearbeiter || '';
+    document.getElementById('Ressource').value = appointment.Ressource || '';
     document.getElementById('projektId').value = appointment.projektId || '';
     document.getElementById('verrechnungsTyp').value = appointment.verrechnungsTyp || '';
     document.getElementById('erbringungsStatus').value = appointment.erbringungsStatus || '';
@@ -144,6 +146,8 @@ async function editAppointment(appointmentId) {
             Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
             description: document.getElementById('description').value,
             erfasstDurch: document.getElementById('erfasstDurch').value,
+            letzterBearbeiter: document.getElementById('letzterBearbeiter').value,
+            Ressource: document.getElementById('Ressource').value,
             projektId: document.getElementById('projektId').value,
             verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
             erbringungsStatus: document.getElementById('erbringungsStatus').value,
@@ -478,7 +482,9 @@ function dateToLocalString(date) {
     
         const workingHoursForDay = workingHours[getDayName(selectedDate).toLowerCase()];
         let alertMessage = null;
-    
+        
+        clearAppointmentForm();
+        console.log('clearaufgeführt')
         // Arbeitszeitprüfung
         if (!isWithinWorkingHours(selectedDate, workingHoursForDay)) {
             alertMessage = "Achtung Termin befindet sich ausserhalb der definierten Arbeitszeit.";
@@ -792,6 +798,12 @@ function clearAppointmentForm() {
     document.getElementById('KundenTelefon').textContent = '';
     document.getElementById('KundenMail').textContent = '';
 
+    document.getElementById('rechnungsEmpfaengerNummer').value = '';
+    document.getElementById('RechnungsempfaengerName').textContent = '';
+    document.getElementById('RechnungsempfaengerAdresse').textContent = '';
+    document.getElementById('RechnungsempfaengerTelefon').textContent = '';
+    document.getElementById('RechnungsempfaengerMail').textContent = '';
+
     // Neu statt dateTime
     document.getElementById('startDateTime').value = '';
     document.getElementById('endDateTime').value = '';
@@ -805,8 +817,17 @@ function clearAppointmentForm() {
     document.getElementById('Abrechnungsstatus').value = '';
     document.getElementById('description').value = '';
 
-    document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
-    // ...
+    document.getElementById('letzterBearbeiter').value = '';
+    document.getElementById('Ressource').value = '';
+
+    document.getElementById('erfasstDurch').value = '';
+    document.getElementById('projektId').value = '';
+    document.getElementById('verrechnungsTyp').value = '-- bitte wählen --';
+    document.getElementById('erbringungsStatus').value = '-- bitte wählen --';
+    document.getElementById('fakturaBemerkung').value = '';
+    document.getElementById('fakturaNummer').value = '';
+    
+    console.log('formular geleert')
 }
 
 
@@ -844,7 +865,7 @@ function hideAppointmentForm() {
     // Button-Text zurücksetzen
     const submitButton = appointmentForm.querySelector('button[type="submit"]');
     submitButton.innerText = 'Termin hinzufügen';
-
+    console.log('hide läuft')
     // Felder leeren
     clearAppointmentForm();
 }
@@ -852,6 +873,7 @@ function hideAppointmentForm() {
 /**************************************************************
  * (D) NEUEN TERMIN ANLEGEN (POST)
  **************************************************************/
+/* TERMIN ANLEGEN BEREITS UNTER ZEILE 
 async function createNewAppointment() {
     // Termin-Daten sammeln
     const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
@@ -869,6 +891,8 @@ async function createNewAppointment() {
     const description = document.getElementById('description').value;
 
     const erfasstDurch = document.getElementById('erfasstDurch').value;
+    const letzterBearbeiter = document.getElementById('erfaletzterBearbeitersstDurch').value;
+    const Ressource = document.getElementById('Ressource').value;
     const projektId = document.getElementById('projektId').value;
     const verrechnungsTyp = document.getElementById('verrechnungsTyp').value;
     const erbringungsStatus = document.getElementById('erbringungsStatus').value;
@@ -895,6 +919,8 @@ async function createNewAppointment() {
                 Abrechnungsstatus,
                 description,
                 erfasstDurch,
+                letzterBearbeiter,
+                Ressource,
                 projektId,
                 verrechnungsTyp,
                 erbringungsStatus,
@@ -905,7 +931,8 @@ async function createNewAppointment() {
         });
 
         if (response.ok) {
-            alert('Termin erfolgreich hinzugefügt!');
+            alert('Termin erfolgreich hinzugefügt! zeile 925');
+            
             console.log(KundennummerzumTermin,
                 startVal,
                 endVal,
@@ -915,13 +942,19 @@ async function createNewAppointment() {
                 Abrechnungsstatus,
                 description,
                 erfasstDurch,
+                letzterBearbeiter,
+                Ressource,
                 projektId,
                 verrechnungsTyp,
                 erbringungsStatus,
                 fakturaBemerkung,
                 fakturaNummer,
                 rechnungsEmpfaengerNummer);
+
             hideAppointmentForm();
+
+            console.log('hier müsste hide appform gestartet werden');
+            
             loadAppointments(); // Termine neu laden
         } else {
             alert('Fehler beim Hinzufügen des Termins');
@@ -931,7 +964,7 @@ async function createNewAppointment() {
     }
 }
 
-
+*/
 
 
 /**************************************************************
@@ -1148,8 +1181,8 @@ function setLocalDateTimeInput(dateTimeLocalStr, elementId) {
 
 /**************************************************************
  * (L) WEITERE SUCH-FUNKTIONEN, KUNDENSUCHE, ETC.
- *     Belässt du einfach in deinem Code, wenn sie schon vorhanden sind.
  **************************************************************/
+
 // Funktion zur Anzeige der Suchergebnisse mit angewendeten Filtern und Sortierung
 function displaySearchResults() {
     const searchResultsContainer = document.getElementById('searchClientForApointment');
@@ -1281,6 +1314,9 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
 
     // 5) Neue Felder (Abwicklung)
     const erfasstDurch = document.getElementById('erfasstDurch').value;
+    const letzterBearbeiter = document.getElementById('letzterBearbeiter').value;
+    const Ressource = document.getElementById('Ressource').value;
+
     // Projekt-ID als Number (falls leer => null)
     let projektId = parseInt(document.getElementById('projektId').value, 10);
     if (isNaN(projektId)) {
@@ -1306,6 +1342,8 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
 
         // Abwicklung
         erfasstDurch,
+        letzterBearbeiter,
+        Ressource,
         projektId,
         verrechnungsTyp,
         erbringungsStatus,
@@ -1328,8 +1366,8 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
         });
 
         if (response.ok) {
-            alert('Termin erfolgreich hinzugefügt!');
-            // ggf. neu laden/ Formular verstecken
+            alert('Termin erfolgreich hinzugefügt Zeile 1360!');
+            hideAppointmentForm();
             loadAppointments();
         } else {
             alert('Fehler beim Hinzufügen des Termins');
@@ -1394,26 +1432,32 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-/**
- * Zeigt die Suchergebnisse für den abweichenden Rechnungsempfänger
- */
+/**************************************************************
+ * (L) RECHNUNGSEMPFÄNGER-SUCHE
+ *     Angelehnt an deine bestehende Kunden-Suchfunktion.
+ **************************************************************/
 function displayInvoiceSearchResults() {
-    invoiceResultsContainer.innerHTML = '';
+    // Container für die Suchergebnisse
+    const invoiceResultsContainer = document.getElementById('invoiceResultsContainer');
+    invoiceResultsContainer.innerHTML = ''; 
 
-    // Keine Ergebnisse?
+    // Wenn keine Ergebnisse
     if (searchResultsInvoice.length === 0) {
+        console.log("Anzahl der Suchergebnisse (Rechnungsempfänger):", searchResultsInvoice.length);
         invoiceResultsContainer.style.display = 'none';
         return;
+    } else {
+        console.log("Suchergebnisse (Rechnungsempfänger) gefunden:", searchResultsInvoice.length);
     }
-    invoiceResultsContainer.style.display = 'block';
 
-    // Ergebnisse auflisten
+    // Anzeige
+    invoiceResultsContainer.style.display = 'block';
     searchResultsInvoice.forEach(client => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('search-result-item');
+        resultItem.classList.add('search-result-item'); 
         resultItem.textContent = `${client.Vorname} ${client.Nachname}, ${client.Ort}, ${client.Telefon}`;
 
-        // Klick => Daten übernehmen
+        // Klick => Rechnungs-Empfängerdaten übernehmen
         resultItem.addEventListener('click', () => {
             document.getElementById('RechnungsempfaengerNummerDisplay').textContent 
                 = String(client.Kundennummer).padStart(6, '0');
@@ -1436,8 +1480,6 @@ function displayInvoiceSearchResults() {
         invoiceResultsContainer.appendChild(resultItem);
     });
 }
-
-
 
 
 
@@ -1583,6 +1625,8 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
       Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
       Dienstleistung: document.getElementById('Dienstleistung').value,
       erfasstDurch: document.getElementById('erfasstDurch').value,
+      letzterBearbeiter: document.getElementById('letzterBearbeiter').value,
+      Ressource: document.getElementById('Ressource').value,
       projektId: parseInt(document.getElementById('projektId').value) || null,
       verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
       erbringungsStatus: document.getElementById('erbringungsStatus').value,

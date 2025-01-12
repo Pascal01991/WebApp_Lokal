@@ -39,11 +39,19 @@ const appointmentSchema = new mongoose.Schema({
         required: true,
     },
 
-        erfasstDurch: {
+    erfasstDurch: {
         type: String,
         required: false 
     },
-    
+    letzterBearbeiter: {
+        type: String,
+        required: false 
+    },
+    Ressource: {
+        type: String,
+        required: false 
+    },
+
     projektId: {
         type: Number,
         required: false

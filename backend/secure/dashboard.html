@@ -114,15 +114,14 @@
                 </div>
             </div>
             
-            <!-- Button für abweichenden Rechnungsempfänger -->
+            <!-- Checkbox für abweichenden Rechnungsempfänger -->
             <button type="button" id="abweichenderRechnungsempfaengerButton">
                 Abweichender Rechnungsempfänger
             </button>
             <!-- Versteckte Felder für IDs, falls benötigt -->
             <input type="hidden" id="rechnungsEmpfaengerNummer" />
-        </div>
-
-        <!-- Versteckter Block für den abweichenden Rechnungsempfänger -->
+            <div id="invoiceResultsContainer" style="display:none;"></div>
+             <!-- Versteckter Block für den abweichenden Rechnungsempfänger -->
         <div id="abweichenderRechnungsempfaengerBlock" style="display: none;">
             <hr>
             <h4>Abweichender Rechnungsempfänger</h4>
@@ -156,6 +155,9 @@
                 </div>
             </div>
         </div>
+        </div>
+
+       
 
         <!-- ===================================== -->
         <!-- 2) Termindetails                     -->
@@ -200,6 +202,14 @@
             <div>
                 <label>Erfasst durch:</label>
                 <input type="text" id="erfasstDurch">
+            </div>
+            <div>
+                <label>letzter Bearbeiter:</label>
+                <input type="text" id="letzterBearbeiter">
+            </div>
+            <div>
+                <label>Ressource:</label>
+                <input type="text" id="Ressource">
             </div>
             <div>
                 <label>Verknüpftes Projekt (ID):</label>

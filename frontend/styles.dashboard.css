@@ -491,6 +491,41 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 
 /* usw. – hier kannst du Abstände reduzieren */
 
+/* RECHNUNGSEMPFÄNGER-SUCHFUNKTION (Analog zur Kunden-Suchfunktion) */
+
+#invoiceResultsContainer {
+  display: none;
+  position: absolute;
+  top: 100%; /* Direkt unter dem Eingabefeld */
+  left: 0;
+  width: 800px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: var(--background-light);
+  color: var(--text-color);
+  z-index: 10;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+}
+
+/* Styling einzelner Suchergebnisse */
+#invoiceResultsContainer .search-result-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #444;
+}
+
+#invoiceResultsContainer .search-result-item:last-child {
+  border-bottom: none;
+}
+
+/* Hover-Effekt für Suchergebnisse */
+#invoiceResultsContainer .search-result-item:hover {
+  background-color: var(--theme-color);
+  color: var(--background-dark);
+}
 
 
 /*====================================================================================================================================

@@ -32,6 +32,8 @@ router.post('/', async (req, res) => {
             MailAppointment,
             Dienstleistung,
             erfasstDurch,
+            letzterBearbeiter,
+            Ressource,
             projektId,
             verrechnungsTyp,
             erbringungsStatus,
@@ -68,6 +70,8 @@ router.post('/', async (req, res) => {
     
             // Abwicklung
             erfasstDurch,
+            letzterBearbeiter,
+            Ressource,
             projektId,
             verrechnungsTyp,
             erbringungsStatus,
