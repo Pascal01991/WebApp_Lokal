@@ -746,12 +746,12 @@ console.log('for Schleife let hour');
     
 
     // Event-Listener für die Wochennavigation
-    document.getElementById('prevWeek').addEventListener('click', () => {
+    document.getElementById('prevBtn').addEventListener('click', () => {
         currentDate.setDate(currentDate.getDate() - 7);
         renderCalendar();
     });
 
-    document.getElementById('nextWeek').addEventListener('click', () => {
+    document.getElementById('nextBtn').addEventListener('click', () => {
         currentDate.setDate(currentDate.getDate() + 7);
         renderCalendar();
     });

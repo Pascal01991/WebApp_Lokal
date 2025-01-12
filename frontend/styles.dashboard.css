@@ -160,6 +160,62 @@ MAINCONTENT
 KALENDER
 ==================================================================================================================================*/
 
+
+    #view-toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Einfacher Switch-Style (kannst du noch anpassen) */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 25px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider.round {
+      border-radius: 25px;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--background-dark);
+      transition: .4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 17px;
+      width: 17px;
+      left: 4px; 
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--theme-color);
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    #week-navigation button {
+      margin-right: 10px;
+    }
+
+    /* Kalender-Wrapper */
+    #calendar-section {
+      margin-top: 20px;
+    }
+
     /* Kalenderbereich und -navigation */
     #week-navigation {
       margin-bottom: 0px; /* Abstand unterhalb der Navigation */
@@ -212,21 +268,14 @@ KALENDER
       background-color: var(--background-medium);
   }
 
-  /*
-    .working-hour {
-      background-color: #d4edda; /* Grün für Arbeitsstunden 
-    }
 
-    /*.working-hour:hover {
-      background-color: #b3e6c1; /* Hellere Grünfarbe beim Hover 
-      cursor: pointer; }*/
 
     .non-working-hour {
       background-color: var(--background-light); /* Grau für nicht arbeitende Stunden */
     }
 
     .appointment {
-      background-color: var(--user1);
+/*      background-color: var(--user1);*/
       position: absolute;
       box-sizing: border-box;
       padding: 2px;

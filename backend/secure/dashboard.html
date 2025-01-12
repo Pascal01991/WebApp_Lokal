@@ -52,16 +52,50 @@
             
             
         </section>
-
-        <!-- Inhalt des Kalender-Abschnitts -->
-        <section id="calendar-section">
-            
+        
+<!-- Inhalt des Kalender-Abschnitts -->                  
+<section id="calendar-section">
+            <!-- Hier Box mit den Benutzern: Checkboxen zum Aus- und Anwählen -->
+            <div id="user-selection">
+                <label>
+                <input type="checkbox" class="user-checkbox" value="user1" checked />
+                Benutzer 1
+                </label>
+                <label>
+                <input type="checkbox" class="user-checkbox" value="user2" checked />
+                Benutzer 2
+                </label>
+                <label>
+                <input type="checkbox" class="user-checkbox" value="user3" checked />
+                Benutzer 3
+                </label>
+                <label>
+                <input type="checkbox" class="user-checkbox" value="user4" checked />
+                Benutzer 4
+                </label>
+                <label>
+                <input type="checkbox" class="user-checkbox" value="user5" checked />
+                Benutzer 5
+                </label>
+                
+            </div>
               
-          <div id="week-navigation">
-              <button id="prevWeek">Vorherige Woche</button>
-              <button id="nextWeek">Nächste Woche</button>
-          </div>
+          
+        <!-- Wechselschalter für Tages- oder Wochenansicht -->
+        <div id="view-toggle-container">
+            <span>Tagesansicht</span>
+            <label class="switch">
+            <input type="checkbox" id="viewToggle" />
+            <span class="slider round"></span>
+            </label>
+            <span>Wochenansicht</span>
+        </div>
 
+        <!-- Navigation für Woche / Tag (Beschriftung ändert sich dynamisch in JS) -->
+        <div id="week-navigation">
+            <button id="prevBtn">Vorheriger Zeitraum</button>
+            <button id="nextBtn">Nächster Zeitraum</button>
+        </div>
           <div id="calendar"></div>
           
         </section>
@@ -483,7 +517,7 @@
   <h3>Benutzer</h>
 
 
-    
+
   <h3>Farb-Schema</h3>
               <!-- Farbwahl für das Thema -->
               <div class="form-row">
