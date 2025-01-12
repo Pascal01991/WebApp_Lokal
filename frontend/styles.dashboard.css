@@ -8,6 +8,19 @@ DESIGNVARIABLEN
   --background-medium: #e2e2e2;
   --background-dark: #ffffff;
   --text-color: #000000;
+
+/*Kalender-Farben*/
+
+/*Benutzer 1*/
+  --user1: #24144b; /* Standard-Themenfarbe */
+/*Benutzer 2*/
+  --user2: #143a4b; /* Standard-Themenfarbe */
+/*Benutzer 3*/
+  --user3: #414b14; /* Standard-Themenfarbe */
+/*Benutzer 4*/
+  --user4: #4b142e; /* Standard-Themenfarbe */
+/*Benutzer 5*/
+  --user5: #194b14; /* Standard-Themenfarbe */
 }
 
 body.dark-mode {
@@ -16,6 +29,8 @@ body.dark-mode {
   --background-dark: #000000;
   --text-color: #ffffff;
 }
+
+
 
 /*====================================================================================================================================
 BODY - ALLGEMEIN
@@ -211,7 +226,7 @@ KALENDER
     }
 
     .appointment {
-      background-color: var(--theme-color);
+      background-color: var(--user1);
       position: absolute;
       box-sizing: border-box;
       padding: 2px;
