@@ -498,16 +498,13 @@ async function renderDay() {
     // Das setzt natürlich voraus, dass dein Slot-Objekt sagt, **welcher Benutzer** gemeint ist.
     // Falls dein Backend das anders regelt, musst du es anpassen.
     daySlots.forEach(slot => {
-      const date = new Date(slot.startDateTime);
-      const hour = date.getHours();
-      const minute = date.getMinutes();
-  
-      // Beispiel: slot.ressource oder slot.userResource?
-      // Wir nehmen an, du hast ein Feld "slot.ressource" = "user1", ...
-      const slotUser = slot.ressource; 
-      const key = `${slotUser}-${hour}-${minute}`;
-      slotsMap[key] = slot;
-    });
+        const slotDate = new Date(slot.startDateTime);
+        const user = slot.ressource; // oder slot.user o.ä.
+        const hour = slotDate.getHours();
+        const minute = slotDate.getMinutes();
+        const key = `${user}-${hour}-${minute}`;
+        slotsMap[key] = slot;
+      });
   
     // Ermittel Start-/Endstunde dynamisch anhand daySlots oder fallback 6 - 20
     let startHour = 6;
