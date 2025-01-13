@@ -2,10 +2,25 @@ const express = require('express');
 const router = express.Router();
 const Service = require('../models/services'); // Pfad anpassen, falls du den Dateinamen änderst
 
-// Neuen Service erstellen (CREATE)
+// Neuen Service erstellen (CREATE) mit automatischem Hochzählen von serviceID
 router.post('/', async (req, res) => {
     try {
-        const newService = new Service(req.body);
+        // 1) Letztes Service-Dokument nach serviceID in absteigender Reihenfolge finden
+        const lastService = await Service.findOne().sort({ serviceID: -1 });
+
+        // 2) Nächste serviceID bestimmen
+        let nextServiceID = 0;
+        if (lastService && Number.isInteger(lastService.serviceID)) {
+            nextServiceID = lastService.serviceID + 1;
+        }
+
+        // 3) Neues Service-Objekt mit serviceID erstellen
+        const newService = new Service({
+            ...req.body,
+            serviceID: nextServiceID
+        });
+
+        // 4) Speichern
         await newService.save();
         res.status(201).json(newService);
     } catch (error) {

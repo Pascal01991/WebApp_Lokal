@@ -3382,8 +3382,8 @@ function displayServices(services) {
     const serviceList = document.getElementById('serviceList');
     serviceList.innerHTML = services
         .map(srv => `
-            <div class="service-card">{srv.serviceID
-                <span class="service-info"><strong>${srv.serviceName}</strong> ID: ${srv.serviceID} Dauer: ${srv.serviceDuration} Min</span>
+            <div class="service-card">
+                <span class="service-info">${srv.serviceID} – <strong>${srv.serviceName}</strong> Dauer: ${srv.serviceDuration} Min</span>
                 <span class="service-info">Beschreibung: ${srv.serviceDescription || 'Keine Angabe'}</span>
                 <span class="service-info">Preis: ${srv.servicePrice} CHF</span>
                 <div class="service-actions">
