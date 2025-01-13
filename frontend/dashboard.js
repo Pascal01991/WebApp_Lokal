@@ -3013,7 +3013,8 @@ document.addEventListener('DOMContentLoaded', function() {
  * 2) USER-FORMULAR: ÖFFNEN, SCHLIESSEN, LEEREN
  ***************************************************/
 // Button "Neuen Benutzer anlegen" → Formular öffnen
-document.getElementById('openUserFormButton').addEventListener('click', () => {
+// ACHTUNG: async, damit wir await verwenden können
+document.getElementById('openUserFormButton').addEventListener('click', async () => {
     // 1) Diesen Button ausblenden
     document.getElementById('openUserFormButton').style.display = 'none';
     // 2) Felder leeren
@@ -3031,6 +3032,11 @@ document.getElementById('openUserFormButton').addEventListener('click', () => {
         e.preventDefault();
         await addNewUser(); // POST-Funktion
     });
+
+    // 6) Services laden und Checkboxen generieren
+    //    NUR möglich, weil wir diese Funktion jetzt async machen
+    const services = await loadAllServices();
+    renderServiceCheckboxes(services);
 });
 
 // Funktion: Formular anzeigen (Animation)
@@ -3087,13 +3093,25 @@ async function addNewUser() {
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    // Weitere Felder hier ergänzen (z.B. roles, color, etc.)
+
+    // ausgewählte Services ermitteln
+    const checkboxes = document.querySelectorAll('#servicesCheckboxContainer .service-checkbox:checked');
+    const selectedServices = Array.from(checkboxes).map(cb => cb.value);
+
+    // User-Daten zusammenstellen
+    const newUserData = {
+        userID,
+        username,
+        email,
+        password,
+        availableServices: selectedServices  // <= Hier das Array rein
+    };
 
     try {
         const response = await fetch(`${BACKEND_URL}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userID, username, email, password })
+            body: JSON.stringify(newUserData)
         });
 
         if (response.ok) {
@@ -3112,7 +3130,6 @@ async function addNewUser() {
 /***************************************************
  * 4) BENUTZERLISTE LADEN UND ANZEIGEN (GET)
  ***************************************************/
-// Hier könnte ein loadUsers() stehen, das vom Backend die User-Daten lädt:
 async function loadUsers() {
     try {
         const response = await fetch(`${BACKEND_URL}/users`);
@@ -3160,6 +3177,46 @@ function displayUsers(users) {
 
 
 /***************************************************
+ * 4.5) SERVICES LADEN UND CHECKBOXEN RENDERN
+ ***************************************************/
+// Du hast bereits eine "loadServices" im SERVICE-MANAGEMENT-Block.
+// Wir machen hier eine separate "loadAllServices()" für den User-Form-Dialog.
+// Oder du könntest "loadServices()" aus dem Service-Block wiederverwenden - 
+// mit dem Unterschied, dass dort `allServices` befüllt wird.
+//
+// Da du schon "loadAllServices()" geschrieben hast, nutzen wir die:
+async function loadAllServices() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/services`);
+        if (!response.ok) throw new Error('Fehler beim Laden der Services');
+        return await response.json(); // Array von Services
+    } catch (error) {
+        console.error('Fehler beim Laden der Services:', error);
+        return [];
+    }
+}
+
+function renderServiceCheckboxes(services) {
+    const container = document.getElementById('servicesCheckboxContainer');
+    container.innerHTML = ''; // Erst mal leeren, falls vorher was drin war
+
+    services.forEach(service => {
+        const label = document.createElement('label');
+        label.style.display = 'block'; // jede Checkbox in neuer Zeile
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = service.serviceID;  // oder service._id
+        checkbox.className = 'service-checkbox';
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' ' + service.serviceName));
+        container.appendChild(label);
+    });
+}
+
+
+/***************************************************
  * 5) BENUTZER BEARBEITEN (PUT)
  ***************************************************/
 async function editUser(userId) {
@@ -3177,43 +3234,58 @@ async function editUser(userId) {
     document.getElementById('userID').value   = user.userID || '';
     document.getElementById('username').value = user.username || '';
     document.getElementById('email').value    = user.email || '';
-    // Passwortfeld wird meist nicht vorausgefüllt – optional
 
     // 4) Formular anzeigen
     showUserForm();
 
-    // 5) Button-Beschriftung ändern
+    // 5) Button "Änderungen speichern" ...
     const submitButton = document.querySelector('#userForm button[type="submit"]');
     submitButton.innerText = "Änderungen speichern";
-
-    // 6) Alten Listener entfernen, neuen Listener anfügen
     submitButton.replaceWith(submitButton.cloneNode(true));
     const newSubmitButton = document.querySelector('#userForm button[type="submit"]');
+
+    // 6) Services laden und Checkboxen erstellen
+    const services = await loadAllServices();
+    renderServiceCheckboxes(services);
+
+    // 7) Checkboxen "vorbelegen"
+    //    Falls user.availableServices ein Array mit z.B. service._id oder serviceName enthält:
+    if (Array.isArray(user.availableServices)) {
+        user.availableServices.forEach(svc => {
+            // Finde die Checkbox, die den Wert "svc" hat
+            const checkbox = document.querySelector(`#servicesCheckboxContainer .service-checkbox[value="${svc}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+
     newSubmitButton.addEventListener('click', async (e) => {
         e.preventDefault();
+        // Updated-Daten ...
+        const passwordInput = document.getElementById('password').value.trim();
+        const updatedUser = {
+            userID: document.getElementById('userID').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value
+        };
 
-    // 7) Updated-Daten
-    const passwordInput = document.getElementById('password').value.trim();
+        // Passwort nur hinzufügen, wenn nicht leer ...
+        if (passwordInput !== "") {
+            updatedUser.password = passwordInput;
+        }
 
-    const updatedUser = {
-    userID: document.getElementById('userID').value,
-    username: document.getElementById('username').value,
-    email: document.getElementById('email').value
-    };
+        // Ausgewählte Services abgreifen
+        const checkboxes = document.querySelectorAll('#servicesCheckboxContainer .service-checkbox:checked');
+        updatedUser.availableServices = Array.from(checkboxes).map(cb => cb.value);
 
-// Nur dann hinzufügen, wenn nicht leer
-if (passwordInput !== "") {
-  updatedUser.password = passwordInput;
-}
-
-        // 8) PUT-Request
+        // PUT-Request ...
         try {
             const response = await fetch(`${BACKEND_URL}/users/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedUser)
             });
-
             if (response.ok) {
                 alert('Benutzer erfolgreich aktualisiert');
                 await loadUsers();
@@ -3226,6 +3298,7 @@ if (passwordInput !== "") {
         }
     });
 }
+
 
 
 /***************************************************
@@ -3246,6 +3319,8 @@ async function deleteUser(userId) {
         alert('Fehler: ' + err.message);
     }
 }
+
+
 //====================================================================================================================================
 //====================================================================================================================================
 //====================================================================================================================================
@@ -3337,7 +3412,6 @@ function clearServiceForm() {
  * 3) NEUEN SERVICE ANLEGEN (POST)
  ***************************************************/
 async function addNewService() {
-//    const serviceID = document.getElementById('serviceID').value;  WICHTIG UNTEN BEI BODY JSON AUCH SERVICEID WIEDER EINTRAGEN!!
     const serviceName = document.getElementById('serviceName').value;
     const serviceDescription = document.getElementById('serviceDescription').value;
     const servicePrice = parseFloat(document.getElementById('servicePrice').value) || 0;
