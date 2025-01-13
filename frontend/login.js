@@ -7,6 +7,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
 
     try {
         // Führe den Login durch
@@ -16,7 +17,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 'Content-Type': 'application/json',
             },
             credentials: 'include', // Für Cookies oder Authentifizierungsinformationen
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, rememberMe }),
         });
 
         // Verarbeite die Antwort
