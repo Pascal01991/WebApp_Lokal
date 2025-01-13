@@ -318,9 +318,11 @@
     <!-- Inhalt des Projekt-Abschnitts -->
 <section id="Project-section">
         <h2>BETA! Projekte</h2>
+        <div id="projectList" class="projct-list"></div>
         <p>Projekte zur Verknüpfung mit Terminen folgt.</p>
+</section>
         <!-- Inhalt des Kundenverwaltungs-Abschnitts -->
-        <section id="customer-management-section">
+<section id="customer-management-section">
             <h2>Kunden</h2>
           <button id="openClientFormButton" type="submit">Kunden anlegen</button>
           <!-- Kundenformular, standardmäßig ausgeblendet -->
@@ -517,7 +519,73 @@
   </form>
 
   <h3>Benutzer</h>
+    <!-- ========================================= -->
+<!-- USER-MANAGEMENT:  -->
+<!-- ========================================= -->
+<button id="openUserFormButton">Neuen Benutzer anlegen</button>
 
+<div id="userFormular" class="hidden user-form">
+  <form id="userForm">
+    <h2>Benutzer-Details</h2>
+    
+    <label for="userID">User-ID:</label>
+    <input type="text" id="userID" name="userID" />
+
+    <label for="username">Benutzername:</label>
+    <input type="text" id="username" name="username" />
+
+    <label for="email">E-Mail:</label>
+    <input type="email" id="email" name="email" />
+
+    <label for="password">Passwort:</label>
+    <input type="password" id="password" name="password" />
+
+    <!-- Weitere Felder wie roles, color etc. könnten hier ergänzt werden -->
+
+    <div class="form-buttons">
+      <button type="submit">Benutzer hinzufügen</button>
+      <button type="button" id="cancelUserFormButton">Abbrechen</button>
+    </div>
+  </form>
+</div>
+
+<!-- Hier wird die Liste aller Benutzer gerendert -->
+<div id="userList" class="user-list"></div>
+
+
+
+
+    <!-- ========================================= -->
+<!-- SERVICE-MANAGEMENT: HTML-SNIPPET -->
+<!-- ========================================= -->
+<h3>Dienstleistungen</h>
+    <button id="openServiceFormButton">Neuen Service anlegen</button>
+
+<div id="serviceFormular" class="hidden service-form">
+  <form id="serviceForm">
+    <h2>Service-Details</h2>
+    
+    <label for="serviceName">Service-Name:</label>
+    <input type="text" id="serviceName" name="serviceName" />
+
+    <label for="serviceDescription">Beschreibung:</label>
+    <input type="text" id="serviceDescription" name="serviceDescription" />
+
+    <label for="servicePrice">Preis:</label>
+    <input type="number" step="0.01" id="servicePrice" name="servicePrice" />
+
+    <label for="serviceDuration">Dauer (Minuten):</label>
+    <input type="number" id="serviceDuration" name="serviceDuration" />
+
+    <div class="form-buttons">
+      <button type="submit">Service hinzufügen</button>
+      <button type="button" id="cancelServiceFormButton">Abbrechen</button>
+    </div>
+  </form>
+</div>
+
+<!-- Hier wird die Liste aller Services gerendert -->
+<div id="serviceList" class="service-list"></div>
 
 
   <h3>Farb-Schema</h3>
@@ -536,9 +604,9 @@
           
 
 
-        </section>
+        
 
-  </div>
+  
   </body>
   <script type="module" src="/dashboard.js"></script>
   </html>

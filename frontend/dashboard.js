@@ -2986,3 +2986,502 @@ loadHolidays();
         loadThemeSettings();
     });
 
+//====================================================================================================================================
+//====================================================================================================================================
+//====================================================================================================================================
+//USER-MANAGEMENT
+//====================================================================================================================================
+//====================================================================================================================================
+//====================================================================================================================================
+
+/***************************************************
+ * 1) GRUNDLEGENDE SETUPS
+ ***************************************************/
+// Globale Variable für die Benutzerliste
+let allUsers = [];
+
+// Benutzerformular beim Laden der Seite ausblenden
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('userFormular').style.display = 'none';
+
+    // Benutzerliste laden beim Start
+    loadUsers(); // allUsers wird hier gefüllt
+});
+
+
+/***************************************************
+ * 2) USER-FORMULAR: ÖFFNEN, SCHLIESSEN, LEEREN
+ ***************************************************/
+// Button "Neuen Benutzer anlegen" → Formular öffnen
+document.getElementById('openUserFormButton').addEventListener('click', () => {
+    // 1) Diesen Button ausblenden
+    document.getElementById('openUserFormButton').style.display = 'none';
+    // 2) Felder leeren
+    clearUserForm();
+    // 3) Formular anzeigen
+    showUserForm();
+    // 4) Button-Text = "Benutzer hinzufügen"
+    const submitButton = document.querySelector('#userForm button[type="submit"]');
+    submitButton.innerText = "Benutzer hinzufügen";
+
+    // 5) Alten Listener entfernen und neuen Listener (POST) anhängen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.querySelector('#userForm button[type="submit"]');
+    newSubmitButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await addNewUser(); // POST-Funktion
+    });
+});
+
+// Funktion: Formular anzeigen (Animation)
+function showUserForm() {
+    const form = document.getElementById('userFormular');
+    form.classList.remove('hidden');
+    form.style.display = 'block';
+    setTimeout(() => {
+        form.classList.add('show');
+    }, 10); 
+}
+
+// Klick auf "Abbrechen" → Formular schließen
+document.getElementById('cancelUserFormButton').addEventListener('click', function () {
+    hideUserForm();
+});
+
+// Funktion zum Ausblenden des Formulars
+function hideUserForm() {
+    const form = document.getElementById('userFormular');
+    // Button "Neuen Benutzer anlegen" wieder anzeigen
+    document.getElementById('openUserFormButton').style.display = 'inline-block';
+
+    // Smooth ausblenden
+    form.classList.remove('show');
+    setTimeout(() => {
+        form.classList.add('hidden'); 
+        form.style.display = 'none';
+    }, 300);
+
+    // Beschriftung zurücksetzen
+    const submitButton = document.querySelector('#userForm button[type="submit"]');
+    submitButton.innerText = "Benutzer hinzufügen";
+
+    // Felder leeren
+    clearUserForm();
+}
+
+// Formularfelder leeren
+function clearUserForm() {
+    document.getElementById('userID').value = '';
+    document.getElementById('username').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+}
+
+
+/***************************************************
+ * 3) NEUEN BENUTZER ANLEGEN (POST)
+ ***************************************************/
+async function addNewUser() {
+    // Eingaben abrufen
+    const userID = document.getElementById('userID').value;
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    // Weitere Felder hier ergänzen (z.B. roles, color, etc.)
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userID, username, email, password })
+        });
+
+        if (response.ok) {
+            alert('Benutzer erfolgreich hinzugefügt!');
+            hideUserForm();
+            loadUsers(); // Benutzerliste neu laden
+        } else {
+            alert('Fehler beim Hinzufügen des Benutzers');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+
+/***************************************************
+ * 4) BENUTZERLISTE LADEN UND ANZEIGEN (GET)
+ ***************************************************/
+// Hier könnte ein loadUsers() stehen, das vom Backend die User-Daten lädt:
+async function loadUsers() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/users`);
+        if (!response.ok) throw new Error('Netzwerk-Fehler beim Laden der Benutzer');
+        
+        allUsers = await response.json();
+        displayUsers(allUsers);
+    } catch (error) {
+        console.error('Fehler beim Laden der Benutzer:', error);
+    }
+}
+
+// Funktion zum Anzeigen der Benutzerliste
+function displayUsers(users) {
+    const userList = document.getElementById('userList');
+    userList.innerHTML = users
+        .map(user => `
+            <div class="user-card">
+                <span class="user-info"><strong>${user.userID}</strong> – ${user.username}</span>
+                <span class="user-info">E-Mail: ${user.email || 'Keine Angabe'}</span>
+                <div class="user-actions">
+                    <button data-user-id="${user._id}" class="action-btn edit-user-btn" title="Bearbeiten">✏️</button>
+                    <button data-user-id="${user._id}" class="action-btn delete-user-btn" title="Löschen">🗑️</button>
+                </div>
+            </div>
+        `)
+        .join('');
+
+    // Event-Listener für "Bearbeiten"
+    document.querySelectorAll('.edit-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const userId = btn.getAttribute('data-user-id');
+            editUser(userId); 
+        });
+    });
+
+    // Event-Listener für "Löschen"
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const userId = btn.getAttribute('data-user-id');
+            deleteUser(userId);
+        });
+    });
+}
+
+
+/***************************************************
+ * 5) BENUTZER BEARBEITEN (PUT)
+ ***************************************************/
+async function editUser(userId) {
+    // 1) Button "Neuen Benutzer anlegen" ausblenden
+    document.getElementById('openUserFormButton').style.display = 'none';
+
+    // 2) Benutzer-Objekt finden
+    const user = allUsers.find(u => u._id === userId);
+    if (!user) {
+        alert('Benutzer nicht gefunden');
+        return;
+    }
+
+    // 3) Felder füllen
+    document.getElementById('userID').value   = user.userID || '';
+    document.getElementById('username').value = user.username || '';
+    document.getElementById('email').value    = user.email || '';
+    // Passwortfeld wird meist nicht vorausgefüllt – optional
+
+    // 4) Formular anzeigen
+    showUserForm();
+
+    // 5) Button-Beschriftung ändern
+    const submitButton = document.querySelector('#userForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+
+    // 6) Alten Listener entfernen, neuen Listener anfügen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.querySelector('#userForm button[type="submit"]');
+    newSubmitButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 7) Updated-Daten
+        const updatedUser = {
+            userID: document.getElementById('userID').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            // password nur bei Bedarf
+        };
+
+        // 8) PUT-Request
+        try {
+            const response = await fetch(`${BACKEND_URL}/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedUser)
+            });
+
+            if (response.ok) {
+                alert('Benutzer erfolgreich aktualisiert');
+                await loadUsers();
+                hideUserForm();
+            } else {
+                alert('Fehler beim Aktualisieren des Benutzers');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    });
+}
+
+
+/***************************************************
+ * 6) BENUTZER LÖSCHEN (DELETE)
+ ***************************************************/
+async function deleteUser(userId) {
+    if (!confirm("Möchtest du diesen Benutzer wirklich löschen?")) return;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/users/${userId}`, { method: 'DELETE' });
+        if (response.ok) {
+            alert('Benutzer erfolgreich gelöscht');
+            await loadUsers();
+        } else {
+            alert('Fehler beim Löschen des Benutzers');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+//====================================================================================================================================
+//====================================================================================================================================
+//====================================================================================================================================
+//SERVICE-MANAGEMENT
+//====================================================================================================================================
+//====================================================================================================================================
+//====================================================================================================================================
+
+/***************************************************
+ * 1) GRUNDLEGENDE SETUPS
+ ***************************************************/
+// Globale Variable für die Serviceliste
+let allServices = [];
+
+// Serviceformular beim Laden der Seite ausblenden
+document.addEventListener('DOMContentLoaded', function() {
+    // Falls separat eingebunden, ggf. ein eigenes DOMContentLoaded-Event
+    document.getElementById('serviceFormular').style.display = 'none';
+
+    // Serviceliste laden beim Start
+    loadServices(); // allServices wird hier gefüllt
+});
+
+
+/***************************************************
+ * 2) SERVICE-FORMULAR: ÖFFNEN, SCHLIESSEN, LEEREN
+ ***************************************************/
+// Button "Neuen Service anlegen" → Formular öffnen
+document.getElementById('openServiceFormButton').addEventListener('click', () => {
+    document.getElementById('openServiceFormButton').style.display = 'none';
+    clearServiceForm();
+    showServiceForm();
+
+    const submitButton = document.querySelector('#serviceForm button[type="submit"]');
+    submitButton.innerText = "Service hinzufügen";
+
+    // Alten Listener entfernen und neuen (POST) anhängen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.querySelector('#serviceForm button[type="submit"]');
+    newSubmitButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await addNewService(); // POST-Funktion
+    });
+});
+
+// Formular anzeigen (Animation)
+function showServiceForm() {
+    const form = document.getElementById('serviceFormular');
+    form.classList.remove('hidden');
+    form.style.display = 'block';
+    setTimeout(() => {
+        form.classList.add('show');
+    }, 10);
+}
+
+// Klick auf "Abbrechen" → Formular schließen
+document.getElementById('cancelServiceFormButton').addEventListener('click', function () {
+    hideServiceForm();
+});
+
+// Formular ausblenden
+function hideServiceForm() {
+    const form = document.getElementById('serviceFormular');
+    document.getElementById('openServiceFormButton').style.display = 'inline-block';
+
+    form.classList.remove('show');
+    setTimeout(() => {
+        form.classList.add('hidden');
+        form.style.display = 'none';
+    }, 300);
+
+    const submitButton = document.querySelector('#serviceForm button[type="submit"]');
+    submitButton.innerText = "Service hinzufügen";
+
+    clearServiceForm();
+}
+
+// Formularfelder leeren
+function clearServiceForm() {
+    document.getElementById('serviceName').value = '';
+    document.getElementById('serviceDescription').value = '';
+    document.getElementById('servicePrice').value = '';
+    document.getElementById('serviceDuration').value = '';
+}
+
+
+/***************************************************
+ * 3) NEUEN SERVICE ANLEGEN (POST)
+ ***************************************************/
+async function addNewService() {
+    const serviceName = document.getElementById('serviceName').value;
+    const serviceDescription = document.getElementById('serviceDescription').value;
+    const servicePrice = parseFloat(document.getElementById('servicePrice').value) || 0;
+    const serviceDuration = parseInt(document.getElementById('serviceDuration').value) || 0;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/services`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serviceName, serviceDescription, servicePrice, serviceDuration })
+        });
+
+        if (response.ok) {
+            alert('Service erfolgreich hinzugefügt!');
+            hideServiceForm();
+            loadServices();
+        } else {
+            alert('Fehler beim Hinzufügen des Service');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+
+/***************************************************
+ * 4) SERVICELISTE LADEN UND ANZEIGEN (GET)
+ ***************************************************/
+async function loadServices() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/services`);
+        if (!response.ok) throw new Error('Netzwerk-Fehler beim Laden der Services');
+
+        allServices = await response.json();
+        displayServices(allServices);
+    } catch (error) {
+        console.error('Fehler beim Laden der Services:', error);
+    }
+}
+
+function displayServices(services) {
+    const serviceList = document.getElementById('serviceList');
+    serviceList.innerHTML = services
+        .map(srv => `
+            <div class="service-card">
+                <span class="service-info"><strong>${srv.serviceName}</strong> (${srv.serviceDuration} Min)</span>
+                <span class="service-info">Beschreibung: ${srv.serviceDescription || 'Keine Angabe'}</span>
+                <span class="service-info">Preis: ${srv.servicePrice} €</span>
+                <div class="service-actions">
+                    <button data-service-id="${srv._id}" class="action-btn edit-service-btn" title="Bearbeiten">✏️</button>
+                    <button data-service-id="${srv._id}" class="action-btn delete-service-btn" title="Löschen">🗑️</button>
+                </div>
+            </div>
+        `)
+        .join('');
+
+    // Event-Listener für "Bearbeiten"
+    document.querySelectorAll('.edit-service-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const serviceId = btn.getAttribute('data-service-id');
+            editService(serviceId);
+        });
+    });
+
+    // Event-Listener für "Löschen"
+    document.querySelectorAll('.delete-service-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const serviceId = btn.getAttribute('data-service-id');
+            deleteService(serviceId);
+        });
+    });
+}
+
+
+/***************************************************
+ * 5) SERVICE BEARBEITEN (PUT)
+ ***************************************************/
+async function editService(serviceId) {
+    // 1) Button "Neuen Service anlegen" ausblenden
+    document.getElementById('openServiceFormButton').style.display = 'none';
+
+    // 2) Service-Objekt finden
+    const service = allServices.find(s => s._id === serviceId);
+    if (!service) {
+        alert('Service nicht gefunden');
+        return;
+    }
+
+    // 3) Felder mit vorhandenen Daten füllen
+    document.getElementById('serviceName').value = service.serviceName || '';
+    document.getElementById('serviceDescription').value = service.serviceDescription || '';
+    document.getElementById('servicePrice').value = service.servicePrice || 0;
+    document.getElementById('serviceDuration').value = service.serviceDuration || 0;
+
+    // 4) Formular anzeigen
+    showServiceForm();
+
+    // 5) Button-Beschriftung ändern
+    const submitButton = document.querySelector('#serviceForm button[type="submit"]');
+    submitButton.innerText = "Änderungen speichern";
+
+    // 6) Alten Listener entfernen, neuen Listener anfügen
+    submitButton.replaceWith(submitButton.cloneNode(true));
+    const newSubmitButton = document.querySelector('#serviceForm button[type="submit"]');
+    newSubmitButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 7) Updated-Daten
+        const updatedService = {
+            serviceName: document.getElementById('serviceName').value,
+            serviceDescription: document.getElementById('serviceDescription').value,
+            servicePrice: parseFloat(document.getElementById('servicePrice').value) || 0,
+            serviceDuration: parseInt(document.getElementById('serviceDuration').value) || 0
+        };
+
+        // 8) PUT-Request
+        try {
+            const response = await fetch(`${BACKEND_URL}/services/${serviceId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedService)
+            });
+
+            if (response.ok) {
+                alert('Service erfolgreich aktualisiert');
+                await loadServices();
+                hideServiceForm();
+            } else {
+                alert('Fehler beim Aktualisieren des Service');
+            }
+        } catch (err) {
+            alert('Fehler: ' + err.message);
+        }
+    });
+}
+
+
+/***************************************************
+ * 6) SERVICE LÖSCHEN (DELETE)
+ ***************************************************/
+async function deleteService(serviceId) {
+    if (!confirm("Möchtest du diesen Service wirklich löschen?")) return;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/services/${serviceId}`, { method: 'DELETE' });
+        if (response.ok) {
+            alert('Service erfolgreich gelöscht');
+            await loadServices();
+        } else {
+            alert('Fehler beim Löschen des Service');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}

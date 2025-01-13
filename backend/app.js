@@ -16,6 +16,12 @@ const cookieParser = require('cookie-parser');
 //Verfügbarkeiten der Slots
 const availabilityRoutes = require('./routes/availability');
 
+//Users
+const usersRouter = require('./routes/users');
+
+//Users
+const servicesRoutes = require('./routes/services');
+
 const app = express();
 
 //Für User-Authentifizierung
@@ -64,7 +70,7 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.get('/', (req, res) => res.send('API läuft'));
 
 //Absence
-const absenceRoutes = require('./routes/Absence');
+const absenceRoutes = require('./routes/absence');
 app.use('/api/absence', absenceRoutes);
     
 
@@ -74,6 +80,12 @@ app.use('/api/auth', authRoutes); // Authentifizierungsrouten
 
 //Verfügbarkeiten der Slots
 app.use('/api/availability', availabilityRoutes);
+
+//Users
+app.use('/api/users', usersRouter);
+
+//Services
+app.use('/api/services', servicesRoutes);
 
 // Termin-Routen
 app.use('/api/appointments', appointmentRoutes); // Terminrouten einbinden
