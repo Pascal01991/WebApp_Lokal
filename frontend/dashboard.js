@@ -3319,6 +3319,7 @@ function hideServiceForm() {
 
 // Formularfelder leeren
 function clearServiceForm() {
+    document.getElementById('serviceID').value = '';
     document.getElementById('serviceName').value = '';
     document.getElementById('serviceDescription').value = '';
     document.getElementById('servicePrice').value = '';
@@ -3330,6 +3331,7 @@ function clearServiceForm() {
  * 3) NEUEN SERVICE ANLEGEN (POST)
  ***************************************************/
 async function addNewService() {
+    const serviceID = document.getElementById('serviceID').value;
     const serviceName = document.getElementById('serviceName').value;
     const serviceDescription = document.getElementById('serviceDescription').value;
     const servicePrice = parseFloat(document.getElementById('servicePrice').value) || 0;
@@ -3339,7 +3341,7 @@ async function addNewService() {
         const response = await fetch(`${BACKEND_URL}/services`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ serviceName, serviceDescription, servicePrice, serviceDuration })
+            body: JSON.stringify({ serviceID, serviceName, serviceDescription, servicePrice, serviceDuration })
         });
 
         if (response.ok) {
@@ -3374,10 +3376,10 @@ function displayServices(services) {
     const serviceList = document.getElementById('serviceList');
     serviceList.innerHTML = services
         .map(srv => `
-            <div class="service-card">
-                <span class="service-info"><strong>${srv.serviceName}</strong> (${srv.serviceDuration} Min)</span>
+            <div class="service-card">{srv.serviceID
+                <span class="service-info"><strong>${srv.serviceName}</strong> ID: ${srv.serviceID} Dauer: ${srv.serviceDuration} Min</span>
                 <span class="service-info">Beschreibung: ${srv.serviceDescription || 'Keine Angabe'}</span>
-                <span class="service-info">Preis: ${srv.servicePrice} €</span>
+                <span class="service-info">Preis: ${srv.servicePrice} CHF</span>
                 <div class="service-actions">
                     <button data-service-id="${srv._id}" class="action-btn edit-service-btn" title="Bearbeiten">✏️</button>
                     <button data-service-id="${srv._id}" class="action-btn delete-service-btn" title="Löschen">🗑️</button>
@@ -3419,6 +3421,7 @@ async function editService(serviceId) {
     }
 
     // 3) Felder mit vorhandenen Daten füllen
+    document.getElementById('serviceID').value = service.serviceID || '';
     document.getElementById('serviceName').value = service.serviceName || '';
     document.getElementById('serviceDescription').value = service.serviceDescription || '';
     document.getElementById('servicePrice').value = service.servicePrice || 0;
@@ -3439,6 +3442,7 @@ async function editService(serviceId) {
 
         // 7) Updated-Daten
         const updatedService = {
+            serviceID: document.getElementById('serviceID').value,
             serviceName: document.getElementById('serviceName').value,
             serviceDescription: document.getElementById('serviceDescription').value,
             servicePrice: parseFloat(document.getElementById('servicePrice').value) || 0,
