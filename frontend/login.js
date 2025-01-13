@@ -27,8 +27,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             // Zeige Erfolgsmeldung an
             document.getElementById('message').textContent = 'Login erfolgreich! Token: ' + data.token;
 
+            //Speicherung des Usernamens
+            localStorage.setItem('loggedInUsername', username);
+            console.log('user ' + username);
+
             // Weiterleitung auf die geschützte Seite
             window.location.href = `${BACKEND_URL}/dashboard`;
+            
             console.log('Token:');
         } else {
             // Zeige Fehlermeldung an

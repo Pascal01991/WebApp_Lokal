@@ -35,12 +35,14 @@ connectDB();
 
 // CORS-Einstellungen
 const allowedOrigins = [
-    'http://localhost:8080',  // Lokale Entwicklung
-    'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
-    'http://localhost:5000', 
-    'https://www.sapps.ch',    // Deine Produktionsdomain
-    'https://sapps.ch'    // Deine Produktionsdomain
+//  'http://localhost:8080',  // Lokale Entwicklung
+//  'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
+    'http://localhost:5000',  // Lokale Entwicklung
+    process.env.Domain_https_www,    // Deine Produktionsdomain
+    process.env.Domain_https        // Deine Produktionsdomain
 ];
+
+
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -118,32 +120,4 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ msg: 'Interner Serverfehler', error: err.message });
 });
-
-// server.js oder app.js (nach dem DB-Connect!)
-async function seedStandardUsers() {
-  try {
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      // => DB ist leer, wir legen 2 Standard-User an
-      const defaultUsers = [
-        {
-          userID: 0,
-          username: 'admin',
-          password: 'admin' // wird in userSchema prä-save gehasht
-        },
-        {
-          userID: 1,
-          username: 'demo',
-          password: 'demo'
-        }
-      ];
-      await User.insertMany(defaultUsers);
-      console.log('Standard-User angelegt!');
-    } else {
-      console.log('Es existieren bereits User-Dokumente, keine Standard-User angelegt.');
-    }
-  } catch (error) {
-    console.error('Fehler beim Erstellen der Standard-User:', error);
-  }
-}
 
