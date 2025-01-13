@@ -9,15 +9,20 @@ router.post('/', async (req, res) => {
         // Beispiel (sehr vereinfacht): userID hochzählen.
         // ACHTUNG: Das funktioniert nur, wenn userID numerisch ist oder 
         //          du eine String-Parsierung für das Hochzählen implementierst.
-        /*
-        const lastUser = await User.findOne().sort({ userID: -1 });
-        const nextUserID = lastUser ? parseInt(lastUser.userID, 10) + 1 : 0;
-        req.body.userID = nextUserID.toString();
-        */
         
-        // Oder falls userID immer manuell aus req.body kommt, kann man das oben weg lassen
-
-        const newUser = new User(req.body);
+        // 1) Letzter User anhand userID in absteigender Reihenfolge
+        const lastUser = await User.findOne().sort({ userID: -1 });
+        
+        // 2) Berechne die nächste userID
+        let nextUserID = 0;
+        if (lastUser && Number.isInteger(lastUser.userID)) {
+            nextUserID = lastUser.userID + 1;
+        }
+        // 3) Neuen User erstellen, userID setzen
+        const newUser = new User({
+            ...req.body,
+            userID: nextUserID
+        });
         await newUser.save();
 
         res.status(201).json(newUser);
@@ -53,15 +58,27 @@ router.get('/:id', async (req, res) => {
 // User aktualisieren
 router.put('/:id', async (req, res) => {
     try {
-        // new: true gibt das aktualisierte Dokument zurück
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedUser) return res.status(404).json({ error: 'User nicht gefunden' });
-        res.json(updatedUser);
+      const user = await User.findById(req.params.id);
+      if (!user) return res.status(404).json({ error: 'User nicht gefunden' });
+      
+      // userID, username, email werden immer aktualisiert:
+      if (req.body.userID !== undefined)    user.userID = req.body.userID;
+      if (req.body.username !== undefined)  user.username = req.body.username;
+      if (req.body.email !== undefined)     user.email = req.body.email;
+      
+      // Passwort nur updaten, wenn übergeben und nicht leer
+      if (req.body.password && req.body.password.trim().length > 0) {
+        user.password = req.body.password;
+      }
+      
+      await user.save(); // Triggert .pre('save') (Hashing)
+      res.json(user);
     } catch (error) {
-        console.error('Fehler beim Aktualisieren des Users:', error);
-        res.status(500).json({ error: 'Fehler beim Aktualisieren des Users' });
+      console.error('Fehler beim Aktualisieren des Users:', error);
+      res.status(500).json({ error: 'Fehler beim Aktualisieren des Users' });
     }
-});
+  });
+  
 
 // User löschen
 router.delete('/:id', async (req, res) => {

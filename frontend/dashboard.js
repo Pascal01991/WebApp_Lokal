@@ -3192,13 +3192,19 @@ async function editUser(userId) {
     newSubmitButton.addEventListener('click', async (e) => {
         e.preventDefault();
 
-        // 7) Updated-Daten
-        const updatedUser = {
-            userID: document.getElementById('userID').value,
-            username: document.getElementById('username').value,
-            email: document.getElementById('email').value,
-            // password nur bei Bedarf
-        };
+    // 7) Updated-Daten
+    const passwordInput = document.getElementById('password').value.trim();
+
+    const updatedUser = {
+    userID: document.getElementById('userID').value,
+    username: document.getElementById('username').value,
+    email: document.getElementById('email').value
+    };
+
+// Nur dann hinzufügen, wenn nicht leer
+if (passwordInput !== "") {
+  updatedUser.password = passwordInput;
+}
 
         // 8) PUT-Request
         try {
@@ -3331,7 +3337,7 @@ function clearServiceForm() {
  * 3) NEUEN SERVICE ANLEGEN (POST)
  ***************************************************/
 async function addNewService() {
-    const serviceID = document.getElementById('serviceID').value;
+//    const serviceID = document.getElementById('serviceID').value;  WICHTIG UNTEN BEI BODY JSON AUCH SERVICEID WIEDER EINTRAGEN!!
     const serviceName = document.getElementById('serviceName').value;
     const serviceDescription = document.getElementById('serviceDescription').value;
     const servicePrice = parseFloat(document.getElementById('servicePrice').value) || 0;
@@ -3341,7 +3347,7 @@ async function addNewService() {
         const response = await fetch(`${BACKEND_URL}/services`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ serviceID, serviceName, serviceDescription, servicePrice, serviceDuration })
+            body: JSON.stringify({ serviceName, serviceDescription, servicePrice, serviceDuration })
         });
 
         if (response.ok) {
