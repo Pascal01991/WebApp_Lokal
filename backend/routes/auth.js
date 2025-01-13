@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
   try {
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ username });
     if (user) {
       return res.status(400).json({ msg: 'Benutzer existiert bereits' });
     }
@@ -24,9 +24,9 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password, rememberMe } = req.body;
+  const { username, password, rememberMe } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ msg: 'Benutzer nicht gefunden' });
     }
@@ -42,12 +42,13 @@ router.post('/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      // Je nach expiresIn (1h vs. 7 Tage) → maxAge in ms
       maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000
     });
 
     res.json({ msg: 'Login erfolgreich' });
   } catch (err) {
-    res.status(500).json({ msg: 'Serverfehler' });
+    res.status(500).json({ msg: 'Serverfehler' + err});
   }
 });
 

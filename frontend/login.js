@@ -5,7 +5,7 @@ import { BACKEND_URL } from './config.js';
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
 
-    const email = document.getElementById('email').value;
+    const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
@@ -17,7 +17,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 'Content-Type': 'application/json',
             },
             credentials: 'include', // Für Cookies oder Authentifizierungsinformationen
-            body: JSON.stringify({ email, password, rememberMe }),
+            body: JSON.stringify({ username, password, rememberMe }),
         });
 
         // Verarbeite die Antwort
