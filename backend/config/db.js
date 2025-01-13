@@ -10,12 +10,14 @@ async function seedStandardUsers() {
       const defaultUsers = [
         {
           userID: 0,
-          username: 'admin',
+          username: 'master',
+          email: 'master',
           password: process.env.Password_User0 // wird in userSchema prä-save gehasht
         },
         {
           userID: 1,
-          username: 'demo',
+          username: 'admin',
+          email: 'admin',
           password: process.env.Password_User1
         }
       ];
