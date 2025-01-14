@@ -248,7 +248,14 @@
             </div>
             <div>
                 <label>Ressource:</label>
-                <input type="text" id="Ressource">
+                <select id="Ressource">
+                    <option value="">`${currentUserName}`</option>
+                    <option value="Geplant">`${allUsers.name[1]}`</option>
+                    <option value="in Erbringung">`${allUsers.name[1]}`</option>
+                    <option value="Ausgeführt">`${allUsers.name[1]}`</option>
+                    <option value="Abgerechnet">`${allUsers.name[1]}`</option>
+                    <!-- usw. fall weitere benutzer vorhanden -->
+                </select>
             </div>
             <div>
                 <label>Verknüpftes Projekt (ID):</label>

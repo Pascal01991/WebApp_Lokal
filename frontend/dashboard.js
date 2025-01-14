@@ -1064,7 +1064,7 @@ function dateToLocalString(date) {
         const workingHoursForDay = workingHours[getDayName(selectedDate).toLowerCase()];
         let alertMessage = null;
         
-        clearAppointmentForm();
+        clearAppointmentForm(currentUserName);
         console.log('clearaufgeführt')
         // Arbeitszeitprüfung
         if (!isWithinWorkingHours(selectedDate, workingHoursForDay)) {
@@ -1361,7 +1361,7 @@ const cancelAppointmentFormButton = document.getElementById('CancelAppointmentFo
  * (A) Formular-Felder leeren,
  *     inkl. Kundendaten (Kundennummer, Name, Adresse usw.).
  */
-function clearAppointmentForm() { 
+function clearAppointmentForm(currentUserName) { 
     document.getElementById('KundennummerzumTermin').value = '';
     document.getElementById('KundennummerzumTerminDisplay').textContent = '';
     document.getElementById('KundenName').textContent = '';
@@ -1389,16 +1389,36 @@ function clearAppointmentForm() {
     document.getElementById('description').value = '';
 
     document.getElementById('letzterBearbeiter').value = '';
-    document.getElementById('Ressource').value = `${currentUserName}`;
+    document.getElementById('Ressource').value = currentUserName;
 
-    document.getElementById('erfasstDurch').value = '';
+    document.getElementById('erfasstDurch').value = currentUserName;
     document.getElementById('projektId').value = '';
     document.getElementById('verrechnungsTyp').value = '-- bitte wählen --';
     document.getElementById('erbringungsStatus').value = '-- bitte wählen --';
     document.getElementById('fakturaBemerkung').value = '';
     document.getElementById('fakturaNummer').value = '';
     
+    
     console.log('formular geleert')
+}
+
+
+// Funktion zum Befüllen des Dropdown-Menüs mit Benutzern ab Index 1
+function populateDropdownWithUsers(users) {
+    const dropdown = document.getElementById('Ressource');
+
+    // Bestehende Optionen entfernen
+    dropdown.innerHTML = '';
+
+    // Benutzer ab Index 1 hinzufügen
+    users.slice(1).forEach((user, index) => {
+        const option = document.createElement('option');
+        option.value = user._id || `user${index + 1}`; // Eindeutiger Wert
+        option.textContent = user.username;
+        dropdown.appendChild(option);
+    });
+
+    console.log('Dropdown mit Benutzern gefüllt:', users.slice(1));
 }
 
 
@@ -1438,7 +1458,7 @@ function hideAppointmentForm() {
     submitButton.innerText = 'Termin hinzufügen';
     console.log('hide läuft')
     // Felder leeren
-    clearAppointmentForm();
+    clearAppointmentForm(currentUserName);
 }
 
 /**************************************************************
@@ -1556,7 +1576,7 @@ openAppointmentFormButton.addEventListener('click', function() {
     // 1) Button ausblenden
     openAppointmentFormButton.style.display = 'none';
     // 2) Felder leeren
-    clearAppointmentForm();
+    clearAppointmentForm(currentUserName);
     // 3) Formular im Neu-Modus anzeigen
     showAppointmentForm(false);
     
