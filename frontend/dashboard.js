@@ -1389,7 +1389,7 @@ function clearAppointmentForm() {
     document.getElementById('description').value = '';
 
     document.getElementById('letzterBearbeiter').value = '';
-    document.getElementById('Ressource').value = '';
+    document.getElementById('Ressource').value = `${currentUserName}`;
 
     document.getElementById('erfasstDurch').value = '';
     document.getElementById('projektId').value = '';
