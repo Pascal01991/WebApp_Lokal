@@ -6,8 +6,7 @@ const User = require('../models/userModel'); // Pfad zum UserModel ggf. anpassen
 router.post('/', async (req, res) => {
     try {
         // OPTIONALE Logik für automatische userID o. Ä. könnte hier eingefügt werden.
-        // Beispiel (sehr vereinfacht): userID hochzählen.
-        // ACHTUNG: Das funktioniert nur, wenn userID numerisch ist oder 
+                // ACHTUNG: Das funktioniert nur, wenn userID numerisch ist oder 
         //          du eine String-Parsierung für das Hochzählen implementierst.
         
         // 1) Letzter User anhand userID in absteigender Reihenfolge

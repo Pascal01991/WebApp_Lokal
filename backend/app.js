@@ -35,8 +35,8 @@ connectDB();
 
 // CORS-Einstellungen
 const allowedOrigins = [
-  'http://localhost:8080',  // Lokale Entwicklung
-  'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
+  //'http://localhost:8080',  // Lokale Entwicklung
+  //'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
     'http://localhost:5000',  // Lokale Entwicklung
     'https://www.sapps.ch',    // Deine Produktionsdomain
     'https://sapps.ch'  
