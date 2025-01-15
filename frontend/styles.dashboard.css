@@ -967,7 +967,7 @@ Absenzverwaltung
 USERVERWALTUNG
 ====================================================================*/
 /* Benutzerliste */
-.user-list {
+#userList {
   padding: 10px;
   margin-top: 10px;
   background-color: var(--background-medium);
@@ -975,28 +975,34 @@ USERVERWALTUNG
 }
 
 /* Einzelner Benutzer-Eintrag */
-.user-list-item {
+.user-card {
   display: flex;
-  justify-content: space-between; /* Platz zwischen Text und Button */
-  align-items: center; /* Zentriert Text und Button vertikal */
+  justify-content: space-between; /* Text links, Buttons rechts */
+  align-items: center; /* Zentriert Text und Buttons vertikal */
   padding: 8px;
   border-bottom: 1px solid #ddd; /* Trennlinie zwischen Einträgen */
 }
 
 /* Letzter Eintrag ohne untere Linie */
-.user-list-item:last-child {
+.user-card:last-child {
   border-bottom: none;
 }
 
-/* Benutzername */
-.user-name {
+/* Benutzer-Info */
+.user-info {
   font-size: 16px;
-  font-weight: 500;
   color: var(--text-primary);
+  margin-right: auto; /* Lässt Platz für die Buttons rechts */
+}
+
+/* Aktionen */
+.user-actions {
+  display: flex;
+  gap: 10px; /* Abstand zwischen den Buttons */
 }
 
 /* Bearbeiten-Button */
-.edit-button {
+.edit-user-btn {
   padding: 5px 10px;
   font-size: 14px;
   color: #fff;
@@ -1006,6 +1012,21 @@ USERVERWALTUNG
   cursor: pointer;
 }
 
-.edit-button:hover {
+.edit-user-btn:hover {
   background-color: var(--primary-color-hover);
+}
+
+/* Löschen-Button */
+.delete-user-btn {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--danger-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.delete-user-btn:hover {
+  background-color: var(--danger-color-hover);
 }
