@@ -313,26 +313,60 @@ async function editAppointment(appointmentId) {
 
 
 
-
+/*
 
         // Beispiel: Falls du die "Ressource" namentlich so in app hast:
     function getUserColor(resourceName) {
         // resourceName = "user1", "user2", "user3", ...
         // Falls du mehr Benutzer hast, füge sie hier hinzu
         switch (resourceName) {
-        case "user1": return "var(--user1)";
-        case "user2": return "var(--user2)";
+        case "admin": return "#414b14";
+        case "Reto": return "var(--user2)";
         case "user3": return "var(--user3)";
         case "user4": return "var(--user4)";
         case "user5": return "var(--user5)";
         default:      return "var(--user1)"; // fallback
         }
+
+    }
+    */
+
+    //Laden der Fabren der User
+
+    let userColors = []; // Globale Variable, um die Benutzer und ihre Farben zu speichern
+
+    async function loadUserColors() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/users`); // API-Aufruf
+            const users = await response.json(); // Benutzerliste aus der API
+            userColors = users.map(user => ({ username: user.username, color: user.color })); // Nur relevante Daten speichern
+            console.log("Benutzerfarben geladen:", userColors);
+        } catch (error) {
+            console.error("Fehler beim Laden der Benutzerfarben:", error);
+        }
     }
 
+    //Ausfindig machen der jeweiligen Farbe
+    function getUserColor(resourceName) {
+        // Benutzer anhand des Namens finden
+        const user = userColors.find(u => u.username === resourceName);
+    
+        // Debugging-Log vor dem Return
+        if (user) {
+            console.log('Farbe gefunden:', user.color);
+        } else {
+            console.log('Benutzer nicht gefunden, Fallback-Farbe wird verwendet.');
+            console.log('userColors:', userColors);
+
+        }
+    
+        // Falls der Benutzer existiert, die Farbe zurückgeben, ansonsten eine Fallback-Farbe
+        return user ? user.color : "#00FFFF"; // Fallback-Farbe
+    }
+    
 
 
-
-
+    
 
     /*******************************************************
      * Initialisierung
@@ -473,6 +507,7 @@ async function editAppointment(appointmentId) {
  *******************************************************/
 async function renderCalendar() {
     console.log('renderCalender ausgeführt');
+    loadUserColors()
     if (dayView) {
       renderDay();
     } else {
@@ -997,6 +1032,7 @@ function displayDayAppointments(day, selectedUsers) {
   }
   
 
+
     /*******************************************************
      * Hilfsfunktionen
      *******************************************************/
@@ -1425,7 +1461,7 @@ function clearAppointmentForm(currentUserName) {
 
 
 // Dropdown mit Benutzern füllen und aktuellen Benutzer wählen
-function populateDropdownWithUsers(users, currentUserName) {
+function populateDropdownWithUsers(users) {
     const dropdown = document.getElementById('Ressource');
     dropdown.innerHTML = ''; // Bestehende Optionen entfernen
 
@@ -1438,7 +1474,6 @@ function populateDropdownWithUsers(users, currentUserName) {
         // Option hinzufügen
         dropdown.appendChild(option);
     });
-console.log('users: ' + users);
 }
 
 
@@ -1480,102 +1515,6 @@ function hideAppointmentForm() {
     // Felder leeren
     clearAppointmentForm(currentUserName);
 }
-
-/**************************************************************
- * (D) NEUEN TERMIN ANLEGEN (POST)
- **************************************************************/
-/* TERMIN ANLEGEN BEREITS UNTER ZEILE 
-async function createNewAppointment() {
-    // Termin-Daten sammeln
-    const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value;
-    const startVal = document.getElementById('startDateTime').value;  // datetime-local
-    const endVal   = document.getElementById('endDateTime').value;    // datetime-local
-
-    // Dauer
-    const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
-    const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
-    const totalDuration = hours * 60 + mins;
-
-    const Dienstleistung = document.getElementById('Dienstleistung').value;
-    const Preis = document.getElementById('Preis').value;
-    const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
-    const description = document.getElementById('description').value;
-
-    const erfasstDurch = document.getElementById('erfasstDurch').value;
-    const letzterBearbeiter = document.getElementById('erfaletzterBearbeitersstDurch').value;
-    const Ressource = document.getElementById('Ressource').value;
-    const projektId = document.getElementById('projektId').value;
-    const verrechnungsTyp = document.getElementById('verrechnungsTyp').value;
-    const erbringungsStatus = document.getElementById('erbringungsStatus').value;
-    const rechnungsEmpfaengerNummer = document.getElementById('rechnungsEmpfaengerNummer').value;
-    const fakturaNummer = document.getElementById('fakturaNummer').value;
-    const fakturaBemerkung = document.getElementById('fakturaBemerkung').value;
-
-
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/appointments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                KundennummerzumTermin,
-                startDateTime: startVal,
-                endDateTime: endVal,
-                duration: totalDuration,
-                Dienstleistung,
-                Preis,
-                Abrechnungsstatus,
-                description,
-                erfasstDurch,
-                letzterBearbeiter,
-                Ressource,
-                projektId,
-                verrechnungsTyp,
-                erbringungsStatus,
-                fakturaBemerkung,
-                fakturaNummer,
-                rechnungsEmpfaengerNummer
-            })
-        });
-
-        if (response.ok) {
-            alert('Termin erfolgreich hinzugefügt! zeile 925');
-            
-            console.log(KundennummerzumTermin,
-                startVal,
-                endVal,
-                totalDuration,
-                Dienstleistung,
-                Preis,
-                Abrechnungsstatus,
-                description,
-                erfasstDurch,
-                letzterBearbeiter,
-                Ressource,
-                projektId,
-                verrechnungsTyp,
-                erbringungsStatus,
-                fakturaBemerkung,
-                fakturaNummer,
-                rechnungsEmpfaengerNummer);
-
-            hideAppointmentForm();
-
-            console.log('hier müsste hide appform gestartet werden');
-            
-            loadAppointments(); // Termine neu laden
-        } else {
-            alert('Fehler beim Hinzufügen des Termins');
-        }
-    } catch (err) {
-        alert('Fehler: ' + err.message);
-    }
-}
-
-*/
 
 
 /**************************************************************
@@ -1976,7 +1915,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
         });
 
         if (response.ok) {
-            alert('Termin erfolgreich hinzugefügt Zeile 1360!');
+            alert('Termin erfolgreich hinzugefügt!');
             hideAppointmentForm();
             loadAppointments();
         } else {
@@ -3131,7 +3070,22 @@ function clearUserForm() {
     document.getElementById('username').value = '';
     document.getElementById('email').value = '';
     document.getElementById('password').value = '';
-}
+    document.getElementById('color').value = '#FFD1DC'; // Standardfarbe (z. B. Rosa)
+    }
+    /*
+    
+
+  userID
+  username
+  email
+  password 
+  activeModuls
+  roles
+  availableServices
+  UserSpecificSettings
+  color
+
+*/
 
 
 /***************************************************
@@ -3143,6 +3097,7 @@ async function addNewUser() {
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    const color = document.getElementById('color').value; // Farbauswahl
 
     // ausgewählte Services ermitteln
     const checkboxes = document.querySelectorAll('#servicesCheckboxContainer .service-checkbox:checked');
@@ -3154,7 +3109,8 @@ async function addNewUser() {
         username,
         email,
         password,
-        availableServices: selectedServices  // <= Hier das Array rein
+        color, // Farbe hinzufügen
+        availableServices: selectedServices // Services hinzufügen
     };
 
     try {
@@ -3175,6 +3131,7 @@ async function addNewUser() {
         alert('Fehler: ' + err.message);
     }
 }
+
 
 
 /***************************************************
@@ -3288,7 +3245,21 @@ async function editUser(userId) {
     document.getElementById('userID').value   = user.userID || '';
     document.getElementById('username').value = user.username || '';
     document.getElementById('email').value    = user.email || '';
+    document.getElementById('color').value    = user.color || '';
+    /*
+    
 
+  userID
+  username
+  email
+  password 
+  activeModuls
+  roles
+  availableServices
+  UserSpecificSettings
+  color
+
+*/
     // 4) Formular anzeigen
     showUserForm();
 
@@ -3321,7 +3292,8 @@ async function editUser(userId) {
         const updatedUser = {
             userID: document.getElementById('userID').value,
             username: document.getElementById('username').value,
-            email: document.getElementById('email').value
+            email: document.getElementById('email').value,
+            color: document.getElementById('color').value
         };
 
         // Passwort nur hinzufügen, wenn nicht leer ...
@@ -3341,6 +3313,7 @@ async function editUser(userId) {
                 body: JSON.stringify(updatedUser)
             });
             if (response.ok) {
+                renderCalendar();
                 alert('Benutzer erfolgreich aktualisiert');
                 await loadUsers();
                 hideUserForm();
@@ -3592,6 +3565,7 @@ async function editService(serviceId) {
             });
 
             if (response.ok) {
+                renderCalendar();
                 alert('Service erfolgreich aktualisiert');
                 await loadServices();
                 hideServiceForm();

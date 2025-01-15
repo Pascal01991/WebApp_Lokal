@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     type: [String], // or references to another model if you prefer
     default: []
   },
-  workingHours: {
+  UserSpecificSettings: {
     // Example structure for custom working hours:
     monday: { start: String, end: String },
     tuesday: { start: String, end: String },
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
   },
   color: {
     type: String,
-    default: '#FFFFFF'
+    default: '#FFB6C1'
   }
 }, { timestamps: true });
 
@@ -60,3 +60,4 @@ userSchema.pre('save', async function (next) {
 });
 
 module.exports = mongoose.model('User', userSchema);
+

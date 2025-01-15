@@ -12,13 +12,15 @@ async function seedStandardUsers() {
           userID: 0,
           username: 'master',
           email: 'master',
-          password: process.env.Password_User0 // wird in userSchema prä-save gehasht
+          password: process.env.Password_User0, // wird in userSchema prä-save gehasht
+          color: '#919191'
         },
         {
           userID: 1,
           username: 'admin',
           email: 'admin',
-          password: process.env.Password_User1
+          password: process.env.Password_User1,
+          color: '#919191'
         }
       ];
       await User.create(defaultUsers); // das führt bei jedem Dokument pre('save') aus

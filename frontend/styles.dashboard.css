@@ -12,7 +12,7 @@ DESIGNVARIABLEN
 /*Kalender-Farben*/
 
 /*Benutzer 1*/
-  --user1: #24144b; /* Standard-Themenfarbe */
+  --user1: #9e2289; /* Standard-Themenfarbe */
 /*Benutzer 2*/
   --user2: #143a4b; /* Standard-Themenfarbe */
 /*Benutzer 3*/
@@ -20,7 +20,7 @@ DESIGNVARIABLEN
 /*Benutzer 4*/
   --user4: #4b142e; /* Standard-Themenfarbe */
 /*Benutzer 5*/
-  --user5: #194b14; /* Standard-Themenfarbe */
+  --user5: #46144b; /* Standard-Themenfarbe */
 }
 
 body.dark-mode {
@@ -958,4 +958,54 @@ Absenzverwaltung
 #filter2025:hover {
   background-color:var(--theme-color);
   cursor: pointer;
+}
+
+
+
+
+/*====================================================================
+USERVERWALTUNG
+====================================================================*/
+/* Benutzerliste */
+.user-list {
+  padding: 10px;
+  margin-top: 10px;
+  background-color: var(--background-medium);
+  border: 1px solid #ccc;
+}
+
+/* Einzelner Benutzer-Eintrag */
+.user-list-item {
+  display: flex;
+  justify-content: space-between; /* Platz zwischen Text und Button */
+  align-items: center; /* Zentriert Text und Button vertikal */
+  padding: 8px;
+  border-bottom: 1px solid #ddd; /* Trennlinie zwischen Einträgen */
+}
+
+/* Letzter Eintrag ohne untere Linie */
+.user-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Benutzername */
+.user-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Bearbeiten-Button */
+.edit-button {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.edit-button:hover {
+  background-color: var(--primary-color-hover);
 }

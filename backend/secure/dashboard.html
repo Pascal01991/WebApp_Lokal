@@ -249,12 +249,7 @@
             <div>
                 <label>Ressource:</label>
                 <select id="Ressource">
-                    <option value="">`${currentUserName}`</option>
-                    <option value="Geplant">`${allUsers.name[1]}`</option>
-                    <option value="in Erbringung">`${allUsers.name[1]}`</option>
-                    <option value="Ausgeführt">`${allUsers.name[1]}`</option>
-                    <option value="Abgerechnet">`${allUsers.name[1]}`</option>
-                    <!-- usw. fall weitere benutzer vorhanden -->
+              
                 </select>
             </div>
             <div>
@@ -556,6 +551,23 @@
           <!-- Hier werden dynamisch die Checkboxen für Services eingefügt -->
         </div>
     </div>
+
+    <!-- Farbauswahl -->
+    <label for="color">Farbe:</label>
+    <select id="color" name="color">
+        <option value="#000080">Marine</option>
+        <option value="#008080">Blaugrün</option>
+        <option value="#800080">Lila</option>
+        <option value="#008000">Grün</option>
+        <option value="#808000">Olive</option>
+        <option value="#800000">Kastanienbraun</option>
+        <option value="#808080">Grau</option>
+        <option value="#98FB98">Helles Grün</option>
+        <option value="#AFEEEE">Türkis</option>
+        <option value="#D3D3D3">Hellgrau</option>
+    </select>
+
+
 
     <!-- Weitere Felder wie roles, color etc. könnten hier ergänzt werden -->
 
