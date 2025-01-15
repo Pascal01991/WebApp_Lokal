@@ -12,9 +12,27 @@
     //====================================================================================================================================
     //====================================================================================================================================
    
+    /***************************************************
+     * 1) GRUNDLEGENDE Elemente Users
+     ***************************************************/
 
-// Funktion zum Bearbeiten des Termins
 
+    // Benutzerformular beim Laden der Seite ausblenden
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('userFormular').style.display = 'none';
+
+        // Benutzerliste laden beim Start
+        loadUsers(); // allUsers wird hier gefüllt
+    });
+
+    // Globale Variable für die Benutzerliste
+    let allUsers = [];
+
+    loadUsers();
+    
+
+
+    // Funktion zum Bearbeiten des Termins
 // Für "Bearbeiten"-Button im Termin
 
 
@@ -1400,27 +1418,26 @@ function clearAppointmentForm(currentUserName) {
     
     
     console.log('formular geleert')
+
+    // Benutzer abrufen und Dropdown füllen
+   
 }
 
+    // Dropdown mit Benutzern füllen
+    function populateDropdownWithUsers(users) {
+        const dropdown = document.getElementById('Ressource');
+        dropdown.innerHTML = ''; // Bestehende Optionen entfernen
 
-// Funktion zum Befüllen des Dropdown-Menüs mit Benutzern ab Index 1
-function populateDropdownWithUsers(users) {
-    const dropdown = document.getElementById('Ressource');
+        // Benutzer außer Admin (Index 0) hinzufügen
+        users.slice(1).forEach(user => {
+            const option = document.createElement('option');
+            option.value = user._id || user.username; // Verwende die ID oder den Benutzernamen als Wert
+            option.textContent = user.username; // Benutzernamen anzeigen
+            dropdown.appendChild(option);
+        });
 
-    // Bestehende Optionen entfernen
-    dropdown.innerHTML = '';
-
-    // Benutzer ab Index 1 hinzufügen
-    users.slice(1).forEach((user, index) => {
-        const option = document.createElement('option');
-        option.value = user._id || `user${index + 1}`; // Eindeutiger Wert
-        option.textContent = user.username;
-        dropdown.appendChild(option);
-    });
-
-    console.log('Dropdown mit Benutzern gefüllt:', users.slice(1));
-}
-
+        console.log('Dropdown mit Benutzern gefüllt:', users.slice(1));
+    }
 
 /**
  * (B) Formular anzeigen (Unterschied: Neu vs. Edit)
@@ -3036,16 +3053,8 @@ loadHolidays();
 /***************************************************
  * 1) GRUNDLEGENDE SETUPS
  ***************************************************/
-// Globale Variable für die Benutzerliste
-let allUsers = [];
 
-// Benutzerformular beim Laden der Seite ausblenden
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('userFormular').style.display = 'none';
-
-    // Benutzerliste laden beim Start
-    loadUsers(); // allUsers wird hier gefüllt
-});
+// Siehe Allgemein
 
 
 /***************************************************
@@ -3179,6 +3188,8 @@ async function loadUsers() {
     } catch (error) {
         console.error('Fehler beim Laden der Benutzer:', error);
     }
+    console.log('allUsers async: ' + allUsers);
+    populateDropdownWithUsers(allUsers);            //DroptDown befüllen
 }
 
 // Funktion zum Anzeigen der Benutzerliste
