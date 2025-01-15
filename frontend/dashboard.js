@@ -231,7 +231,7 @@ async function editAppointment(appointmentId) {
     //====================================================================================================================================
     //Aktueller Benutzer in den DOM laden:
     const currentUserName = localStorage.getItem('loggedInUsername') || 'Unbekannt';
-    console.log('user' + currentUserName);
+    console.log('current user: ' + currentUserName);
    
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -472,10 +472,12 @@ async function editAppointment(appointmentId) {
  * -> Ruft je nach Modus renderDay oder renderWeek auf
  *******************************************************/
 async function renderCalendar() {
+    console.log('renderCalender ausgeführt');
     if (dayView) {
       renderDay();
     } else {
       renderWeek();
+      console.log('renderweek aufgerufen');
     }
   }
   
@@ -484,9 +486,7 @@ async function renderCalendar() {
  * -> Zeigt nur den aktuellen Tag an
  * -> Jeder aktivierte Benutzer bekommt seine eigene Spalte
  *******************************************************/
-async function renderDay() {
-    console.log("=== renderDay() aufgerufen ===");
-  
+async function renderDay() {  
     // Kalender leeren
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
@@ -743,7 +743,7 @@ function displayDayAppointments(day, selectedUsers) {
    * -> im Prinzip dein vorhandenes renderCalendar() => rename
    *******************************************************/
   async function renderWeek() {
-    console.log("=== renderWeek() aufgerufen ===");
+    
   
     // Zuerst Kalender-HTML leeren
     const calendar = document.getElementById('calendar');
@@ -901,7 +901,7 @@ function displayDayAppointments(day, selectedUsers) {
   
     // Finde Gruppen überlappender Termine (falls du das Feature brauchst)
     const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
-console.log('Behandle Termin und Behandle appStartDate Log einblenden um +GMT Zeitzonen Thematik zu bereinigen'); //weiter unten im code "Behandle Termin" sowie "Behandele appStartDate"
+
     // Platziere jede Gruppe im Kalender
     overlappingGroups.forEach(group => {
       const groupSize = group.length;
@@ -916,8 +916,6 @@ console.log('Behandle Termin und Behandle appStartDate Log einblenden um +GMT Ze
         const dayIndex = (appStartDate.getDay() + 6) % 7;
         const startHour = appStartDate.getHours();
         const endHour = appEndDate.getHours();
-        
-        //console.log('Behandle Termin:', appStartDate, 'Tag-Index:', dayIndex);
   
         // Für jede Stunde zwischen StartHour und EndHour
         for (let hour = startHour; hour <= endHour; hour++) {
@@ -1407,37 +1405,42 @@ function clearAppointmentForm(currentUserName) {
     document.getElementById('description').value = '';
 
     document.getElementById('letzterBearbeiter').value = '';
-    document.getElementById('Ressource').value = currentUserName;
-
     document.getElementById('erfasstDurch').value = currentUserName;
+
     document.getElementById('projektId').value = '';
     document.getElementById('verrechnungsTyp').value = '-- bitte wählen --';
     document.getElementById('erbringungsStatus').value = '-- bitte wählen --';
     document.getElementById('fakturaBemerkung').value = '';
     document.getElementById('fakturaNummer').value = '';
-    
-    
-    console.log('formular geleert')
 
-    // Benutzer abrufen und Dropdown füllen
-   
+    // Aktuellen Benutzer im Dropdown "Ressource" auswählen
+    const dropdown = document.getElementById('Ressource');
+    if (dropdown) {
+        dropdown.value = currentUserName; // Setze den aktuellen Benutzer
+        console.log(`Dropdown-Wert auf "${currentUserName}" gesetzt.`);
+    } else {
+        console.warn('Dropdown "Ressource" nicht gefunden.');
+    }
 }
 
-    // Dropdown mit Benutzern füllen
-    function populateDropdownWithUsers(users) {
-        const dropdown = document.getElementById('Ressource');
-        dropdown.innerHTML = ''; // Bestehende Optionen entfernen
 
-        // Benutzer außer Admin (Index 0) hinzufügen
-        users.slice(1).forEach(user => {
-            const option = document.createElement('option');
-            option.value = user._id || user.username; // Verwende die ID oder den Benutzernamen als Wert
-            option.textContent = user.username; // Benutzernamen anzeigen
-            dropdown.appendChild(option);
-        });
+// Dropdown mit Benutzern füllen und aktuellen Benutzer wählen
+function populateDropdownWithUsers(users, currentUserName) {
+    const dropdown = document.getElementById('Ressource');
+    dropdown.innerHTML = ''; // Bestehende Optionen entfernen
 
-        console.log('Dropdown mit Benutzern gefüllt:', users.slice(1));
-    }
+    // Alle Benutzer hinzufügen
+    users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.username; // Verwende die ID oder den Benutzernamen als Wert
+        option.textContent = user.username; // Benutzernamen anzeigen
+
+        // Option hinzufügen
+        dropdown.appendChild(option);
+    });
+console.log('users: ' + users);
+}
+
 
 /**
  * (B) Formular anzeigen (Unterschied: Neu vs. Edit)
@@ -2980,7 +2983,6 @@ loadHolidays();
                 document.getElementById(`${day}AfternoonEnd`).value = workingHours[day].afternoon.end;
             } else {
                 console.warn(`Arbeitszeiten für ${day} sind nicht definiert.`);
-                // Optional: Setze Standardwerte oder behandle den Fehler entsprechend
             }
         });
     }
@@ -3183,14 +3185,16 @@ async function loadUsers() {
         const response = await fetch(`${BACKEND_URL}/users`);
         if (!response.ok) throw new Error('Netzwerk-Fehler beim Laden der Benutzer');
         
-        allUsers = await response.json();
-        displayUsers(allUsers);
+        const users = await response.json();
+        allUsers = users.slice(1); // Entfernt den Benutzer mit Index 0 (Admin)
+        
+        displayUsers(allUsers); // Benutzerliste anzeigen
+        populateDropdownWithUsers(allUsers, currentUserName); // Dropdown mit Benutzern befüllen
     } catch (error) {
         console.error('Fehler beim Laden der Benutzer:', error);
     }
-    console.log('allUsers async: ' + allUsers);
-    populateDropdownWithUsers(allUsers);            //DroptDown befüllen
 }
+
 
 // Funktion zum Anzeigen der Benutzerliste
 function displayUsers(users) {
