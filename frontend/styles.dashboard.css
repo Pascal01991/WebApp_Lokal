@@ -1030,3 +1030,115 @@ USERVERWALTUNG
 .delete-user-btn:hover {
   background-color: var(--danger-color-hover);
 }
+
+
+/*====================================================================
+Serviceverwaltung
+====================================================================*/
+/* Haupt-Container für Benutzer- und Serviceliste */
+.main-container {
+  display: flex;
+  gap: 20px; /* Abstand zwischen Benutzer- und Serviceliste */
+  padding: 20px;
+  background-color: var(--background-light);
+}
+
+/* Benutzerliste */
+.user-list {
+  flex: 1;
+  background-color: var(--background-medium);
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* Serviceliste */
+.service-list {
+  flex: 1;
+  background-color: var(--background-medium);
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* Einzelner Benutzer-/Service-Eintrag */
+.user-card, .service-card {
+  display: flex;
+  justify-content: space-between; /* Text links, Buttons rechts */
+  align-items: center; /* Zentriert Text und Buttons vertikal */
+  padding: 8px;
+  border-bottom: 1px solid #ddd; /* Trennlinie zwischen Einträgen */
+}
+
+/* Letzter Eintrag ohne Trennlinie */
+.user-card:last-child, .service-card:last-child {
+  border-bottom: none;
+}
+
+/* Text für Benutzer/Service */
+.user-info, .service-info {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-right: auto; /* Platz für die Buttons rechts */
+}
+
+/* Aktionen */
+.user-actions, .service-actions {
+  display: flex;
+  gap: 10px; /* Abstand zwischen den Buttons */
+}
+
+/* Bearbeiten-Button */
+.edit-service-btn, .edit-user-btn {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.edit-service-btn:hover, .edit-user-btn:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Löschen-Button */
+.delete-service-btn, .delete-user-btn {
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--danger-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.delete-service-btn:hover, .delete-user-btn:hover {
+  background-color: var(--danger-color-hover);
+}
+
+/* Benutzer anlegen und Service anlegen Buttons */
+#openUserFormButton, #openServiceFormButton {
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#openUserFormButton:hover, #openServiceFormButton:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Benutzer anlegen Button links ausgerichtet */
+#openUserFormButton {
+  margin-right: auto;
+}
+
+/* Service anlegen Button mittig ausgerichtet */
+#openServiceFormButton {
+  display: block;
+  margin: 0 auto;
+}

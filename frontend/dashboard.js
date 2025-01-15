@@ -3485,7 +3485,6 @@ function displayServices(services) {
         .map(srv => `
             <div class="service-card">
                 <span class="service-info">${srv.serviceID} – <strong>${srv.serviceName}</strong> Dauer: ${srv.serviceDuration} Min</span>
-                <span class="service-info">Beschreibung: ${srv.serviceDescription || 'Keine Angabe'}</span>
                 <span class="service-info">Preis: ${srv.servicePrice} CHF</span>
                 <div class="service-actions">
                     <button data-service-id="${srv._id}" class="action-btn edit-service-btn" title="Bearbeiten">✏️</button>
