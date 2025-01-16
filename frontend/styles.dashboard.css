@@ -960,12 +960,10 @@ Absenzverwaltung
   cursor: pointer;
 }
 
-
-
-
 /*====================================================================
 USERVERWALTUNG
 ====================================================================*/
+
 /* Benutzerliste */
 #userList {
   padding: 10px;
@@ -1031,10 +1029,10 @@ USERVERWALTUNG
   background-color: var(--danger-color-hover);
 }
 
-
 /*====================================================================
 Serviceverwaltung
 ====================================================================*/
+
 /* Haupt-Container für Benutzer- und Serviceliste */
 .main-container {
   display: flex;
@@ -1045,7 +1043,7 @@ Serviceverwaltung
 
 /* Benutzerliste */
 .user-list {
-  flex: 1;
+  flex-basis: 50%; /* Feste Breite: 50% */
   background-color: var(--background-medium);
   border: 1px solid #ccc;
   padding: 10px;
@@ -1053,7 +1051,7 @@ Serviceverwaltung
 
 /* Serviceliste */
 .service-list {
-  flex: 1;
+  flex-basis: 50%; /* Feste Breite: 50% */
   background-color: var(--background-medium);
   border: 1px solid #ccc;
   padding: 10px;
@@ -1076,6 +1074,7 @@ Serviceverwaltung
 /* Text für Benutzer/Service */
 .user-info, .service-info {
   font-size: 16px;
+  font-weight: normal; /* Schriftart normal */
   color: var(--text-primary);
   margin-right: auto; /* Platz für die Buttons rechts */
 }
@@ -1141,4 +1140,48 @@ Serviceverwaltung
 #openServiceFormButton {
   display: block;
   margin: 0 auto;
+}
+
+/*====================================================================
+HAUPT-CONTAINER
+====================================================================*/
+
+/* Haupt-Container für Benutzer- und Serviceliste */
+.main-container {
+  display: flex;
+  gap: 20px; /* Abstand zwischen Benutzer- und Serviceliste */
+  padding: 20px;
+  background-color: var(--background-light);
+}
+
+/* Benutzer anlegen Button links ausgerichtet */
+#openUserFormButton {
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#openUserFormButton:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Service anlegen Button mittig oberhalb der Liste */
+#openServiceFormButton {
+  margin: 0 auto 10px auto;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #fff;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#openServiceFormButton:hover {
+  background-color: var(--primary-color-hover);
 }

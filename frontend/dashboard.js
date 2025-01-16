@@ -3484,8 +3484,7 @@ function displayServices(services) {
     serviceList.innerHTML = services
         .map(srv => `
             <div class="service-card">
-                <span class="service-info">${srv.serviceID} – <strong>${srv.serviceName}</strong> Dauer: ${srv.serviceDuration} Min</span>
-                <span class="service-info">Preis: ${srv.servicePrice} CHF</span>
+                <span class="service-info">${srv.serviceName} – ${srv.serviceDuration} Min – ${srv.servicePrice} CHF</span>
                 <div class="service-actions">
                     <button data-service-id="${srv._id}" class="action-btn edit-service-btn" title="Bearbeiten">✏️</button>
                     <button data-service-id="${srv._id}" class="action-btn delete-service-btn" title="Löschen">🗑️</button>
@@ -3510,6 +3509,7 @@ function displayServices(services) {
         });
     });
 }
+
 
 
 /***************************************************

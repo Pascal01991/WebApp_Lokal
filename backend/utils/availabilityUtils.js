@@ -7,7 +7,7 @@ let workingHours = {            //Später aus DB
     montag: {
         active: true,
         morning: { start: '08:00', end: '12:00' },
-        afternoon: { start: '13:00', end: '17:00' }
+        afternoon: { start: '13:00', end: '18:00' }
     },
     dienstag: {
         active: true,
@@ -17,7 +17,7 @@ let workingHours = {            //Später aus DB
     mittwoch: {
         active: true,
         morning: { start: '08:00', end: '12:00' },
-        afternoon: { start: '13:00', end: '17:00' }
+        afternoon: { start: '12:30', end: '17:00' }
     },
     donnerstag: {
         active: true,
@@ -35,9 +35,9 @@ let workingHours = {            //Später aus DB
         afternoon: { start: null, end: null }
     },
     sonntag: {
-        active: false,
-        mmorning: { start: null, end: null },
-        afternoon: { start: null, end: null }
+        active: true,
+        morning: { start: '08:00', end: '12:00' },
+        afternoon: { start: '13:00', end: '17:30' }
     }
 };
 
@@ -138,14 +138,15 @@ function isDateInHoliday(date, holidays) {
     //Verfügbarkeit der Zeit-Slots prüfen
     function updateSlotAvailability(slots, appointments) {
         slots.forEach(slot => {
-            const testDate = new Date(slot.dateTime);
-            
-            const slotStart = new Date(slot.dateTime); // Aus String ein Date-Objekt machen
+            // slot.startDateTime ist jetzt ein Date-Objekt oder Date-String
+            // ggf. konvertieren wir es:
+            const slotStart = new Date(slot.startDateTime);
             const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
     
             // Prüfe, ob der Slot mit einem bestehenden Termin kollidiert
             const conflict = appointments.some(app => {
-                const appStart = new Date(app.dateTime);
+                // auch hier dateTime -> startDateTime
+                const appStart = new Date(app.startDateTime);
                 const appEnd = new Date(appStart.getTime() + app.duration * 60000);
     
                 return (slotStart < appEnd) && (appStart < slotEnd);
@@ -154,11 +155,9 @@ function isDateInHoliday(date, holidays) {
             if (conflict) {
                 slot.isAvailable = false;
             }
-            
         });
-        
     }
-
+    
 
 
       
