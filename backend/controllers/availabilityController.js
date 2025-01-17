@@ -3,6 +3,8 @@ const Appointment = require('../models/appointmentModel');
 
 const Absence = require('../models/AbsenceModel'); // Importieren des Modells
 
+const User = require('../models/userModel');
+
 async function fetchHolidaysFromDatabase() {
     try {
         const absence = await Absence.findOne();
@@ -20,46 +22,44 @@ async function fetchHolidaysFromDatabase() {
 
 
 
-
 async function getSlots(req, res) {
     try {
-        // Das aktuelle Datum aus dem Query-Parameter
         const requestedDate = new Date(req.query.currentDate);
-
         const startOfWeek = getStartOfWeek(requestedDate);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(endOfWeek.getDate() + 6);
 
-        console.log('Angefragtes Datum:', requestedDate.toISOString());
-        console.log('Start der Woche:', startOfWeek.toISOString());
-        console.log('Ende der Woche:', endOfWeek.toISOString());
-
         const holidays = await fetchHolidaysFromDatabase();
-        console.log('Geladene Feiertage:', holidays);
+        
+        // 1) Alle User laden:
+        const users = await User.find({}); 
+        // 2) Alle Appointments laden (ggf. nur für diese Woche filtern, falls gewünscht):
+        const appointments = await Appointment.find(/* evtl. Filter */);
 
-        // Slots (Zeitfenster) generieren
-        const slots = generateTimeSlots(holidays, startOfWeek, endOfWeek);
-        console.log('Generierte Slots vor Filterung:', slots);
+        // 3) Slots generieren
+        let slots = generateTimeSlots(holidays, startOfWeek, endOfWeek);
 
-        // Slots filtern, damit sie nur innerhalb der Woche liegen
-        const filteredSlots = slots.filter(slot => {
-            const slotDate = new Date(slot.startDateTime); 
+        // 4) Slots filtern, damit sie nur in der aktuellen Woche bleiben
+        slots = slots.filter(slot => {
+            const slotDate = new Date(slot.startDateTime);
             return slotDate >= startOfWeek && slotDate <= endOfWeek;
         });
 
-        console.log('Gefilterte Slots für die Woche:', filteredSlots);
+        // 5) Die Verfügbarkeit für jeden Slot **pro User** updaten
+        updateSlotAvailability(slots, appointments, users);
 
-        // Für die Ausgabe formatieren
-        const formattedSlots = filteredSlots.map(slot => ({
+        // 6) Für die Ausgabe formatieren
+        //    Beachte hier: Wenn du pro User ein Objekt in `slot.isAvailable` hast,
+        //    willst du das vermutlich direkt so durchreichen, oder entsprechend formatieren.
+        const formattedSlots = slots.map(slot => ({
             dayIndex: slot.dayIndex,
-            // Wir behalten den Namen "startDateTime" hier, oder du wandelst es in LocalString um
             startDateTime: dateToLocalString(new Date(slot.startDateTime)),
             duration: slot.duration,
-            isAvailable: slot.isAvailable,
+            // Hier kommt neu: isAvailable (pro User!)
+            isAvailable: slot.isAvailable,   
             isHoliday: slot.isHoliday
         }));
 
-        console.log('Formatierte Slots:', formattedSlots);
         res.json(formattedSlots);
 
     } catch (error) {
@@ -67,6 +67,7 @@ async function getSlots(req, res) {
         res.status(500).json({ error: 'Interner Serverfehler' });
     }
 }
+
 
 
 
