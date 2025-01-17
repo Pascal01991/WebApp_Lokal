@@ -3068,6 +3068,7 @@ function hideUserForm() {
 function clearUserForm() {
     document.getElementById('userID').value = '';
     document.getElementById('username').value = '';
+    document.getElementById('publicName').value = '';
     document.getElementById('email').value = '';
     document.getElementById('password').value = '';
     document.getElementById('color').value = '#FFD1DC'; // Standardfarbe (z. B. Rosa)
@@ -3095,6 +3096,7 @@ async function addNewUser() {
     // Eingaben abrufen
     const userID = document.getElementById('userID').value;
     const username = document.getElementById('username').value;
+    const publicName = document.getElementById('publicName').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const color = document.getElementById('color').value; // Farbauswahl
@@ -3107,6 +3109,7 @@ async function addNewUser() {
     const newUserData = {
         userID,
         username,
+        publicName,
         email,
         password,
         color, // Farbe hinzufügen
@@ -3244,6 +3247,7 @@ async function editUser(userId) {
     // 3) Felder füllen
     document.getElementById('userID').value   = user.userID || '';
     document.getElementById('username').value = user.username || '';
+    document.getElementById('publicName').value = user.publicName || '';
     document.getElementById('email').value    = user.email || '';
     document.getElementById('color').value    = user.color || '';
     /*
@@ -3292,6 +3296,7 @@ async function editUser(userId) {
         const updatedUser = {
             userID: document.getElementById('userID').value,
             username: document.getElementById('username').value,
+            publicName: document.getElementById('publicName').value,
             email: document.getElementById('email').value,
             color: document.getElementById('color').value
         };

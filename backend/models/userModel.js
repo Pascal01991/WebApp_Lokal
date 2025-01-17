@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  publicName: {
+    type: String,
+    required: true,
+    unique: true
+  },
   email: {
     type: String,
     required: false // or true if you still need mandatory emails

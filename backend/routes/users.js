@@ -63,6 +63,7 @@ router.put('/:id', async (req, res) => {
       // userID, username, email werden immer aktualisiert:
       if (req.body.userID !== undefined)    user.userID = req.body.userID;
       if (req.body.username !== undefined)  user.username = req.body.username;
+      if (req.body.publicName !== undefined)  user.publicName = req.body.publicName;
       if (req.body.email !== undefined)     user.email = req.body.email;
       if (req.body.color !== undefined)     user.color = req.body.color;
       
@@ -95,6 +96,7 @@ router.put('/:id', async (req, res) => {
         // 3) Felder füllen
         document.getElementById('userID').value   = user.userID || '';
         document.getElementById('username').value = user.username || '';
+        document.getElementById('publicName').value = user.publicName || '';
         document.getElementById('email').value    = user.email || '';
         document.getElementById('color').value    = user.color || '';
         /*
@@ -143,6 +145,7 @@ router.put('/:id', async (req, res) => {
             const updatedUser = {
                 userID: document.getElementById('userID').value,
                 username: document.getElementById('username').value,
+                publicName: document.getElementById('publicName').value,
                 email: document.getElementById('email').value,
                 color: document.getElementById('color').value
             };
