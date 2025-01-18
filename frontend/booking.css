@@ -18,27 +18,40 @@ body {
     margin-bottom: 20px;
   }
   
-  /* Tabellen-Stil für den Kalender */
+  .weekNavigation {
+    margin-bottom: 10px;
+  }
+  
   #weekTable {
     width: 100%;
     border-collapse: collapse;
     margin: 10px 0;
   }
   
-  #weekTable th, #weekTable td {
+  #weekTable th,
+  #weekTable td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: center;
   }
   
+  /* Buttons in Slots */
   #slotsContainer button {
     margin: 5px;
   }
   
+  /* Zusammenfassung */
   #summaryContainer {
     background: #f9f9f9;
     border: 1px solid #ddd;
     padding: 10px;
     margin-bottom: 10px;
+  }
+  
+  /* Disabled / ausgegraut */
+  .disabled {
+    background-color: #eee;
+    color: #999;
+    pointer-events: none; /* Klicks deaktivieren */
   }
   

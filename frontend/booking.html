@@ -12,15 +12,22 @@
     <!-- Schritt 1: Dienste & Mitarbeiter wählen -->
     <div id="step1" class="step">
       <h2>Schritt 1: Dienstleistung(en) und Mitarbeiter wählen</h2>
+
       <div id="servicesList"></div>
       <div id="usersList"></div>
+      
       <button id="toStep2">Weiter</button>
     </div>
     
     <!-- Schritt 2: Datum und Tageszeit -->
     <div id="step2" class="step" style="display: none;">
       <h2>Schritt 2: Datum auswählen</h2>
-      <p>Wähle einen Tag und ob Vormittag oder Nachmittag.</p>
+      <div class="weekNavigation">
+        <button id="prevWeek">Vorherige Woche</button>
+        <span id="currentWeekLabel"></span>
+        <button id="nextWeek">Nächste Woche</button>
+      </div>
+      
       <table id="weekTable">
         <!-- Kopfzeile (Wochentage + Datum) -->
         <thead>
@@ -42,6 +49,7 @@
           </tr>
         </tbody>
       </table>
+
       <button id="backToStep1">Zurück</button>
     </div>
     

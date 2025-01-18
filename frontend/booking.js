@@ -1,44 +1,95 @@
 /********************************************
  * booking.js
- * Beispiel: Public Booking Workflow
  ********************************************/
 
-// --- Globale Variablen, um Zwischenschritte zu speichern --- //
-let allServices = [];     // Array aller Dienste (Backend)
-let selectedServices = []; // Array aus "0"/"1" je Index, ob ausgewählt
-let allUsers = [];        // Array aller User (Backend)
-let selectedUser = null;  // Merkt sich den ausgewählten Mitarbeiter
+/*
+  Annahmen bzw. Routen:
+   - /api/services => Liefert Array von Services, z.B.:
+     [
+       {
+         "serviceID": 0,
+         "serviceName": "Basis-Termin",
+         "servicePrice": 20,
+         "serviceDuration": 15
+       },
+       {
+         "serviceID": 1,
+         "serviceName": "Haare Färben",
+         "servicePrice": 30,
+         "serviceDuration": 30
+       },
+       ...
+     ]
+   - /api/users => Liefert Array von Usern, z.B.:
+     [
+       {
+         "username": "max",
+         "publicName": "Max Mustermann",
+         // optional: "servicesOffered": [0,1,2] => falls wir das pflegen
+       },
+       ...
+     ]
+   - /api/availability/slots?currentDate=YYYY-MM-DD => Liefert Slots für die angefragte Woche
+   - /api/appointmentRequests (POST) => Speichert ins AppointmentRequestsSchema
 
-let selectedDate = null;    // Das Datum (z.B. "2025-01-20")
-let selectedPeriod = null;  // "morning" oder "afternoon"
-let selectedSlot = null;    // Konkreter Slot-Objekt
+  WICHTIG:
+   - Index 0 (serviceID = 0) gilt IMMER als aktiv. Wir zeigen sie nicht an, rechnen sie aber immer ein.
+   - Wenn ein User den/die gewählten Services nicht abdecken kann (z.B. der User hat 
+     "servicesOffered" und es passt nicht), wird er/sie disabled.
+   - In Schritt 2: wir haben "vorherige Woche", "nächste Woche", 
+     schon geladene Slots => wir sehen, welche Tage noch frei sind.
 
-// Merkt sich außerdem den Namen/Vornamen/Mail
+  SCHRITTE:
+   1) Services + Users laden
+   2) Gewählte Services -> Filtern User -> disable/enable
+   3) Datum => StartOfWeek + 7 Tage => "vorherige" / "nächste" => 
+      Holen Slots => Markieren Vormittag/Nachmittag disabled/enabled
+      (Wenn Tag < heute => disable)
+      (Wenn in dem Vormittag KEIN Slot => disable)
+      (Falls alle 7 Tage = disable => automatisch "nächsteWoche")
+   4) Slots-liste -> Zeitauswahl
+   5) Pers. Daten
+   6) Zusammenfassung
+   7) POST -> appointmentRequests
+
+*/
+
+// --- Globale States ---
+let allServices = [];
+let selectedServices = []; // "1"/"0" pro serviceID
+let allUsers = [];
+let selectedUser = null;
+
+let displayedWeekStart = null; // Montag der aktuell angezeigten Woche
+let loadedSlots = [];          // Alle Slots dieser Woche (aus /api/availability/slots)
+let selectedDate = null;       // "YYYY-MM-DD"
+let selectedPeriod = null;     // "morning"/"afternoon"
+let selectedSlot = null;
+
 let personalData = {
   firstName: "",
   lastName: "",
   email: ""
 };
 
-// Starte Standardmäßig mit "Index0" = "1" => immer aktiv:
+// Standard: serviceID=0 immer "1"
 function initSelectedServices() {
-  // Initialisiere alle Services auf "0"
   selectedServices = allServices.map(() => "0");
-  
-  // Index 0 soll *immer* "1" sein
   const idx0 = allServices.findIndex(s => s.serviceID === 0);
   if (idx0 >= 0) {
-    selectedServices[idx0] = "1";
+    selectedServices[idx0] = "1"; 
   }
 }
 
-// Hilfsfunktion: hole Services vom Server
+/***********************************************************
+ * 1) SERVICES & USERS LADEN
+ ***********************************************************/
 async function loadServices() {
   try {
-    const response = await fetch('/api/services');
-    const data = await response.json();
-    allServices = data; 
-    console.log("Services geladen:", allServices);
+    const res = await fetch('/api/services');
+    const data = await res.json();
+    allServices = data;
+    console.log("allServices:", allServices);
     initSelectedServices();
     renderServicesList();
   } catch (err) {
@@ -46,54 +97,53 @@ async function loadServices() {
   }
 }
 
-// Zeige Services in Schritt 1 an (außer serviceID 0)
 function renderServicesList() {
   const container = document.getElementById('servicesList');
   container.innerHTML = "<h3>Verfügbare Dienstleistungen</h3>";
 
-  // Filter: serviceID != 0 => soll angezeigtes Checkbox sein
+  // Zeige alle (außer ID=0)
   allServices.forEach(service => {
     if (service.serviceID !== 0) {
-      // Erzeuge Checkbox
       const label = document.createElement('label');
       label.style.display = "block";
 
-      // Wir brauchen einen Input (Checkbox)
       const checkbox = document.createElement('input');
       checkbox.type = "checkbox";
-      checkbox.value = service.serviceID; // identifiziert diesen Service
+      checkbox.value = service.serviceID;
       checkbox.checked = (selectedServices[service.serviceID] === "1");
 
       checkbox.addEventListener('change', () => {
-        // "1" oder "0" setzen in selectedServices
         selectedServices[service.serviceID] = checkbox.checked ? "1" : "0";
+        // Nach dem Klick ggf. Users updaten (disable/enable)
+        updateUsersList();
       });
 
       label.appendChild(checkbox);
-      label.appendChild(document.createTextNode(` ${service.serviceName} (${service.servicePrice} CHF)`));
-
+      label.appendChild(
+        document.createTextNode(` ${service.serviceName} (${service.servicePrice} CHF)`)
+      );
       container.appendChild(label);
     }
   });
 }
 
-// Hole User (Mitarbeiter) vom Server
+// ----------------------------------------------------------
+
 async function loadUsers() {
   try {
-    const response = await fetch('/api/users');
-    const data = await response.json();
+    const res = await fetch('/api/users');
+    const data = await res.json();
     allUsers = data;
-    console.log("User geladen:", allUsers);
+    console.log("allUsers:", allUsers);
     renderUsersList();
   } catch (err) {
-    console.error("Fehler beim Laden der User:", err);
+    console.error("Fehler beim Laden der Users:", err);
   }
 }
 
-// Zeige User in Schritt 1 an (per Radio-Button)
 function renderUsersList() {
   const container = document.getElementById('usersList');
-  container.innerHTML = "<h3>Mitarbeiter (Ressource) wählen</h3>";
+  container.innerHTML = "<h3>Mitarbeiter wählen</h3>";
 
   allUsers.forEach(user => {
     const label = document.createElement('label');
@@ -105,55 +155,153 @@ function renderUsersList() {
     radio.value = user.username;
 
     radio.addEventListener('change', () => {
-      selectedUser = user; // Ganzes User-Objekt merken
+      selectedUser = user;
     });
 
     label.appendChild(radio);
     label.appendChild(document.createTextNode(` ${user.publicName}`));
     container.appendChild(label);
   });
+
+  // Wenn wir das erste Mal laden, direkt updateUsersList
+  updateUsersList();
 }
 
-// --- Schritt 2: Woche anzeigen und Vormittag/Nachmittag klickbar --- //
+// ----------------------------------------------------------
+// Diese Funktion disabled die User, die die aktuellen 
+// ausgewählten Services NICHT alle anbieten (o.ä. Logik)
+function updateUsersList() {
+  // Sammle IDs, die "1" sind:
+  const chosen = getChosenServices().filter(s => s.chosen === "1");
+  const chosenIDs = chosen.map(s => s.serviceID); 
+  // Angenommen, du hast in user z.B. user.servicesOffered = [0,1,2].
+  // Wenn die user-Daten das NICHT enthalten, disabled.
 
-// Hilfsfunktion: Hole Start der Woche (Mo) relativ zum gewählten Tag
+  const container = document.getElementById('usersList');
+  const labels = container.querySelectorAll('label');
+  
+  labels.forEach(label => {
+    const radio = label.querySelector('input[type=radio]');
+    if (!radio) return;
+    // Finde den passenden User
+    const user = allUsers.find(u => u.username === radio.value);
+    if (!user) return;
+
+    // Prüfe, ob user ALLE chosenIDs anbietet
+    // => Das setzt natürlich voraus, dass du z.B. `user.servicesOffered` hast.
+    // Wenn du solche Daten nicht hast, kannst du z.B. eine Dummy-Logik machen:
+    // "Jeder User kann jede Dienstleistung" oder 
+    // "Wenn chosenIDs größer als 2 => disable user" usw.
+    // Hier ein Beispiel (User muss ALLE chosenIDs abdecken):
+    const canDoAll = canUserDoAllServices(user, chosenIDs);
+
+    if (!canDoAll) {
+      label.classList.add('disabled');
+      radio.checked = false;
+      radio.disabled = true;
+      // Falls selectedUser = user => nullen wir es
+      if (selectedUser && selectedUser.username === user.username) {
+        selectedUser = null;
+      }
+    } else {
+      label.classList.remove('disabled');
+      radio.disabled = false;
+    }
+  });
+}
+
+// Beispiel-Helfer: 
+// Wir tun mal so, als hätte jeder user ein Array: user.servicesOffered=[0,1,2,...] 
+// Hier checken wir, ob user alle "chosenIDs" anbietet:
+function canUserDoAllServices(user, chosenIDs) {
+  // BEISPIEL: wenn user.servicesOffered nicht existiert => user kann alles
+  if (!user.servicesOffered) return true;
+
+  // Muss jede gewählte ID in user.servicesOffered enthalten sein
+  return chosenIDs.every(id => user.servicesOffered.includes(id));
+}
+
+/***********************************************************
+ * 2) DATUMS-AUSWAHL (WOCHE)
+ ***********************************************************/
+function initWeekNavigation() {
+  // setze displayedWeekStart = aktueller Montag
+  displayedWeekStart = getStartOfWeek(new Date());
+  document.getElementById('prevWeek').addEventListener('click', () => {
+    // Gehe eine Woche zurück
+    // Aber nicht in die Vergangenheit? => Du sagst "bereits vergangene Tage sperren".
+    // Wir erlauben "zurück", ABER man kann die Vergangenheit ausgrauen. 
+    // Optional kannst du es komplett blocken, wenn man nicht zurück soll.
+    displayedWeekStart.setDate(displayedWeekStart.getDate() - 7);
+    loadAndRenderWeek();
+  });
+
+  document.getElementById('nextWeek').addEventListener('click', () => {
+    displayedWeekStart.setDate(displayedWeekStart.getDate() + 7);
+    loadAndRenderWeek();
+  });
+}
+
 function getStartOfWeek(date) {
-  // Wir gehen mal davon aus, dass 'date' ein normales Date-Objekt ist
   const day = date.getDay(); // So=0, Mo=1, ...
   const diff = (day === 0 ? -6 : 1 - day);
-  const startOfWeek = new Date(date);
-  startOfWeek.setDate(startOfWeek.getDate() + diff);
-  startOfWeek.setHours(0,0,0,0);
-  return startOfWeek;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  monday.setHours(0,0,0,0);
+  return monday;
 }
 
-// Diese Funktion rendert die Tabelle der Woche (Mo-So)
-function renderWeekSelection() {
-  const current = new Date(); // Oder das gewählte Datum
-  const startOfWeek = getStartOfWeek(current);
+async function loadAndRenderWeek() {
+  // Zuerst Slots für diese displayedWeekStart laden
+  // => /api/availability/slots?currentDate=YYYY-MM-DD
+  const isoDate = formatDate(displayedWeekStart); // e.g. "2025-01-13"
+  try {
+    const res = await fetch(`/api/availability/slots?currentDate=${isoDate}`);
+    const data = await res.json();
+    loadedSlots = data;
+    console.log("SLOTS LOADED for week:", isoDate, loadedSlots);
+
+    // Dann Tabelle rendern
+    renderWeekTable();
+    // Dann checken: sind ALLE Tage disabled => dann nächste Woche
+    if (areAllDaysDisabled()) {
+      // Automatic next week
+      displayedWeekStart.setDate(displayedWeekStart.getDate() + 7);
+      await loadAndRenderWeek();
+    }
+  } catch (err) {
+    console.error("Fehler beim Laden der Slots:", err);
+  }
+}
+
+function renderWeekTable() {
+  const currentWeekLabel = document.getElementById('currentWeekLabel');
+  // Zeige den Montag + Datum
+  const endOfWeek = new Date(displayedWeekStart);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+  currentWeekLabel.textContent = `Woche ${formatDate(displayedWeekStart)} - ${formatDate(endOfWeek)}`;
 
   const weekHeader = document.getElementById('weekHeader');
-  const rowVormittag = document.getElementById('rowVormittag');
-  const rowNachmittag = document.getElementById('rowNachmittag');
+  const rowV = document.getElementById('rowVormittag');
+  const rowN = document.getElementById('rowNachmittag');
 
-  // Header leeren (1. Spalte bleibt)
-  weekHeader.innerHTML = "<th></th>"; 
-  rowVormittag.innerHTML = "<td>Vormittag</td>";
-  rowNachmittag.innerHTML = "<td>Nachmittag</td>";
+  // Clear
+  weekHeader.innerHTML = "<th></th>";
+  rowV.innerHTML = "<td>Vormittag</td>";
+  rowN.innerHTML = "<td>Nachmittag</td>";
 
-  // Für die 7 Tage
-  for (let i = 0; i < 7; i++) {
-    const day = new Date(startOfWeek);
-    day.setDate(startOfWeek.getDate() + i);
+  for (let i=0; i<7; i++) {
+    const day = new Date(displayedWeekStart);
+    day.setDate(day.getDate() + i);
 
+    const wd = ["So","Mo","Di","Mi","Do","Fr","Sa"][day.getDay()];
     const dayNum = day.getDate();
-    const monthNum = day.getMonth() + 1;
-    // Wochentag
-    const weekday = ["So","Mo","Di","Mi","Do","Fr","Sa"][day.getDay()];
+    const monthNum = day.getMonth()+1;
 
-    // Kopf-Spalte
+    // Head
     const th = document.createElement('th');
-    th.textContent = `${weekday} ${dayNum}.${monthNum}`;
+    th.textContent = `${wd} ${dayNum}.${monthNum}`;
     weekHeader.appendChild(th);
 
     // Vormittag
@@ -161,12 +309,12 @@ function renderWeekSelection() {
     const btnV = document.createElement('button');
     btnV.textContent = "Wählen";
     btnV.addEventListener('click', () => {
-      selectedDate = formatDate(day); // z.B. "2025-01-17"
+      selectedDate = formatDate(day);
       selectedPeriod = "morning";
       goToStep3();
     });
     tdV.appendChild(btnV);
-    rowVormittag.appendChild(tdV);
+    rowV.appendChild(tdV);
 
     // Nachmittag
     const tdN = document.createElement('td');
@@ -178,136 +326,165 @@ function renderWeekSelection() {
       goToStep3();
     });
     tdN.appendChild(btnN);
-    rowNachmittag.appendChild(tdN);
+    rowN.appendChild(tdN);
+
+    // 1) Vergangene Tage ausgrauen
+    const today = new Date();
+    if (day < stripTime(today)) {
+      btnV.classList.add('disabled');
+      btnV.disabled = true;
+      btnN.classList.add('disabled');
+      btnN.disabled = true;
+    } else {
+      // 2) Check: Gibt es für VORMITTAG oder NACHMITTAG mind. 1 verfügbaren Slot 
+      const morningHasSlots = checkMorningAvailability(day);
+      if (!morningHasSlots) {
+        btnV.classList.add('disabled');
+        btnV.disabled = true;
+      }
+      const afternoonHasSlots = checkAfternoonAvailability(day);
+      if (!afternoonHasSlots) {
+        btnN.classList.add('disabled');
+        btnN.disabled = true;
+      }
+    }
   }
 }
 
-// Kleiner Helfer: formatiere Datum als "YYYY-MM-DD"
-function formatDate(dateObj) {
-  const y = dateObj.getFullYear();
-  const m = String(dateObj.getMonth() + 1).padStart(2,'0');
-  const d = String(dateObj.getDate()).padStart(2,'0');
-  return `${y}-${m}-${d}`;
+// Hilfsfunktionen, um zu prüfen, ob es in den loadedSlots 
+// mind. 1 Slot für diesen Tag + morning/afternoon gibt
+function checkMorningAvailability(dateObj) {
+  const requiredDuration = calculateTotalDuration(); // Summe aus allen gewählten Services
+  const dateStr = formatDate(dateObj); // "YYYY-MM-DD"
+  
+  // Finde mind. 1 Slot, wo hour < 12 + isAvailable + user
+  if (!selectedUser) {
+    // Noch kein User gewählt => in Step1
+    // Falls du ausgrauen willst, weil kein User = 
+    //   return false;
+    // Hier sagen wir mal "true" => 
+    return true;
+  }
+
+  const userName = selectedUser.username;
+  const availableSlot = loadedSlots.find(slot => {
+    const slotDate = slot.startDateTime.split('T')[0];
+    if (slotDate !== dateStr) return false;
+
+    // morning => hour < 12
+    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
+    if (hour >= 12) return false;
+
+    // Check user availability
+    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+
+    // Optional: Check if there's enough continuous time for requiredDuration 
+    // => In diesem Beispiel ignorieren wir "continuous" und gehen simplifiziert davon aus, 
+    //    wir buchen nur Start-Slot. 
+    //    Für echtes "enough time" bräuchte man aufwändigere Prüfung.
+    return true;
+  });
+
+  return !!availableSlot; // true, wenn wir einen gefunden haben
 }
 
-// --- Schritt 3: Slots laden & anzeigen --- //
+function checkAfternoonAvailability(dateObj) {
+  const requiredDuration = calculateTotalDuration();
+  const dateStr = formatDate(dateObj);
 
-// Hier laden wir die Availability-Slots (die komplette Woche).
-// Dann filtern wir nur die, die zum selectedDate + Period passen.
-async function goToStep3() {
-  // Schritt 2 verstecken, Schritt 3 zeigen
+  if (!selectedUser) return true;
+
+  const userName = selectedUser.username;
+  const availableSlot = loadedSlots.find(slot => {
+    const slotDate = slot.startDateTime.split('T')[0];
+    if (slotDate !== dateStr) return false;
+
+    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
+    if (hour < 12) return false;
+
+    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+    return true;
+  });
+
+  return !!availableSlot;
+}
+
+// Prüfen, ob alle Buttons in der Woche disabled sind 
+function areAllDaysDisabled() {
+  const rowV = document.getElementById('rowVormittag').querySelectorAll('button');
+  const rowN = document.getElementById('rowNachmittag').querySelectorAll('button');
+
+  const allButtons = [...rowV, ...rowN];
+  return allButtons.every(btn => btn.disabled);
+}
+
+/***********************************************************
+ * 3) SLOT-AUSWAHL
+ ***********************************************************/
+function goToStep3() {
+  // step2 -> step3
   document.getElementById('step2').style.display = 'none';
   document.getElementById('step3').style.display = 'block';
 
-  // Slots laden (für die ganze Woche)
-  // Query-Parameter: currentDate=selectedDate => wir nehmen den Montag der gewählten Woche
-  const url = `/api/availability/slots?currentDate=${formatDate(new Date(selectedDate))}`;
-  try {
-    const response = await fetch(url);
-    const allSlots = await response.json();
-
-    console.log("Slots erhalten:", allSlots);
-    renderSlots(allSlots);
-  } catch (err) {
-    console.error("Fehler beim Laden der Slots:", err);
-  }
+  renderSlotsForSelectedDay();
 }
 
-// Hier filtern wir z.B. die Slots auf den gewählten Tag (selectedDate)
-// und ob morgens / nachmittags (selectedPeriod).
-// Dann zeigen wir sie dem User als Buttons.
-function renderSlots(allSlots) {
+function renderSlotsForSelectedDay() {
   const container = document.getElementById('slotsContainer');
   container.innerHTML = "";
 
-  // a) Filter nach passendem Datum
-  //    Wir erinnern uns, dass `slot.startDateTime` z.B. "2025-01-17T08:00"
-  // b) Vormittag => 0-12 Uhr, Nachmittag => 12-24 Uhr
-  // c) Zeitzone: +1h für Anzeige
+  // Filter loadedSlots => passender Tag + morning/afternoon + user
+  const requiredDuration = calculateTotalDuration();
+  const userName = selectedUser?.username;
+  if (!userName) {
+    container.textContent = "Kein Mitarbeiter gewählt!";
+    return;
+  }
 
-  let filtered = allSlots.filter(slot => {
-    // Gleiche Tag?
-    // slot.startDateTime = "2025-01-17T08:00"
-    // => extrahiere YYYY-MM-DD
-    const slotDate = slot.startDateTime.split('T')[0]; // "2025-01-17"
-    if (slotDate !== selectedDate) return false;
-    
-    // Zeit?
-    const timePart = slot.startDateTime.split('T')[1]; // "08:00"
-    const hour = parseInt(timePart.split(':')[0]);
-    // if period = "morning" => hour < 12
-    // if period = "afternoon" => hour >= 12
+  let filtered = loadedSlots.filter(slot => {
+    // Tag
+    const slotDay = slot.startDateTime.split('T')[0];
+    if (slotDay !== selectedDate) return false;
+
+    // morning / afternoon
+    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
     if (selectedPeriod === "morning" && hour >= 12) return false;
     if (selectedPeriod === "afternoon" && hour < 12) return false;
-    
-    // Nur anzeigen, wenn isAvailable = true für den gewählten Mitarbeiter
-    if (!selectedUser) return false;
-    // Schauen wir in slot.isAvailable[ user.username ]
-    // (Achtung: Wenn das Availability-Objekt so heißt wie in der Hilfe.)
-    if (!slot.isAvailable || slot.isAvailable[selectedUser.username] !== true) {
-      return false;
-    }
-    
+
+    // user availability
+    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+
     return true;
   });
-  
-  // Sortiere nach Uhrzeit aufsteigend
-  filtered.sort((a,b) => {
-    return a.startDateTime.localeCompare(b.startDateTime);
-  });
-  
-  // Berechne die gesamte benötigte Dauer (inkl. index 0)
-  const totalDuration = calculateTotalDuration();
 
-  // Filter die Slots basierend auf der benötigten Dauer
-  filtered = filtered.filter(slot => {
-    const slotStart = new Date(slot.startDateTime);
-    const slotEnd = new Date(slotStart.getTime() + totalDuration * 60000);
+  // Sortieren
+  filtered.sort((a,b) => a.startDateTime.localeCompare(b.startDateTime));
 
-    // Überprüfe, ob alle Slots innerhalb der Verfügbarkeit liegen
-    // Dies erfordert eine zusätzliche Backend-Logik, um sicherzustellen,
-    // dass der gesamte Zeitraum frei ist. 
-    // Hier vereinfachen wir und zeigen nur einzelne Slots an.
+  if (filtered.length === 0) {
+    container.textContent = "Keine freien Slots verfügbar.";
+    return;
+  }
 
-    return true; // Placeholder: Implementiere echte Logik, falls nötig
-  });
-
-  // Für jeden Slot einen Button
+  // Buttons
   filtered.forEach(slot => {
     const btn = document.createElement('button');
-    // +1 Stunde "manuell" für Anzeige
-    const dateObj = new Date(slot.startDateTime);
-    dateObj.setHours(dateObj.getHours() + 1); // +1
-    const hh = String(dateObj.getHours()).padStart(2,'0');
-    const mm = String(dateObj.getMinutes()).padStart(2,'0');
-    btn.textContent = `${hh}:${mm} Uhr`;
-    
+    // +1h für Anzeige:
+    const local = offsetByOneHour(slot.startDateTime);
+    const hhmm = local.toISOString().substring(11,16); // "HH:MM"
+    btn.textContent = hhmm + " Uhr";
+
     btn.addEventListener('click', () => {
       selectedSlot = slot;
       goToStep4();
     });
-    
+
     container.appendChild(btn);
   });
-
-  if (filtered.length === 0) {
-    container.textContent = "Keine freien Slots verfügbar.";
-  }
 }
 
-// Berechne die gesamte benötigte Dauer (inkl. index 0)
-function calculateTotalDuration() {
-  // Index 0 ist immer aktiv, addiere seine Dauer
-  let total = 0;
-  allServices.forEach(service => {
-    if (selectedServices[service.serviceID] === "1") {
-      total += service.serviceDuration;
-    }
-  });
-  return total;
-}
-
-// --- Schritt 4: Persönliche Daten abfragen --- //
+/***********************************************************
+ * 4) PERSÖNLICHE DATEN
+ ***********************************************************/
 function goToStep4() {
   document.getElementById('step3').style.display = 'none';
   document.getElementById('step4').style.display = 'block';
@@ -315,64 +492,119 @@ function goToStep4() {
 
 function initStep4() {
   const form = document.getElementById('personalDataForm');
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', e => {
     e.preventDefault();
-    // Werte auslesen
     personalData.firstName = document.getElementById('firstName').value;
     personalData.lastName = document.getElementById('lastName').value;
     personalData.email = document.getElementById('email').value;
-    
-    // weiter zu Schritt 5
     goToStep5();
   });
 }
 
-// --- Schritt 5: Zusammenfassung & POST zum Server --- //
+/***********************************************************
+ * 5) ZUSAMMENFASSUNG & POST
+ ***********************************************************/
 function goToStep5() {
   document.getElementById('step4').style.display = 'none';
   document.getElementById('step5').style.display = 'block';
 
-  // Zeige Zusammenfassung: Dienste, Datum, Slot, Name etc.
-  const summary = document.getElementById('summaryContainer');
-  summary.innerHTML = "";
+  const summaryContainer = document.getElementById('summaryContainer');
+  summaryContainer.innerHTML = "";
 
-  const chosenServices = getChosenServices(); // Array aus { serviceID, name, price, duration, chosen:"1|0" }
-  const totalPrice = chosenServices.reduce((sum, s) => sum + (s.chosen === "1" ? s.servicePrice : 0), 0);
-  const totalDuration = chosenServices.reduce((sum, s) => sum + (s.chosen === "1" ? s.serviceDuration : 0), 0);
+  const chosen = getChosenServices(); // array
+  const totalPrice = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.servicePrice:0), 0);
+  const totalDuration = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.serviceDuration:0), 0);
 
-  // Textlich zusammenfassen
-  // 1) Dienstleistungen
-  const servicesText = chosenServices.map(s => {
-    return `Index ${s.serviceID}: "${s.chosen}" (${s.serviceName})`;
-  });
-  
-  // 2) Datum & Zeit
-  //    selectedSlot.startDateTime => +1h
-  const slotDateObj = new Date(selectedSlot.startDateTime);
-  slotDateObj.setHours(slotDateObj.getHours() + 1);
-  const slotTimeString = slotDateObj.toISOString().substring(0,16).replace('T',' ');
+  // StartTime (+1h Anzeige)
+  const localDate = offsetByOneHour(selectedSlot.startDateTime);
+  const dateStr = localDate.toISOString().replace('T',' ').substring(0,16);
 
-  summary.innerHTML = `
-    <p><strong>Datum/Uhrzeit:</strong> ${slotTimeString}</p>
-    <p><strong>Gewählter Mitarbeiter:</strong> ${selectedUser.publicName}</p>
-    <p><strong>Vorname/Nachname:</strong> ${personalData.firstName} ${personalData.lastName}</p>
-    <p><strong>E-Mail:</strong> ${personalData.email}</p>
-    <p><strong>Dienstleistungen (Index: "gewählt"):</strong> [${servicesText.join(', ')}]</p>
+  // Liste der services in Notation "Index 2: 1" ...
+  const servicesText = chosen.map(s => `ID ${s.serviceID}: "${s.chosen}" (${s.serviceName})`);
+
+  const html = `
+    <p><strong>Datum/Uhrzeit:</strong> ${dateStr}</p>
+    <p><strong>Mitarbeiter:</strong> ${selectedUser?.publicName || ''}</p>
+    <p><strong>Name:</strong> ${personalData.firstName} ${personalData.lastName}</p>
+    <p><strong>Email:</strong> ${personalData.email}</p>
+    <p><strong>Dienstleistungen:</strong> [${servicesText.join(', ')}]</p>
     <p><strong>Gesamtpreis:</strong> ${totalPrice} CHF</p>
     <p><strong>Gesamtdauer:</strong> ${totalDuration} Minuten</p>
   `;
+  summaryContainer.innerHTML = html;
 }
 
-// Hilfsfunktion: erzeuge Array, das zu jedem Service serviceID + name + price + chosen enthält
+function confirmBooking() {
+  const chosen = getChosenServices();
+  const totalPrice = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.servicePrice:0), 0);
+  const totalDuration = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.serviceDuration:0), 0);
+
+  // Wir bauen das Array ["1","0","1"] etc. 
+  // => In der Reihenfolge serviceID: 0..max
+  // Da "allServices" evtl. unsortiert sein kann, 
+  //   ist es hilfreich, es an serviceID zu koppeln.
+  // Hier behelfen wir uns so:
+  const maxID = Math.max(...allServices.map(s=>s.serviceID));
+  // Erzeuge passendes Array der Länge (maxID+1)
+  let servicesArray = new Array(maxID+1).fill("0");
+  for (let s of allServices) {
+    if (selectedServices[s.serviceID]==="1") {
+      servicesArray[s.serviceID] = "1";
+    }
+  }
+
+  // StartDateTime = original (UTC) (Server rechnet das?)
+  let finalStart = selectedSlot.startDateTime;
+
+  const payload = {
+    startDateTime: finalStart,
+    endDateTime: "", // optional
+    duration: totalDuration,
+    description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
+    MailAppointmentRequests: personalData.email, // NEU
+    Preis: String(totalPrice),
+    Dienstleistung: JSON.stringify(servicesArray),
+    erfasstDurch: "öffentliche Buchungsplattform",
+    Ressource: selectedUser?.username || ""
+  };
+
+  console.log("Sende POST /api/appointmentRequests =>", payload);
+
+  fetch('/api/appointmentRequests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(async (res) => {
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData?.error || "Fehler beim POSTen");
+    }
+    return res.json();
+  })
+  .then((saved) => {
+    console.log("Termin-Anfrage gespeichert:", saved);
+    // Step5 ausblenden, Erfolg
+    document.getElementById('step5').style.display = 'none';
+    const r = document.getElementById('bookingResult');
+    r.style.display = 'block';
+    r.innerHTML = "<h3>Vielen Dank!</h3><p>Deine Buchungsanfrage wurde übermittelt.</p>";
+  })
+  .catch(err => {
+    console.error("Buchung fehlgeschlagen:", err);
+    alert("Fehler: " + err.message);
+  });
+}
+
+function cancelBooking() {
+  window.location.reload();
+}
+
+/***********************************************************
+ * HILFSFUNKTIONEN
+ ***********************************************************/
+// Services => array pro Service
 function getChosenServices() {
-  // Wir wollen z.B. so was haben: 
-  // allServices = [
-  //   {serviceID:0, serviceName:"Basis", servicePrice:20, serviceDuration:15}, 
-  //   {serviceID:1, serviceName:"Haarschnitt", servicePrice:50, serviceDuration:30},
-  //   ...
-  // ]
-  // selectedServices = ["1","1","0","1"] (String-Array)
-  // => wir mappen das zusammen:
   return allServices.map(s => {
     return {
       serviceID: s.serviceID,
@@ -384,114 +616,84 @@ function getChosenServices() {
   });
 }
 
-// Termin absenden => POST /api/appointments
-async function confirmBooking() {
-  const chosenServices = getChosenServices();
-  const totalPrice = chosenServices.reduce((sum, s) => sum + (s.chosen === "1" ? s.servicePrice : 0), 0);
-  const totalDuration = chosenServices.reduce((sum, s) => sum + (s.chosen === "1" ? s.serviceDuration : 0), 0);
-
-  // Wir bauen das Array z. B. ["1","0","1","1"] als String
-  // Je nachdem, wie du es brauchst: JSON-String, oder Komma-getrennt, ...
-  // Hier machen wir JSON-String:
-  const servicesString = JSON.stringify(selectedServices);
-
-  // startDateTime => wir speichern OHNE die +1h (Server hat UTC?),
-  //   oder wenn du willst, kannst du +1h wieder abziehen, 
-  //   je nachdem, wie dein Server es erwartet.
-  //   Angenommen, wir geben "2025-01-17T08:00" (UTC) an.
-  let finalStartDateTime = selectedSlot.startDateTime; 
-
-  // Das Payload-Objekt:
-  const payload = {
-    startDateTime: finalStartDateTime,
-    endDateTime: "",  // optional
-    duration: totalDuration,
-    description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName} Mail: ${personalData.email})`, 
-    Preis: String(totalPrice),
-    Dienstleistung: servicesString,
-    Ressource: selectedUser.username,
-    erfasstDurch: "öffentliche Buchungsplattform"
-  };
-
-  try {
-    const response = await fetch('/api/appointments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.error || "Fehler beim Speichern des Termins");
-    }
-    const savedAppt = await response.json();
-    console.log("Termin gespeichert:", savedAppt);
-
-    // Erfolg anzeigen:
-    document.getElementById('step5').style.display = 'none';
-    const resultDiv = document.getElementById('bookingResult');
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = "<h3>Vielen Dank!</h3><p>Deine Buchung war erfolgreich.</p>";
-  } catch (err) {
-    console.error("Fehler bei Buchung:", err);
-    alert("Fehler bei der Buchung: " + err.message);
-  }
+// Summe der gewählten Services (inkl. ID=0)
+function calculateTotalDuration() {
+  const chosen = getChosenServices().filter(s => s.chosen==="1");
+  return chosen.reduce((sum, s) => sum + s.serviceDuration, 0);
 }
 
-// Buchung abbrechen => zurück zu Schritt 1 oder komplett beenden
-function cancelBooking() {
-  // Einfach reload, oder redirect:
-  window.location.reload();
+function stripTime(dateObj) {
+  const d = new Date(dateObj);
+  d.setHours(0,0,0,0);
+  return d;
 }
 
-// --- Initialisierung der Steps & Buttons ---
+function formatDate(dateObj) {
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth()+1).padStart(2,'0');
+  const d = String(dateObj.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+// Offset by +1h
+function offsetByOneHour(dateTimeStr) {
+  // dateTimeStr = "2025-01-17T08:00"
+  const d = new Date(dateTimeStr);
+  d.setHours(d.getHours() + 1);
+  return d;
+}
+
+/***********************************************************
+ * INITIALISIERUNG
+ ***********************************************************/
 function initStepNavigation() {
-  // Schritt 1 => Schritt 2
+  // Step1 => Step2
   document.getElementById('toStep2').addEventListener('click', () => {
     if (!selectedUser) {
-      alert("Bitte einen Mitarbeiter auswählen.");
+      alert("Bitte einen Mitarbeiter auswählen!");
       return;
     }
-    // Schritt 1 ausblenden, Schritt 2 einblenden
+    // step1 -> step2
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
-    renderWeekSelection();
+    loadAndRenderWeek();
   });
-  
-  // Schritt 2 => zurück zu Schritt 1
+
+  // Zurück zu Step1
   document.getElementById('backToStep1').addEventListener('click', () => {
     document.getElementById('step2').style.display = 'none';
     document.getElementById('step1').style.display = 'block';
   });
 
-  // Schritt 3 => zurück zu Schritt 2
+  // Step3 => zurück zu Step2
   document.getElementById('backToStep2').addEventListener('click', () => {
     document.getElementById('step3').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
   });
 
-  // Schritt 4 => zurück zu Schritt 3
+  // Step4 => zurück zu Step3
   document.getElementById('backToStep3').addEventListener('click', () => {
     document.getElementById('step4').style.display = 'none';
     document.getElementById('step3').style.display = 'block';
   });
 
-  // Schritt 5: Buttons
+  // Step5: Buchung absenden
   document.getElementById('confirmBooking').addEventListener('click', confirmBooking);
+  // Abbrechen
   document.getElementById('cancelBooking').addEventListener('click', cancelBooking);
 }
 
-// --- Haupt-Init-Funktion, wird nach Laden ausgeführt ---
 async function initBooking() {
   initStepNavigation();
   initStep4();
+  initWeekNavigation();
 
-  await loadServices(); 
+  // Lade Services & Users
+  await loadServices();
   await loadUsers();
-
-  // Schritt 1 ist sichtbar, rest ausgeblendet
+  
+  // Step1 sichtbar
   document.getElementById('step1').style.display = 'block';
 }
 
-// Starte
 document.addEventListener('DOMContentLoaded', initBooking);

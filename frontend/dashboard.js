@@ -3250,6 +3250,7 @@ async function editUser(userId) {
     document.getElementById('publicName').value = user.publicName || '';
     document.getElementById('email').value    = user.email || '';
     document.getElementById('color').value    = user.color || '';
+    
     /*
     
 
@@ -3290,45 +3291,56 @@ async function editUser(userId) {
     }
 
     newSubmitButton.addEventListener('click', async (e) => {
-        e.preventDefault();
-        // Updated-Daten ...
-        const passwordInput = document.getElementById('password').value.trim();
-        const updatedUser = {
-            userID: document.getElementById('userID').value,
-            username: document.getElementById('username').value,
-            publicName: document.getElementById('publicName').value,
-            email: document.getElementById('email').value,
-            color: document.getElementById('color').value
-        };
+    e.preventDefault();
 
-        // Passwort nur hinzufügen, wenn nicht leer ...
-        if (passwordInput !== "") {
-            updatedUser.password = passwordInput;
+    // 1. Passwort nur hinzufügen, wenn nicht leer
+    const passwordInput = document.getElementById('password').value.trim();
+
+    // 2. Grundlegende Benutzerdaten abrufen
+    const updatedUser = {
+        userID: document.getElementById('userID').value,
+        username: document.getElementById('username').value,
+        publicName: document.getElementById('publicName').value,
+        email: document.getElementById('email').value,
+        color: document.getElementById('color').value,
+    };
+
+    if (passwordInput !== "") {
+        updatedUser.password = passwordInput;
+    }
+
+    // 3. Ausgewählte Services erfassen
+    const checkboxes = document.querySelectorAll('#servicesCheckboxContainer .service-checkbox:checked');
+    const selectedServices = Array.from(checkboxes).map(cb => cb.value);
+    console.log('Ausgewählte Services:', selectedServices); // Debugging
+    // 4. Services hinzufügen
+    updatedUser.availableServices = selectedServices;
+
+console.log('Services in updatedUser eingefügt:', updatedUser.availableServices); // Debugging
+console.log('Aktualisierte Benutzerdaten (nach Einfügen der Services):', updatedUser);
+
+const requestBody = JSON.stringify(updatedUser);
+console.log('Daten, die an die API gesendet werden:', requestBody);
+    // 5. PUT-Request senden
+    try {
+        const response = await fetch(`${BACKEND_URL}/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedUser),
+        });
+
+        if (response.ok) {
+            alert('Benutzer erfolgreich aktualisiert');
+            await loadUsers(); // Benutzerliste neu laden
+            hideUserForm();
+        } else {
+            alert('Fehler beim Aktualisieren des Benutzers');
         }
-
-        // Ausgewählte Services abgreifen
-        const checkboxes = document.querySelectorAll('#servicesCheckboxContainer .service-checkbox:checked');
-        updatedUser.availableServices = Array.from(checkboxes).map(cb => cb.value);
-
-        // PUT-Request ...
-        try {
-            const response = await fetch(`${BACKEND_URL}/users/${userId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedUser)
-            });
-            if (response.ok) {
-                renderCalendar();
-                alert('Benutzer erfolgreich aktualisiert');
-                await loadUsers();
-                hideUserForm();
-            } else {
-                alert('Fehler beim Aktualisieren des Benutzers');
-            }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    });
+    } catch (err) {
+        console.error('Fehler:', err);
+        alert('Fehler beim Speichern der Änderungen');
+    }
+});
 }
 
 
