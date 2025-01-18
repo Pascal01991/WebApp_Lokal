@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const logger = require('./middleware/logger');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointments'); // Routen für Termine
+const appointmentrequestRoutes = require('./routes/appointmentrequests'); // Routen für Termine
 const cors = require('cors');
 const clientRoutes = require('./routes/clients');
 
@@ -91,6 +92,7 @@ app.use('/api/services', servicesRoutes);
 
 // Termin-Routen
 app.use('/api/appointments', appointmentRoutes); // Terminrouten einbinden
+app.use('/api/appointmentrequests', appointmentrequestRoutes);// appointmentrequestRoutes einbinden
 
 // Client-Routen hinzufügen
 app.use('/api/clients', clientRoutes);

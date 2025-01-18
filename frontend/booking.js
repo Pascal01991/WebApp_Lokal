@@ -406,7 +406,7 @@ async function confirmBooking() {
     startDateTime: finalStartDateTime,
     endDateTime: "",  // optional
     duration: totalDuration,
-    description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`, 
+    description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName} Mail: ${personalData.email})`, 
     Preis: String(totalPrice),
     Dienstleistung: servicesString,
     Ressource: selectedUser.username,
