@@ -4,17 +4,17 @@ const mongoose = require('mongoose');
 const appointmentSchema = new mongoose.Schema({
     // Starttermin
     startDateTime: {
-        type: String,
+        type: String, //Hier die Starttime im Format "2025-01-17T14:00" eintragen
         required: true
     },
     // Endtermin
     endDateTime: {
-        type: String,
-        required: false // Kann optional sein, falls noch nicht festgelegt
+        type: String,  //Hier die Endtime im Format "2025-01-17T14:00" eintragen
+        required: false 
     },
     // Dauer in Minuten (im Backend/DB speichern wir nur Minuten)
     duration: {
-        type: Number,
+        type: Number,   //Hier die Dauer bzw. total der dauer aller gewählten services inkl. index0
         required: false,
         default: 0
     },
@@ -24,23 +24,23 @@ const appointmentSchema = new mongoose.Schema({
     },
     KundennummerzumTermin: {
         type: Number,
-        required: true,
+        required: false,
     },
     Preis: {
-        type: String,
+        type: String,   //Hier der Preis bzw. total der Preise aller gewählten services inkl. index0
         required: true,
     },
     Abrechnungsstatus: {
         type: String,
-        required: true,
+        required: false,
     },
     Dienstleistung: {
-        type: String,
+        type: String,   //Hier die vorhin erwähnten Dienstleistungen zusammenfassen inkl. Index0. zum Beispiel: Array ()   0   "1"  1    "1"  2  "0"  3  "1"
         required: true,
     },
 
     erfasstDurch: {
-        type: String,
+        type: String,  //Hier jedesmal "öffentliche Buchungsplattform" eintragen
         required: false 
     },
     letzterBearbeiter: {
@@ -48,7 +48,7 @@ const appointmentSchema = new mongoose.Schema({
         required: false 
     },
     Ressource: {
-        type: String,
+        type: String,  //hier der user.username des jeweiligen users eintragen
         required: false 
     },
 

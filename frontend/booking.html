@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Online-Buchung</title>
+  <link rel="stylesheet" href="booking.css">
+</head>
+<body>
+  <div id="bookingApp">
+    <h1>Online-Buchung</h1>
+    
+    <!-- Schritt 1: Dienste & Mitarbeiter wählen -->
+    <div id="step1" class="step">
+      <h2>Schritt 1: Dienstleistung(en) und Mitarbeiter wählen</h2>
+      <div id="servicesList"></div>
+      <div id="usersList"></div>
+      <button id="toStep2">Weiter</button>
+    </div>
+    
+    <!-- Schritt 2: Datum und Tageszeit -->
+    <div id="step2" class="step" style="display: none;">
+      <h2>Schritt 2: Datum auswählen</h2>
+      <p>Wähle einen Tag und ob Vormittag oder Nachmittag.</p>
+      <table id="weekTable">
+        <!-- Kopfzeile (Wochentage + Datum) -->
+        <thead>
+          <tr id="weekHeader">
+            <th></th><!-- Erste Spalte leer (Beschriftung) -->
+            <!-- Hier fügen wir die Spalten für Mo-So dynamisch ein -->
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Vormittag-Zeile -->
+          <tr id="rowVormittag">
+            <td>Vormittag</td>
+            <!-- Dynamisch Mo-So Knöpfe -->
+          </tr>
+          <!-- Nachmittag-Zeile -->
+          <tr id="rowNachmittag">
+            <td>Nachmittag</td>
+            <!-- Dynamisch Mo-So Knöpfe -->
+          </tr>
+        </tbody>
+      </table>
+      <button id="backToStep1">Zurück</button>
+    </div>
+    
+    <!-- Schritt 3: Passende Slots wählen -->
+    <div id="step3" class="step" style="display: none;">
+      <h2>Schritt 3: Uhrzeit wählen</h2>
+      <div id="slotsContainer"></div>
+      <button id="backToStep2">Zurück</button>
+    </div>
+    
+    <!-- Schritt 4: Persönliche Daten -->
+    <div id="step4" class="step" style="display: none;">
+      <h2>Schritt 4: Persönliche Daten</h2>
+      <form id="personalDataForm">
+        <label for="firstName">Vorname:</label>
+        <input type="text" id="firstName" required />
+        
+        <label for="lastName">Nachname:</label>
+        <input type="text" id="lastName" required />
+        
+        <label for="email">E-Mail:</label>
+        <input type="email" id="email" required />
+        
+        <button type="submit">Weiter</button>
+      </form>
+      <button id="backToStep3">Zurück</button>
+    </div>
+    
+    <!-- Schritt 5: Zusammenfassung & Bestätigung -->
+    <div id="step5" class="step" style="display: none;">
+      <h2>Schritt 5: Bestätigung</h2>
+      <div id="summaryContainer"></div>
+      <button id="confirmBooking">Buchung absenden</button>
+      <button id="cancelBooking">Abbrechen</button>
+    </div>
+    
+    <!-- Ergebnis/Status-Anzeige -->
+    <div id="bookingResult" style="display: none;"></div>
+  </div>
+
+  <!-- Dein JS -->
+  <script src="booking.js"></script>
+</body>
+</html>

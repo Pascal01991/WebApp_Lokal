@@ -26,7 +26,7 @@ let workingHours = {            //Später aus DB
     },
     freitag: {
         active: true,
-        morning: { start: '08:00', end: '12:00' },
+        morning: { start: '06:00', end: '12:00' },
         afternoon: { start: '13:00', end: '17:30' }
     },
     samstag: {

@@ -1,0 +1,44 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  
+  #bookingApp {
+    max-width: 700px;
+    margin: auto;
+  }
+  
+  .step {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 15px;
+  }
+  
+  #servicesList, #usersList {
+    margin-bottom: 20px;
+  }
+  
+  /* Tabellen-Stil für den Kalender */
+  #weekTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+  
+  #weekTable th, #weekTable td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  #slotsContainer button {
+    margin: 5px;
+  }
+  
+  #summaryContainer {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
