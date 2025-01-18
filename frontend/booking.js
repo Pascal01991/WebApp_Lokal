@@ -171,55 +171,57 @@ function renderUsersList() {
 // Diese Funktion disabled die User, die die aktuellen 
 // ausgewählten Services NICHT alle anbieten (o.ä. Logik)
 function updateUsersList() {
-  // Sammle IDs, die "1" sind:
-  const chosen = getChosenServices().filter(s => s.chosen === "1");
-  const chosenIDs = chosen.map(s => s.serviceID); 
-  // Angenommen, du hast in user z.B. user.servicesOffered = [0,1,2].
-  // Wenn die user-Daten das NICHT enthalten, disabled.
-
-  const container = document.getElementById('usersList');
-  const labels = container.querySelectorAll('label');
+    // Sammle IDs der gewählten Services (als Zahlen):
+    const chosen = getChosenServices().filter(s => s.chosen === "1");
+    const chosenIDs = chosen.map(s => s.serviceID); // z.B. [1, 3]
   
-  labels.forEach(label => {
-    const radio = label.querySelector('input[type=radio]');
-    if (!radio) return;
-    // Finde den passenden User
-    const user = allUsers.find(u => u.username === radio.value);
-    if (!user) return;
-
-    // Prüfe, ob user ALLE chosenIDs anbietet
-    // => Das setzt natürlich voraus, dass du z.B. `user.servicesOffered` hast.
-    // Wenn du solche Daten nicht hast, kannst du z.B. eine Dummy-Logik machen:
-    // "Jeder User kann jede Dienstleistung" oder 
-    // "Wenn chosenIDs größer als 2 => disable user" usw.
-    // Hier ein Beispiel (User muss ALLE chosenIDs abdecken):
-    const canDoAll = canUserDoAllServices(user, chosenIDs);
-
-    if (!canDoAll) {
-      label.classList.add('disabled');
-      radio.checked = false;
-      radio.disabled = true;
-      // Falls selectedUser = user => nullen wir es
-      if (selectedUser && selectedUser.username === user.username) {
-        selectedUser = null;
+    const container = document.getElementById('usersList');
+    const labels = container.querySelectorAll('label');
+    
+    labels.forEach(label => {
+      const radio = label.querySelector('input[type=radio]');
+      if (!radio) return;
+      // Finde den passenden User
+      const user = allUsers.find(u => u.username === radio.value);
+      if (!user) return;
+  
+      // Prüfe, ob user ALLE chosenIDs anbietet
+      const canDoAll = canUserDoAllServices(user, chosenIDs);
+  
+      if (!canDoAll) {
+        label.classList.add('disabled');
+        radio.checked = false;
+        radio.disabled = true;
+        // Falls selectedUser = user => nullen wir es
+        if (selectedUser && selectedUser.username === user.username) {
+          selectedUser = null;
+        }
+      } else {
+        label.classList.remove('disabled');
+        radio.disabled = false;
       }
-    } else {
-      label.classList.remove('disabled');
-      radio.disabled = false;
-    }
-  });
-}
+    });
+  }
+  
 
-// Beispiel-Helfer: 
-// Wir tun mal so, als hätte jeder user ein Array: user.servicesOffered=[0,1,2,...] 
-// Hier checken wir, ob user alle "chosenIDs" anbietet:
 function canUserDoAllServices(user, chosenIDs) {
-  // BEISPIEL: wenn user.servicesOffered nicht existiert => user kann alles
-  if (!user.servicesOffered) return true;
+    /*
+      user.availableServices: Array von Strings (z.B. ["0", "2", "3"])
+      chosenIDs: Array von Zahlen (z.B. [0, 3]) oder evtl. gemischt
+    */
 
-  // Muss jede gewählte ID in user.servicesOffered enthalten sein
-  return chosenIDs.every(id => user.servicesOffered.includes(id));
+    // Falls user.availableServices gar nicht definiert (oder kein Array):
+    if (!Array.isArray(user.availableServices)) {
+        return false;
+    }
+
+    // Wandle die gewählten IDs in Strings um:
+    const chosenIDsAsStrings = chosenIDs.map(id => String(id));
+
+    // Prüfe, ob *alle* gewählten IDs im availableServices-Array vorkommen
+    return chosenIDsAsStrings.every(idStr => user.availableServices.includes(idStr));
 }
+
 
 /***********************************************************
  * 2) DATUMS-AUSWAHL (WOCHE)
@@ -537,7 +539,8 @@ function goToStep5() {
 function confirmBooking() {
   const chosen = getChosenServices();
   const totalPrice = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.servicePrice:0), 0);
-  const totalDuration = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.serviceDuration:0), 0);
+  const totalDuration = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.serviceDuration:0), 0)
+  ;
 
   // Wir bauen das Array ["1","0","1"] etc. 
   // => In der Reihenfolge serviceID: 0..max
