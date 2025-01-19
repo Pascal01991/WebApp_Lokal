@@ -1950,7 +1950,7 @@ function clearAppointmentForm(currentUserName) {
 
 
 // Dropdown mit Benutzern füllen und aktuellen Benutzer wählen
-function populateDropdownWithUsers(users) {
+function populateDropdownWithUsersForAppointmentForm(users) {
     const dropdown = document.getElementById('Ressource');
     dropdown.innerHTML = ''; // Bestehende Optionen entfernen
 
@@ -3020,7 +3020,7 @@ const holidayForm = document.getElementById('holidayForm');
 let activeYears = new Set();
 
 /**************************************************************
- * 1) Hilfsfunktion: Deutsche Datumsformatierung
+ * 1) Hilfsfunktion: Deutsche Datumsformatierung und DropDowninitialisierung
  **************************************************************/
 function formatGermanDate(dateString) {
     const dateObj = new Date(dateString);
@@ -3030,17 +3030,76 @@ function formatGermanDate(dateString) {
     const year = dateObj.getFullYear();
     return `${day}.${month}.${year}`;
 }
+/*
+function populateDropdownWithUsersForHolidayForm(users) {
+    const dropdown = document.getElementById('holidayResourceDropdown');
+    dropdown.innerHTML = ''; // Bestehende Optionen entfernen
+
+    // Option "-- bitte wählen --" hinzufügen
+    const defaultOption = document.createElement('option');
+    defaultOption.value = ""; // Kein Wert für die Auswahl
+    defaultOption.textContent = "-- bitte wählen --";
+    defaultOption.disabled = true; // Auswahl nicht möglich
+    defaultOption.selected = true; // Standardauswahl
+    dropdown.appendChild(defaultOption);
+
+    // Option "Alle (Betriebsurlaub)" hinzufügen
+    const allOption = document.createElement('option');
+    allOption.value = "all";
+    allOption.textContent = "Alle (Betriebsurlaub)";
+    dropdown.appendChild(allOption);
+
+    // Alle Benutzer hinzufügen
+    users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.username; // Verwende den Benutzernamen als Wert
+        option.textContent = user.publicName || user.username; // Zeige den öffentlichen Namen oder Benutzernamen
+        dropdown.appendChild(option);
+    });
+
+    // Event-Listener für die Auswahl im Dropdown
+    dropdown.addEventListener('change', (event) => {
+        const selectedValue = event.target.value;
+        document.getElementById('holidayResource').value = selectedValue;
+    });
+}*/
+
+// Dropdown mit Benutzern füllen und aktuellen Benutzer wählen
+function populateDropdownWithUsersForHolidayForm(users) {
+    const dropdown = document.getElementById('holidayResourceDropdown');
+    dropdown.innerHTML = ''; // Bestehende Optionen entfernen
+
+    // Alle Benutzer hinzufügen
+    users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.username; // Verwende die ID oder den Benutzernamen als Wert
+        option.textContent = user.username; // Benutzernamen anzeigen
+
+        // Option hinzufügen
+        dropdown.appendChild(option);
+    });
+}
+
+
+
 
 /**************************************************************
  * 2) Formular-Felder leeren
  **************************************************************/
 function clearHolidayForm() {
+    // Text- und Datumsfelder leeren
     document.getElementById('holidayDescription').value = '';
     document.getElementById('holidayFromDate').value = '';
     document.getElementById('holidayToDate').value = '';
-    document.getElementById('holidayResource').value = '';
+
+    // Dropdown für Ressource zurücksetzen
+    const resourceDropdown = document.getElementById('holidayResourceDropdown');
+    if (resourceDropdown) {
+        resourceDropdown.value = ''; // Standardoption auswählen
+    }
+
+    // Genehmigungsstatus zurücksetzen
     document.getElementById('holidayStatus').value = ''; 
-    // <- Dann landet "Ausstehend" als Default (siehe unten)
 }
 
 /**************************************************************
@@ -3638,7 +3697,8 @@ async function loadUsers() {
         allUsers = users.slice(1); // Entfernt den Benutzer mit Index 0 (Admin)
         
         displayUsers(allUsers); // Benutzerliste anzeigen
-        populateDropdownWithUsers(allUsers, currentUserName); // Dropdown mit Benutzern befüllen
+        populateDropdownWithUsersForAppointmentForm(allUsers, currentUserName); // Dropdown mit Benutzern befüllen
+        populateDropdownWithUsersForHolidayForm(allUsers);
     } catch (error) {
         console.error('Fehler beim Laden der Benutzer:', error);
     }

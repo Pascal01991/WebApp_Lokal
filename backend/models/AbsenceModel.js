@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const absenceSchema = new mongoose.Schema({
-    workingHours: {
+/*    workingHours: {
         type: Map,
         of: {
             active: Boolean,
@@ -9,7 +9,7 @@ const absenceSchema = new mongoose.Schema({
             afternoon: { start: String, end: String }
         },
         required: true
-    },
+    },*/
     holidays: [
         {
             from: String, // Startdatum (ISO-Format: YYYY-MM-DD)

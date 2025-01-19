@@ -52,7 +52,7 @@
             <div id="userInfo">
                 Angemeldet als: <span id="loggedInUsername"></span>
               </div>
-        
+              <h2>Eingehende Anfragen</h2>
               <div id="appointmentRequestsList" class="scrollable-request-list"></div>
      
             
@@ -393,7 +393,12 @@
                         </div>
                         <div>
                             <label>Ressource:</label>
-                            <input type="text" id="holidayResource" placeholder="Ressource">
+                            <select id="holidayResourceDropdown" required>
+                                <option value="">-- bitte wählen --</option>
+                            </select>
+
+                                                  
+                            </select>
                         </div>
                         <div>
                             <label>Genehmigungsstatus:</label>
@@ -410,8 +415,8 @@
                         <button type="button" id="cancelHolidayFormButton">Abbrechen</button>
                     </div>
                 </form>
-                
             </div>
+            
         
             <!-- Filterbuttons für Jahre -->
             <div id="holidayFilters">
