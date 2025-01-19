@@ -3205,10 +3205,29 @@ async function editHoliday(index) {
 
     console.log('Gefundener Feiertag:', holiday);
 
+    // Sicherstellen, dass das Dropdown initialisiert wurde
+    const dropdown = document.getElementById('holidayResourceDropdown');
+    if (!dropdown || dropdown.options.length === 0) {
+        console.error('Dropdown ist noch nicht initialisiert');
+        return alert('Dropdown-Optionen nicht verfügbar. Bitte erneut versuchen.');
+    }
+
+    // Prüfen, ob die Ressource im Dropdown existiert
+    const resourceExists = Array.from(dropdown.options).some(
+        (option) => option.value === holiday.resource
+    );
+    if (!resourceExists && holiday.resource) {
+        console.warn(`Ressource "${holiday.resource}" nicht im Dropdown gefunden. Fügt sie hinzu.`);
+        const newOption = document.createElement('option');
+        newOption.value = holiday.resource;
+        newOption.textContent = holiday.resource;
+        dropdown.appendChild(newOption);
+    }
+
     // Felder befüllen
-    document.getElementById('holidayDescription').value = holiday.description;
-    document.getElementById('holidayFromDate').value = holiday.from;
-    document.getElementById('holidayToDate').value = holiday.to;
+    document.getElementById('holidayDescription').value = holiday.description || '';
+    document.getElementById('holidayFromDate').value = holiday.from || '';
+    document.getElementById('holidayToDate').value = holiday.to || '';
     document.getElementById('holidayResourceDropdown').value = holiday.resource || '';
     document.getElementById('holidayStatus').value = holiday.status || 'Ausstehend';
 
@@ -3218,7 +3237,8 @@ async function editHoliday(index) {
     // PUT-Listener
     const newSubmitBtn = document.getElementById('addHolidayButton');
     newSubmitBtn.innerText = 'Änderungen speichern';
-    newSubmitBtn.addEventListener('click', async (e) => {
+    newSubmitBtn.replaceWith(newSubmitBtn.cloneNode(true)); // Verhindert doppelte Listener
+    document.getElementById('addHolidayButton').addEventListener('click', async (e) => {
         e.preventDefault();
 
         const updatedHoliday = {
@@ -3250,6 +3270,7 @@ async function editHoliday(index) {
         }
     });
 }
+
 
 /**************************************************************
  * 7) Feiertag/Urlaub löschen (DELETE) => /absence/holidays/:index

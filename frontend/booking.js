@@ -357,38 +357,39 @@ function renderWeekTable() {
 // Hilfsfunktionen, um zu prüfen, ob es in den loadedSlots 
 // mind. 1 Slot für diesen Tag + morning/afternoon gibt
 function checkMorningAvailability(dateObj) {
-    const requiredDuration = calculateTotalDuration(); 
-    const dateStr = formatDate(dateObj); 
-    
-    if (!selectedUser) {
-      // Falls kein User gewählt, hier z.B. true zurückgeben (oder false, je nach Bedarf)
-      return true;
-    }
+  const requiredDuration = calculateTotalDuration(); // Summe aus allen gewählten Services
+  const dateStr = formatDate(dateObj); // "YYYY-MM-DD"
   
-    const userName = selectedUser.username;
-  
-    // Wir suchen mind. 1 Slot, der für diesen Tag (dateStr) in der "morning" Zeit liegt
-    // und laut Backend isAvailable[userName] === true hat.
-    const availableSlot = loadedSlots.find(slot => {
-      const slotDate = slot.startDateTime.split('T')[0];
-      if (slotDate !== dateStr) return false;
-  
-      const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
-      if (hour >= 12) return false;
-  
-      // Hier genügt die Abfrage auf slot.isAvailable[userName],
-      // weil wir im Backend bereits Feiertage + Termin-Konflikte berücksichtigt haben.
-      if (!slot.isAvailable || !slot.isAvailable[userName]) {
-        return false;
-      }
-  
-      // Wenn wir hier sind, haben wir einen passenden Slot
-      return true;
-    });
-  
-    return !!availableSlot; // true, wenn Slot gefunden, false sonst
+  // Finde mind. 1 Slot, wo hour < 12 + isAvailable + user
+  if (!selectedUser) {
+    // Noch kein User gewählt => in Step1
+    // Falls du ausgrauen willst, weil kein User = 
+    //   return false;
+    // Hier sagen wir mal "true" => 
+    return true;
   }
-  
+
+  const userName = selectedUser.username;
+  const availableSlot = loadedSlots.find(slot => {
+    const slotDate = slot.startDateTime.split('T')[0];
+    if (slotDate !== dateStr) return false;
+
+    // morning => hour < 12
+    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
+    if (hour >= 12) return false;
+
+    // Check user availability
+    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+
+    // Optional: Check if there's enough continuous time for requiredDuration 
+    // => In diesem Beispiel ignorieren wir "continuous" und gehen simplifiziert davon aus, 
+    //    wir buchen nur Start-Slot. 
+    //    Für echtes "enough time" bräuchte man aufwändigere Prüfung.
+    return true;
+  });
+
+  return !!availableSlot; // true, wenn wir einen gefunden haben
+}
 
 function checkAfternoonAvailability(dateObj) {
   const requiredDuration = calculateTotalDuration();

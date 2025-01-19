@@ -57,7 +57,7 @@ router.put('/holidays/:index', async (req, res) => {
         const index = parseInt(req.params.index, 10);
         console.log('Konvertierter Index:', index);
 
-        const { from, to, description } = req.body;
+        const { from, to, description, resource, status } = req.body;
         console.log(`Eingehende Daten - From: ${from}, To: ${to}, Description: ${description}`);
 
         let absence = await Absence.findOne();
@@ -71,7 +71,7 @@ router.put('/holidays/:index', async (req, res) => {
             return res.status(404).json({ error: 'Feiertag nicht gefunden' });
         }
 
-        absence.holidays[index] = { from, to, description };
+        absence.holidays[index] = { from, to, description, resource, status  };
         await absence.save();
 
         console.log('Aktualisierte Feiertage:', absence.holidays);
