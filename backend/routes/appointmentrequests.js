@@ -9,8 +9,8 @@ router.get('/', async (req, res) => {
         // Hier kannst du die Header ausgeben
         console.log(req.headers); // Diese Zeile zeigt den Authorization-Header und andere Header in der Konsole an
 
-        const AppointmentRequestss = await AppointmentRequests.find();
-        res.json(AppointmentRequestss);
+        const AppointmentRequests_const = await AppointmentRequests.find();
+        res.json(AppointmentRequests_const);
     } catch (err) {
         res.status(500).json({ msg: 'Fehler beim Abrufen der Termine' });
     }
@@ -104,16 +104,20 @@ router.post('/', async (req, res) => {
 });
 
 
-//Route für Löschen Button
+// Route für Löschen Button
 router.delete('/:id', async (req, res) => {
     try {
         console.log("Löschanfrage erhalten für ID: ", req.params.id);
-        const AppointmentRequests = await AppointmentRequests.findByIdAndDelete(req.params.id);
-        if (!AppointmentRequests) {
+        
+        // Ändere die lokale Variable zu "deletedAppointmentRequest", um Überschneidungen zu vermeiden
+        const deletedAppointmentRequest = await AppointmentRequests.findByIdAndDelete(req.params.id);
+        
+        if (!deletedAppointmentRequest) {
             console.log(`Kein Termin gefunden für ID: ${req.params.id}`);
             return res.status(404).json({ msg: 'Termin nicht gefunden' });
         }
-        res.json({ msg: 'Termin gelöscht' });
+
+        res.json({ msg: 'Termin gelöscht', deletedAppointmentRequest });
     } catch (err) {
         console.error("Fehler beim Löschen des Termins:", err.message);
         console.error("Stack Trace:", err.stack); // Stacktrace für genauere Fehlerdetails
@@ -122,6 +126,7 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ msg: 'Fehler beim Löschen des Termins', error: err.message });
     }
 });
+
 
 //Route für Bearbeiten Button
 router.put('/:id', async (req, res) => {

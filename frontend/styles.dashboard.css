@@ -163,7 +163,7 @@ BUCHUNGSANFRAGEN
 TERMINANFRAGEN SCROLLBARE LISTE
 ====================================================================================================================================*/
 
-#appointment-requests-section {
+#home-section-section {
   margin-top: 50px;
 }
 
@@ -185,7 +185,7 @@ TERMINANFRAGEN SCROLLBARE LISTE
 
 /* Scrollbare Termin-Anfragen Liste */
 .scrollable-request-list {
-  max-height: 500px;
+  max-height: 400px;
   overflow-y: auto;
   border: 1px solid #ccc;
   padding: 10px;
@@ -200,8 +200,6 @@ TERMINANFRAGEN SCROLLBARE LISTE
   padding: 8px;
   border-bottom: 1px solid #ddd;
   margin-bottom: 10px;
-  background-color: var(--background-light);
-  border-radius: 5px;
 }
 
 /* Flexibles Layout für 3 Spalten */
@@ -217,6 +215,13 @@ TERMINANFRAGEN SCROLLBARE LISTE
 .request-actions {
   display: flex;
   flex-direction: column;
+  gap: 5px;
+  text-align: right;
+}
+
+.check_approve-actions {
+  display: flex;
+  flex-direction: row;
   gap: 5px;
 }
 

@@ -279,12 +279,22 @@ async function loadAppointmentRequests() {
 /**************************************************************
  * (I) TERMIN-ANFRAGEN ANZEIGEN / displayAppointmentRequests
  **************************************************************/
+/**
+ * Zeigt alle Appointment Requests in einer Liste an und hängt Event-Listener
+ * für Freigeben, Ablehnen und Bearbeiten an.
+ *
+ * @param {Array} appointmentRequests - Array aus Appointment Requests (z.B. aus dem Backend geladen)
+ */
 async function displayAppointmentRequests(appointmentRequests) {
     const requestsList = document.getElementById('appointmentRequestsList');
+    
+    // HTML für jede Request generieren
     requestsList.innerHTML = appointmentRequests.map(req => {
+        // Start-/End-Zeiten ausrechnen bzw. formattieren
         const start = new Date(req.startDateTime);
-        const end = req.endDateTime ? new Date(req.endDateTime) 
-                                    : new Date(start.getTime() + (req.duration * 60000));
+        const end = req.endDateTime 
+                    ? new Date(req.endDateTime) 
+                    : new Date(start.getTime() + (req.duration * 60000));
 
         return `
             <div class="termin-request-card">
@@ -299,38 +309,286 @@ async function displayAppointmentRequests(appointmentRequests) {
                     <div>Dienstleistung: ${req.Dienstleistung || "nicht angegeben"}</div>
                     <div>Beschreibung: ${req.description || "Keine Beschreibung"}</div>
                 </div>
+
                 <!-- Spalte B: Weitere Infos -->
                 <div class="request-info">
                     <div>Preis: ${req.Preis || "nicht angegeben"}</div>
                     <div>Mail: ${req.MailAppointmentRequests || "keine E-Mail"}</div>
                     <div>Ressource: ${req.Ressource || "keine Ressource angegeben"}</div>
                 </div>
+
                 <!-- Spalte C: Aktionen -->
                 <div class="request-actions">
-                    <button class="action-btn request-edit-btn" data-req-id="${req._id}" title="Bearbeiten">✏️</button>
-                    <button class="action-btn request-delete-btn" data-req-id="${req._id}" title="Löschen">🗑️</button>
+                    <div class="check_approve-actions">
+                        <!-- Freigeben-Button -->
+                        <button 
+                            class="action-btn request-approve-btn" 
+                            data-req-id="${req._id}" 
+                            title="Freigeben">
+                            ✅
+                        </button>
+
+                        <!-- Ablehnen-Button -->
+                        <button 
+                            class="action-btn request-reject-btn" 
+                            data-req-id="${req._id}" 
+                            title="Ablehnen">
+                            ❌
+                        </button>
+                    </div>
+                    
+                    <!-- Bearbeiten-Button -->
+                    <button 
+                        class="action-btn request-edit-btn" 
+                        data-req-id="${req._id}" 
+                        title="Bearbeiten">
+                        ✏️
+                    </button>
                 </div>
             </div>
         `;
     }).join('');
 
-    // Klick auf Bearbeiten
-    document.querySelectorAll('.request-edit-btn').forEach(btn => {
+    // Event-Listener für: Freigeben
+    document.querySelectorAll('.request-approve-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const requestId = btn.getAttribute('data-req-id');
-            editAppointmentRequest(requestId);
+            approveAppointmentRequest(requestId, appointmentRequests);
         });
     });
 
-    // Klick auf Löschen
-    document.querySelectorAll('.request-delete-btn').forEach(btn => {
+    // Event-Listener für: Ablehnen
+    document.querySelectorAll('.request-reject-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const requestId = btn.getAttribute('data-req-id');
-            deleteAppointmentRequest(requestId);
+            rejectAppointmentRequest(requestId, appointmentRequests);
+        });
+    });
+
+    // Event-Listener für: Bearbeiten
+    document.querySelectorAll('.request-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const requestId = btn.getAttribute('data-req-id');
+            editAppointmentRequest(requestId, appointmentRequests);
         });
     });
 }
 
+/**************************************************************
+TERMIN-ANFRAGEN FREIGEBEN
+ **************************************************************/
+/**
+ * Wandelt einen Appointment Request in ein neues Appointment um
+ * und sendet dieses an das Backend. Anschließend kann der Request
+ * entfernt werden (z.B. via delete im Backend).
+ *
+ * @param {string} requestId - Die ID des Requests, der genehmigt werden soll
+ * @param {Array} appointmentRequests - Array aller vorhandenen Requests
+ */
+async function approveAppointmentRequest(requestId, appointmentRequests) {
+    // Request aus dem Array holen
+    const req = appointmentRequests.find(r => r._id === requestId);
+    if (!req) {
+        alert('Request nicht gefunden!');
+        return;
+    }
+
+    // Hier baust du dir aus den Request-Daten das gewünschte newAppointment,
+    // so wie du es für dein /appointments-Backend erwartest.
+    // Die Felder sind analog zu deiner Vorgabe:
+    // ------------------------------------------------------------------------
+    //   KundennummerzumTermin,
+    //   startDateTime: finalStart,
+    //   endDateTime: "",
+    //   duration: totalDuration,
+    //   description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
+    //   MailAppointmentRequests: personalData.email,
+    //   Preis: String(totalPrice),
+    //   Dienstleistung: JSON.stringify(servicesArray),
+    //   erfasstDurch: "öffentliche Buchungsplattform",
+    //   Ressource: selectedUser?.username || ""
+    // ------------------------------------------------------------------------
+    // Da deine Request-Objekte evtl. andere Felder enthalten, bitte anpassen.
+
+    const personalData = {
+        firstName: req.firstName || 'VornameUnbekannt',
+        lastName: req.lastName || 'NachnameUnbekannt',
+        email: req.MailAppointmentRequests || 'keine Email'
+    };
+
+    const servicesArray = req.servicesArray || [];
+    const totalPrice = req.totalPrice || 0;
+    const selectedUser = { username: req.Ressource || '' };
+    
+    // Falls du in deinem Request abweichend startDateTime schon hast,
+    // kannst du das direkt verwenden:
+    const finalStart = req.startDateTime;
+    const totalDuration = req.duration;
+
+    // Du kannst dieses Objekt nach Belieben anpassen
+    const newAppointment = {
+        KundennummerzumTermin: req.KundennummerzumTermin || '',
+        startDateTime: finalStart,
+        endDateTime: req.endDateTime || '',  // optional
+        duration: totalDuration,
+        description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
+        MailAppointmentRequests: personalData.email,
+        Preis: String(totalPrice),
+        Dienstleistung: JSON.stringify(servicesArray),
+        erfasstDurch: "öffentliche Buchungsplattform",
+        Ressource: selectedUser.username
+    };
+
+    // An dein Backend senden
+    try {
+        const response = await fetch(`${BACKEND_URL}/appointments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(newAppointment)
+        });
+
+        if (!response.ok) {
+            throw new Error('Fehler beim Anlegen des neuen Termins');
+        }
+
+        // Wenn das POST erfolgreich war, Request ggf. im Backend löschen
+        // oder seinen Status auf "genehmigt" setzen. Beispiel: DELETE:
+        await fetch(`${BACKEND_URL}/appointmentrequests/${requestId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        // Im Frontend-Array entfernen
+        const index = appointmentRequests.findIndex(r => r._id === requestId);
+        if (index !== -1) {
+            appointmentRequests.splice(index, 1);
+        }
+
+        // UI neu rendern
+        displayAppointmentRequests(appointmentRequests);
+
+        alert('Termin erfolgreich aus Request erstellt und Request entfernt!');
+    } catch (err) {
+        console.error(err);
+        alert('Fehler: ' + err.message);
+    }
+}
+
+/**************************************************************
+TERMIN-ANFRAGEN ABLEHNEN
+ **************************************************************/
+/**
+ * Entfernt (löscht) einen Appointment Request, z.B. wenn der Admin
+ * ihn ablehnt. Kann im Backend per DELETE passieren.
+ *
+ * @param {string} requestId - Die ID des Requests, der gelöscht werden soll
+ * @param {Array} appointmentRequests - Array aller vorhandenen Requests
+ */
+async function rejectAppointmentRequest(requestId, appointmentRequests) {
+    // Im Backend löschen (optional, je nach API)
+    try {
+        const response = await fetch(`${BACKEND_URL}/appointmentrequests/${requestId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Fehler beim Löschen des Requests');
+        }
+
+        // Auch im Frontend-Array entfernen
+        const index = appointmentRequests.findIndex(r => r._id === requestId);
+        if (index !== -1) {
+            appointmentRequests.splice(index, 1);
+        }
+
+        // Liste neu rendern
+        displayAppointmentRequests(appointmentRequests);
+
+        alert('Request abgelehnt und entfernt!');
+    } catch (error) {
+        console.error(error);
+        alert('Fehler beim Entfernen des Requests: ' + error.message);
+    }
+}
+
+/**************************************************************
+TERMIN-ANFRAGEN BEARBEITEN VOR FREIGEBEN
+ **************************************************************/
+/**
+ * Öffnet dein bestehendes Terminformular und befüllt es mit Daten
+ * aus dem gewählten Appointment Request. Der Nutzer kann es dann
+ * ganz normal ändern und absenden.
+ *
+ * @param {string} requestId - Die ID des Requests
+ * @param {Array} appointmentRequests - Array aller Requests
+ */
+function editAppointmentRequest(requestId, appointmentRequests) {
+    // Request aus Array holen
+    const req = appointmentRequests.find(r => r._id === requestId);
+    if (!req) {
+        alert('Request nicht gefunden!');
+        return;
+    }
+
+    // Formular einblenden (falls du dafür eine Funktion hast)
+    showAppointmentForm(); // Diese Funktion musst du ggf. selbst definieren.
+
+    // Nun füllen wir die relevanten Felder deines Formulars
+    // (Feld-IDs anpassen, damit es zu deinen HTML-IDs passt):
+    document.getElementById('KundennummerzumTermin').value = req.KundennummerzumTermin || '';
+
+    // Start-/End-Zeit
+    // Beispiel: wenn req.startDateTime ein ISO-String ist, kannst du .slice(0,16) nehmen,
+    // um das Format "YYYY-MM-DDTHH:mm" zu erhalten, das viele <input type="datetime-local"> Felder brauchen.
+    if (req.startDateTime) {
+        document.getElementById('startDateTime').value = req.startDateTime.slice(0,16);
+    }
+    if (req.endDateTime) {
+        document.getElementById('endDateTime').value   = req.endDateTime.slice(0,16);
+    }
+
+    // Dauer in Stunden/Minuten aufsplitten, falls nötig
+    const totalMinutes = req.duration || 0;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins  = totalMinutes % 60;
+    document.getElementById('durationHours').value = hours;
+    document.getElementById('durationMinutes').value = mins;
+
+    // Dienstleistung, Preis, usw.
+    document.getElementById('Dienstleistung').value = req.Dienstleistung || '';
+    document.getElementById('Preis').value = req.Preis || '';
+    document.getElementById('Abrechnungsstatus').value = req.Abrechnungsstatus || '';
+    document.getElementById('description').value = req.description || '';
+
+    // Weitere Felder
+    document.getElementById('erfasstDurch').value = req.erfasstDurch || '';
+    document.getElementById('letzterBearbeiter').value = req.letzterBearbeiter || '';
+    document.getElementById('Ressource').value = req.Ressource || '';
+
+    // usw. für projektId, verrechnungsTyp, erbringungsStatus, fakturaBemerkung, fakturaNummer
+    if (req.projektId) {
+        document.getElementById('projektId').value = req.projektId;
+    }
+    document.getElementById('verrechnungsTyp').value  = req.verrechnungsTyp  || '';
+    document.getElementById('erbringungsStatus').value = req.erbringungsStatus || '';
+    document.getElementById('fakturaBemerkung').value  = req.fakturaBemerkung || '';
+    document.getElementById('fakturaNummer').value     = req.fakturaNummer    || '';
+
+    // Falls du einen abweichenden Rechnungsempfänger hast
+    const reNum = req.rechnungsEmpfaengerNummer;
+    document.getElementById('RechnungsempfaengerNummerDisplay').textContent = reNum ? String(reNum) : '';
+    
+    // Der Nutzer kann nun im Formular Änderungen vornehmen 
+    // und es dann normal absenden.
+}
 
 
     //====================================================================================================================================
@@ -2236,7 +2494,7 @@ startInput.addEventListener('change', calculateEndDateTime);
 endInput.addEventListener('change', calculateDuration);
 
 
-
+/*
 //Senden & Speichern im Backend
 document.getElementById('appointmentForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -2297,7 +2555,7 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
 
 });
 
-
+*/
 
     //====================================================================================================================================
     //====================================================================================================================================
