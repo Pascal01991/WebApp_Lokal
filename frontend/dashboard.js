@@ -525,7 +525,8 @@ TERMIN-ANFRAGEN BEARBEITEN VOR FREIGEBEN
 /**
  * Öffnet dein bestehendes Terminformular und befüllt es mit Daten
  * aus dem gewählten Appointment Request. Der Nutzer kann es dann
- * ganz normal ändern und absenden.
+ * bearbeiten und am Ende bestätigen, wobei der ursprüngliche Request
+ * in einen Termin umgewandelt (POST) und danach gelöscht wird.
  *
  * @param {string} requestId - Die ID des Requests
  * @param {Array} appointmentRequests - Array aller Requests
@@ -538,56 +539,194 @@ function editAppointmentRequest(requestId, appointmentRequests) {
         return;
     }
 
-    // Formular einblenden (falls du dafür eine Funktion hast)
-    showAppointmentForm(); // Diese Funktion musst du ggf. selbst definieren.
+    // Formular einblenden
+    showAppointmentForm(); // Deine Funktion, die das Formular sichtbar macht
 
-    // Nun füllen wir die relevanten Felder deines Formulars
-    // (Feld-IDs anpassen, damit es zu deinen HTML-IDs passt):
+    // -------------------------
+    // Felder des Formulars befüllen
+    // -------------------------
     document.getElementById('KundennummerzumTermin').value = req.KundennummerzumTermin || '';
 
-    // Start-/End-Zeit
-    // Beispiel: wenn req.startDateTime ein ISO-String ist, kannst du .slice(0,16) nehmen,
-    // um das Format "YYYY-MM-DDTHH:mm" zu erhalten, das viele <input type="datetime-local"> Felder brauchen.
+    // Start-/End-Zeit in "YYYY-MM-DDTHH:mm" konvertieren (falls type="datetime-local")
     if (req.startDateTime) {
         document.getElementById('startDateTime').value = req.startDateTime.slice(0,16);
     }
     if (req.endDateTime) {
-        document.getElementById('endDateTime').value   = req.endDateTime.slice(0,16);
+        document.getElementById('endDateTime').value = req.endDateTime.slice(0,16);
     }
 
-    // Dauer in Stunden/Minuten aufsplitten, falls nötig
+    // Dauer in Stunden und Minuten aufsplitten
     const totalMinutes = req.duration || 0;
     const hours = Math.floor(totalMinutes / 60);
     const mins  = totalMinutes % 60;
-    document.getElementById('durationHours').value = hours;
+    document.getElementById('durationHours').value   = hours;
     document.getElementById('durationMinutes').value = mins;
 
-    // Dienstleistung, Preis, usw.
-    document.getElementById('Dienstleistung').value = req.Dienstleistung || '';
-    document.getElementById('Preis').value = req.Preis || '';
-    document.getElementById('Abrechnungsstatus').value = req.Abrechnungsstatus || '';
-    document.getElementById('description').value = req.description || '';
-
     // Weitere Felder
-    document.getElementById('erfasstDurch').value = req.erfasstDurch || '';
-    document.getElementById('letzterBearbeiter').value = req.letzterBearbeiter || '';
-    document.getElementById('Ressource').value = req.Ressource || '';
-
-    // usw. für projektId, verrechnungsTyp, erbringungsStatus, fakturaBemerkung, fakturaNummer
+    document.getElementById('Dienstleistung').value      = req.Dienstleistung      || '';
+    document.getElementById('Preis').value               = req.Preis              || '';
+    document.getElementById('Abrechnungsstatus').value   = req.Abrechnungsstatus  || '';
+    document.getElementById('description').value         = req.description        || '';
+    document.getElementById('erfasstDurch').value        = req.erfasstDurch       || '';
+    document.getElementById('letzterBearbeiter').value   = req.letzterBearbeiter  || '';
+    document.getElementById('Ressource').value           = req.Ressource          || '';
     if (req.projektId) {
-        document.getElementById('projektId').value = req.projektId;
+        document.getElementById('projektId').value       = req.projektId;
     }
-    document.getElementById('verrechnungsTyp').value  = req.verrechnungsTyp  || '';
-    document.getElementById('erbringungsStatus').value = req.erbringungsStatus || '';
-    document.getElementById('fakturaBemerkung').value  = req.fakturaBemerkung || '';
-    document.getElementById('fakturaNummer').value     = req.fakturaNummer    || '';
+    document.getElementById('verrechnungsTyp').value     = req.verrechnungsTyp    || '';
+    document.getElementById('erbringungsStatus').value   = req.erbringungsStatus  || '';
+    document.getElementById('fakturaBemerkung').value    = req.fakturaBemerkung   || '';
+    document.getElementById('fakturaNummer').value       = req.fakturaNummer      || '';
 
-    // Falls du einen abweichenden Rechnungsempfänger hast
+    // Abweichender Rechnungsempfänger (Anzeige, falls vorhanden)
     const reNum = req.rechnungsEmpfaengerNummer;
     document.getElementById('RechnungsempfaengerNummerDisplay').textContent = reNum ? String(reNum) : '';
-    
-    // Der Nutzer kann nun im Formular Änderungen vornehmen 
-    // und es dann normal absenden.
+
+    // ---------------------------------------------------
+    //  Button "Bearbeiteter Termin Bestätigen" einrichten
+    // ---------------------------------------------------
+    const appointmentForm = document.getElementById('appointmentForm');
+
+    // 1) Alten Event-Listener entfernen, damit nicht das "Standard-Submit" greift.
+    //    Das erreichst du, indem du den Button durch eine Klon-Kopie ersetzt.
+    const oldSubmitButton = appointmentForm.querySelector('button[type="submit"]');
+    const newSubmitButton = oldSubmitButton.cloneNode(true); // Button kopieren
+
+    // 2) Alten Button ersetzen
+    oldSubmitButton.parentNode.replaceChild(newSubmitButton, oldSubmitButton);
+
+    // 3) Button-Text anpassen
+    newSubmitButton.innerText = 'Bearbeiteter Termin Bestätigen';
+
+    // 4) Neuen Klick-/Submit-Listener binden
+    newSubmitButton.addEventListener('click', async (e) => {
+        e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
+
+        try {
+            // ---------------------------------------------
+            //    a) Daten aus Formularfeldern auslesen
+            // ---------------------------------------------
+            // Du kannst exakt die gleiche Logik wie in deinem normalen
+            // Submit-Handler verwenden, nur eben hier lokal.
+
+            // Auftraggeber
+            const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value || '';
+
+            // Start-/Endtermin
+            const startVal = document.getElementById('startDateTime').value;
+            const endVal   = document.getElementById('endDateTime').value;
+
+            // Dauer
+            const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
+            const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
+            const totalDuration = hours * 60 + mins;
+
+            // Weitere Pflicht-/Zusatzfelder
+            const Dienstleistung     = document.getElementById('Dienstleistung').value;
+            const Preis             = document.getElementById('Preis').value;
+            const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
+            const description       = document.getElementById('description').value;
+            const erfasstDurch      = document.getElementById('erfasstDurch').value;
+            const letzterBearbeiter = document.getElementById('letzterBearbeiter').value;
+            const Ressource         = document.getElementById('Ressource').value;
+
+            // Projekt-ID
+            let projektId = parseInt(document.getElementById('projektId').value, 10);
+            if (isNaN(projektId)) {
+                projektId = null;
+            }
+
+            const verrechnungsTyp   = document.getElementById('verrechnungsTyp').value;
+            const erbringungsStatus = document.getElementById('erbringungsStatus').value;
+            const fakturaBemerkung  = document.getElementById('fakturaBemerkung').value;
+            const fakturaNummer     = document.getElementById('fakturaNummer').value;
+
+            // Abweichender Rechnungsempfänger
+            let rechnungsEmpfaengerNummer = document.getElementById('RechnungsempfaengerNummerDisplay').textContent;
+            if (!rechnungsEmpfaengerNummer) {
+                rechnungsEmpfaengerNummer = null;
+            }
+
+            // ---------------------------------------------
+            //    b) Object für das neue Appointment
+            // ---------------------------------------------
+            const newAppointment = {
+                KundennummerzumTermin,
+                startDateTime: startVal,
+                endDateTime: endVal,       // Falls leer, kannst du "" schicken
+                duration: totalDuration,
+                Dienstleistung,
+                Preis,
+                Abrechnungsstatus,
+                description,
+
+                erfasstDurch,
+                letzterBearbeiter,
+                Ressource,
+                projektId,
+                verrechnungsTyp,
+                erbringungsStatus,
+                fakturaBemerkung,
+                fakturaNummer,
+
+                // Abweichender Rechnungsempfänger
+                rechnungsEmpfaengerNummer
+            };
+
+            // ---------------------------------------------
+            //    c) Neues Appointment anlegen (POST)
+            // ---------------------------------------------
+            const response = await fetch(`${BACKEND_URL}/appointments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(newAppointment)
+            });
+
+            if (!response.ok) {
+                throw new Error('Fehler beim Hinzufügen des bearbeiteten Termins');
+            }
+
+            // ---------------------------------------------
+            //    d) Wenn erfolgreich -> Request löschen
+            // ---------------------------------------------
+            // Request per DELETE entfernen
+            const deleteRes = await fetch(`${BACKEND_URL}/appointmentrequests/${requestId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (!deleteRes.ok) {
+                throw new Error(`Fehler beim Entfernen des ursprünglichen Requests`);
+            }
+
+            // Auch lokal aus dem Array entfernen
+            const idx = appointmentRequests.findIndex(r => r._id === requestId);
+            if (idx !== -1) {
+                appointmentRequests.splice(idx, 1);
+            }
+
+            // ---------------------------------------------
+            //    e) UI anpassen: Formular schließen + Liste neu laden
+            // ---------------------------------------------
+            alert('Bearbeiteter Termin erfolgreich gespeichert und Request entfernt!');
+
+            // Formular ausblenden
+            hideAppointmentForm();  // Deine Funktion zum Schließen/Verstecken des Formulars
+
+            // Requests (oder Appointments) neu laden oder neu rendern
+            // Je nachdem, was du in deinem Code machst
+            displayAppointmentRequests(appointmentRequests); 
+            // oder loadAppointments();
+
+        } catch (err) {
+            console.error(err);
+            alert('Fehler: ' + err.message);
+        }
+    });
 }
 
 
