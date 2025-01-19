@@ -3064,10 +3064,17 @@ function populateDropdownWithUsersForHolidayForm(users) {
     });
 }*/
 
+
 // Dropdown mit Benutzern füllen und aktuellen Benutzer wählen
 function populateDropdownWithUsersForHolidayForm(users) {
     const dropdown = document.getElementById('holidayResourceDropdown');
     dropdown.innerHTML = ''; // Bestehende Optionen entfernen
+
+    // Option "Alle (Betriebsurlaub)" hinzufügen
+    const allOption = document.createElement('option');
+    allOption.value = 'all'; // Wert für "Alle"
+    allOption.textContent = 'Alle (Betriebsurlaub)'; // Text der Option
+    dropdown.appendChild(allOption);
 
     // Alle Benutzer hinzufügen
     users.forEach(user => {
@@ -3079,6 +3086,7 @@ function populateDropdownWithUsersForHolidayForm(users) {
         dropdown.appendChild(option);
     });
 }
+
 
 
 
@@ -3145,7 +3153,7 @@ async function createNewHoliday() {
     const from = document.getElementById('holidayFromDate').value;
     const to = document.getElementById('holidayToDate').value || from;
     const description = document.getElementById('holidayDescription').value;
-    const resource = document.getElementById('holidayResource').value;
+    const resource = document.getElementById('holidayResourceDropdown').value;
     // Als Fallback "Ausstehend" statt "Unbekannt", 
     // damit es ins Enum ['Genehmigt','Abgelehnt','Ausstehend'] passt
     const statusRaw = document.getElementById('holidayStatus').value;
