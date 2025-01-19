@@ -30,7 +30,7 @@
 
     loadUsers();
     
-
+    loadAppointmentRequests();
 
     // Funktion zum Bearbeiten des Termins
 // Für "Bearbeiten"-Button im Termin
@@ -240,7 +240,99 @@ async function editAppointment(appointmentId) {
       
         
       });
-      
+
+
+    //====================================================================================================================================      
+    //====================================================================================================================================
+    //====================================================================================================================================
+    //Buchungsanfragen
+    //====================================================================================================================================
+    //====================================================================================================================================
+    
+    /**************************************************************
+    * GLOBALE VARIABLEN: Filterzustände, Terminliste
+    **************************************************************/
+    
+    let allAppointmentRequests = []; // Termin-Anfragen global speichern
+
+/**************************************************************
+ * (H) LOAD APPOINTMENT REQUESTS (GET) UND ANZEIGE
+ **************************************************************/
+async function loadAppointmentRequests() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/appointmentrequests`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        if (response.ok) {
+            allAppointmentRequests = await response.json();
+            displayAppointmentRequests(allAppointmentRequests);
+        } else {
+            alert('Fehler beim Laden der Termin-Anfragen');
+        }
+    } catch (err) {
+        alert('Fehler: ' + err.message);
+    }
+}
+
+/**************************************************************
+ * (I) TERMIN-ANFRAGEN ANZEIGEN / displayAppointmentRequests
+ **************************************************************/
+async function displayAppointmentRequests(appointmentRequests) {
+    const requestsList = document.getElementById('appointmentRequestsList');
+    requestsList.innerHTML = appointmentRequests.map(req => {
+        const start = new Date(req.startDateTime);
+        const end = req.endDateTime ? new Date(req.endDateTime) 
+                                    : new Date(start.getTime() + (req.duration * 60000));
+
+        return `
+            <div class="termin-request-card">
+                <!-- Spalte A: Termin-Details -->
+                <div class="request-info">
+                    <div>
+                        ${start.toLocaleDateString()} 
+                        ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        -
+                        ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div>Dienstleistung: ${req.Dienstleistung || "nicht angegeben"}</div>
+                    <div>Beschreibung: ${req.description || "Keine Beschreibung"}</div>
+                </div>
+                <!-- Spalte B: Weitere Infos -->
+                <div class="request-info">
+                    <div>Preis: ${req.Preis || "nicht angegeben"}</div>
+                    <div>Mail: ${req.MailAppointmentRequests || "keine E-Mail"}</div>
+                    <div>Ressource: ${req.Ressource || "keine Ressource angegeben"}</div>
+                </div>
+                <!-- Spalte C: Aktionen -->
+                <div class="request-actions">
+                    <button class="action-btn request-edit-btn" data-req-id="${req._id}" title="Bearbeiten">✏️</button>
+                    <button class="action-btn request-delete-btn" data-req-id="${req._id}" title="Löschen">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Klick auf Bearbeiten
+    document.querySelectorAll('.request-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const requestId = btn.getAttribute('data-req-id');
+            editAppointmentRequest(requestId);
+        });
+    });
+
+    // Klick auf Löschen
+    document.querySelectorAll('.request-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const requestId = btn.getAttribute('data-req-id');
+            deleteAppointmentRequest(requestId);
+        });
+    });
+}
+
+
+
     //====================================================================================================================================
     //====================================================================================================================================
     //====================================================================================================================================

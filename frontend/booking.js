@@ -268,6 +268,7 @@ async function loadAndRenderWeek() {
     // Dann checken: sind ALLE Tage disabled => dann nächste Woche
     if (areAllDaysDisabled()) {
       // Automatic next week
+      alert('Diese Woche keine verfügbaren Slots für die gewälten Optionen! Siehe Slots in kommender Woche!');
       displayedWeekStart.setDate(displayedWeekStart.getDate() + 7);
       await loadAndRenderWeek();
     }
