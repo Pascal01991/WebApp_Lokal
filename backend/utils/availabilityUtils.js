@@ -80,111 +80,113 @@ function isDateInHoliday(date, holidays) {
 
 
     //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
-    function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
-        const slots = [];
-        const defaultLength = 30; // z.B. 30 Minuten
-    
-        console.log('Generiere Slots für den Zeitraum:', startOfWeek.toISOString(), '-', endOfWeek.toISOString());
-        console.log('Geladene Feiertage:', holidays);
-    
-        // Über die Tage der Woche iterieren
-        for (let i = 0; i < 7; i++) {
-            const day = new Date(startOfWeek);
-            day.setDate(startOfWeek.getDate() + i);
-    
-            if (day > endOfWeek) break;  // Außerhalb der Woche, Abbruch
-    
-            const dayName = getDayName(day).toLowerCase();
-            if (!workingHours[dayName] || !workingHours[dayName].active) continue;
-    
-            // Morgens/Nachmittags
-            const periods = ['morning', 'afternoon'];
-            periods.forEach(period => {
-                const start = workingHours[dayName][period]?.start;
-                const end = workingHours[dayName][period]?.end;
-    
-                if (start && end) {
-                    const startMinutes = parseTime(start);
-                    const endMinutes = parseTime(end);
-    
-                    for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultLength) {
-                        const slotTime = new Date(day);
-                        slotTime.setHours(0, minutes, 0, 0);
-    
-                        const isInHoliday = isDateInHoliday(slotTime, holidays);
-                        console.log(`Slot geprüft: ${slotTime.toISOString()}, Feiertag: ${isInHoliday}`);
-    
-                        slots.push({
-                            dayIndex: i,
-                            // statt dateTime => startDateTime
-                            startDateTime: slotTime,
-                            duration: defaultLength,
-                            //isAvailable: !isInHoliday,
-                            isHoliday: isInHoliday
-                        });
-                    }
-                }
-            });
+    // Hilfsfunktion:
+function getHolidayResourcesForDate(date, holidays) {
+    // Gibt ein Array aller Ressourcen zurück, die an 'date' Urlaub haben
+    // oder "all", wenn es ein Eintrag mit resource="all" gibt
+    const dateStr = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const holidayResources = [];
+
+    holidays.forEach(holiday => {
+        const fromDate = new Date(holiday.from).toISOString().split('T')[0];
+        const toDate = new Date(holiday.to).toISOString().split('T')[0];
+        // Prüfen, ob "dateStr" in diesem Holiday-Zeitraum liegt
+        if (dateStr >= fromDate && dateStr <= toDate) {
+            // Dann gehört "holiday.resource" hier rein
+            holidayResources.push(holiday.resource); 
+            // (z.B. "RiccardaKe", "AlexandraHe", oder "all")
         }
+    });
+
+    return holidayResources; // leeres Array, wenn kein passender Holiday
+}
+
+function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
+    const slots = [];
+    const defaultLength = 30;
     
-        return slots;
+    for (let i = 0; i < 7; i++) {
+        const day = new Date(startOfWeek);
+        day.setDate(startOfWeek.getDate() + i);
+        if (day > endOfWeek) break;
+
+        const dayName = getDayName(day).toLowerCase();
+        if (!workingHours[dayName] || !workingHours[dayName].active) continue;
+
+        ['morning','afternoon'].forEach(period => {
+            const start = workingHours[dayName][period]?.start;
+            const end = workingHours[dayName][period]?.end;
+            if (!start || !end) return;
+
+            const startMinutes = parseTime(start);
+            const endMinutes = parseTime(end);
+
+            for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultLength) {
+                const slotTime = new Date(day);
+                slotTime.setHours(0, minutes, 0, 0);
+                
+                // Statt bloß isHoliday = true/false => 
+                // Wir holen uns ein Array aller Ressourcen, die hier Urlaub haben
+                const holidayRes = getHolidayResourcesForDate(slotTime, holidays);
+                
+                const newSlot = {
+                    dayIndex: i,
+                    startDateTime: slotTime,
+                    duration: defaultLength,
+                    holidayResources: holidayRes, // z.B. [] oder ["RiccardaKe"] oder ["all"]
+                };
+                
+                slots.push(newSlot);
+            }
+        });
     }
+
+    return slots;
+}
+
     
 /**
  * Aktualisiert die Verfügbarkeit jedes Slots für jede Ressource (User).
  * Hier wird nun auch berücksichtigt, ob der Slot in einem Feiertag liegt (slot.isHoliday).
  */
+
 function updateSlotAvailability(slots, appointments, users) {
     slots.forEach(slot => {
-        // Start- und Endzeit des Slots bestimmen
         const slotStart = new Date(slot.startDateTime);
-        const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
+        const slotEnd   = new Date(slotStart.getTime() + slot.duration * 60000);
 
-        // Wir erstellen für jeden User ein Sub-Objekt in slot.isAvailable
         slot.isAvailable = {};
 
-        // Schleife über alle User
+        // Wir durchlaufen jeden Benutzer
         users.forEach(user => {
-            // Ermitteln, ob es einen Termin gibt, der diesen Slot blockiert
-            const userAppointments = appointments.filter(
-                app => app.Ressource === user.username
-            );
-
-            const conflict = userAppointments.some(app => {
+            // 1) Hat der User bereits einen Termin-Konflikt in dieser Zeit?
+            const conflict = appointments.some(app => {
+                if (app.Ressource !== user.username) return false;
                 const appStart = new Date(app.startDateTime);
-                const appEnd = new Date(appStart.getTime() + app.duration * 60000);
-
-                // Konflikt, wenn sich Zeiträume überschneiden
+                const appEnd   = new Date(appStart.getTime() + app.duration * 60000);
+                // Zeitüberlappung?
                 return (slotStart < appEnd) && (appStart < slotEnd);
             });
 
-            // Wichtig: Wenn Feiertag ODER Konflikt, dann nicht verfügbar
-            // slot.isHoliday wird bereits in generateTimeSlots(...) gesetzt
-            if (slot.isHoliday === true || conflict === true) {
-                slot.isAvailable[user.username] = false;
-            } else {
-                slot.isAvailable[user.username] = true;
-            }
+            // 2) Ist der User in holidayResources? 
+            //    (Oder steht dort "all"?)
+            const isUserOnHoliday = 
+                slot.holidayResources.includes('all') 
+                || slot.holidayResources.includes(user.username);
 
-            // Alternativ komprimierter Ausdruck:
-            // slot.isAvailable[user.username] = !(conflict || slot.isHoliday);
+            // Wenn entweder Konflikt oder Urlaub, dann nicht verfügbar
+            const notAvailable = (conflict || isUserOnHoliday);
 
-            // Optional: Logging
+            slot.isAvailable[user.username] = !notAvailable;
+
             console.log(
-                `User: ${user.username} | SlotStart: ${slotStart.toISOString()} | ` +
-                `Feiertag: ${slot.isHoliday} | Konflikt: ${conflict} | ` +
-                `=> Available: ${slot.isAvailable[user.username]}`
+                `User: ${user.username} | SlotStart: ${slotStart.toISOString()} | `
+              + `Holiday: ${isUserOnHoliday} | Konflikt: ${conflict} `
+              + `=> Available: ${!notAvailable}`
             );
         });
-
-        // Optional: das gesamte isAvailable-Objekt des Slots im Log
-        console.log(
-          'Gesamter isAvailable-Status dieses Slots:',
-          JSON.stringify(slot.isAvailable)
-        );
     });
 }
-
 
 
       
