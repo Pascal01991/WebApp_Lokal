@@ -3209,7 +3209,7 @@ async function editHoliday(index) {
     document.getElementById('holidayDescription').value = holiday.description;
     document.getElementById('holidayFromDate').value = holiday.from;
     document.getElementById('holidayToDate').value = holiday.to;
-    document.getElementById('holidayResource').value = holiday.resource || '';
+    document.getElementById('holidayResourceDropdown').value = holiday.resource || '';
     document.getElementById('holidayStatus').value = holiday.status || 'Ausstehend';
 
     // Formular (Edit-Modus) anzeigen
@@ -3225,7 +3225,7 @@ async function editHoliday(index) {
             from: document.getElementById('holidayFromDate').value,
             to: document.getElementById('holidayToDate').value,
             description: document.getElementById('holidayDescription').value,
-            resource: document.getElementById('holidayResource').value,
+            resource: document.getElementById('holidayResourceDropdown').value,
             status: document.getElementById('holidayStatus').value || 'Ausstehend',
         };
 

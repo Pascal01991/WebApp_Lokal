@@ -130,41 +130,61 @@ function isDateInHoliday(date, holidays) {
         return slots;
     }
     
-
+/**
+ * Aktualisiert die Verfügbarkeit jedes Slots für jede Ressource (User).
+ * Hier wird nun auch berücksichtigt, ob der Slot in einem Feiertag liegt (slot.isHoliday).
+ */
 function updateSlotAvailability(slots, appointments, users) {
     slots.forEach(slot => {
-        slot.isAvailable = {};
-
+        // Start- und Endzeit des Slots bestimmen
         const slotStart = new Date(slot.startDateTime);
         const slotEnd = new Date(slotStart.getTime() + slot.duration * 60000);
 
+        // Wir erstellen für jeden User ein Sub-Objekt in slot.isAvailable
+        slot.isAvailable = {};
+
+        // Schleife über alle User
         users.forEach(user => {
+            // Ermitteln, ob es einen Termin gibt, der diesen Slot blockiert
             const userAppointments = appointments.filter(
-              app => app.Ressource === user.username
+                app => app.Ressource === user.username
             );
 
             const conflict = userAppointments.some(app => {
                 const appStart = new Date(app.startDateTime);
                 const appEnd = new Date(appStart.getTime() + app.duration * 60000);
+
+                // Konflikt, wenn sich Zeiträume überschneiden
                 return (slotStart < appEnd) && (appStart < slotEnd);
             });
 
-            slot.isAvailable[user.username] = !conflict;
+            // Wichtig: Wenn Feiertag ODER Konflikt, dann nicht verfügbar
+            // slot.isHoliday wird bereits in generateTimeSlots(...) gesetzt
+            if (slot.isHoliday === true || conflict === true) {
+                slot.isAvailable[user.username] = false;
+            } else {
+                slot.isAvailable[user.username] = true;
+            }
 
-            // Hier LOGST du pro User, ob er verfügbar ist:
+            // Alternativ komprimierter Ausdruck:
+            // slot.isAvailable[user.username] = !(conflict || slot.isHoliday);
+
+            // Optional: Logging
             console.log(
-              `User: ${user.username} | SlotStart: ${slotStart.toISOString()} | Available: ${!conflict}`
+                `User: ${user.username} | SlotStart: ${slotStart.toISOString()} | ` +
+                `Feiertag: ${slot.isHoliday} | Konflikt: ${conflict} | ` +
+                `=> Available: ${slot.isAvailable[user.username]}`
             );
         });
 
-        // Danach kannst du das gesamte Objekt nochmal loggen
-        // (z.B. via JSON.stringify, wenn du willst):
+        // Optional: das gesamte isAvailable-Objekt des Slots im Log
         console.log(
           'Gesamter isAvailable-Status dieses Slots:',
           JSON.stringify(slot.isAvailable)
         );
     });
 }
+
 
 
       
