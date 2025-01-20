@@ -482,13 +482,13 @@ KALENDER
 /**/
 /*// => ein oder mehrere User haben Urlaub, aber nicht alle*/
     .unavailable-holiday-user {
-    background-color: rgba(255, 99, 71, 0.5); /* Beispiel: halbtransparentes Rot */
-    border: 1px solid rgba(255, 99, 71, 1);
+    background-color: #130000; /* Beispiel: halbtransparentes Rot */
+    
 
   }
 /* Falls kein "Feiertag für alle", zeigen wir an, ob der Slot "allAvailable" oder "allUnavailable" ist*/
   .unavailable-slot {
-    background-color: rgba(71, 114, 255, 0.5); /* Beispiel: halbtransparentes Rot */
+    background-color: rgba(32, 32, 32, 0.5); /* Beispiel: halbtransparentes Rot */
     
 
   }
@@ -497,7 +497,7 @@ KALENDER
 
 
   .unavailable-holiday-all {
-    background-color: rgba(71, 255, 86, 0.5); /* Beispiel: halbtransparentes Rot */
+    background-color: #ff00008e; /* Beispiel: halbtransparentes Rot */
     
 }
 

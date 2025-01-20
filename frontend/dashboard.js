@@ -471,8 +471,10 @@ async function approveAppointmentRequest(requestId, appointmentRequests) {
 
         // UI neu rendern
         displayAppointmentRequests(appointmentRequests);
-
+        loadAppointments();
+            renderCalendar();
         alert('Termin erfolgreich aus Request erstellt und Request entfernt!');
+        
     } catch (err) {
         console.error(err);
         alert('Fehler: ' + err.message);
@@ -1376,7 +1378,7 @@ function displayDayAppointments(day, selectedUsers) {
             //    -> "all" => kompletter Betriebsurlaub
             //    -> Array mit einzelnen Namen => nur bestimmte User
             const holidayRes = slotInfo.holidayResources || [];  // falls nicht definiert = leeres Array
-            console.log('holidayResources' + holidayRes);
+            
             // Falls du weiterhin "isHoliday" nutzt, checke ob "all" drin ist
             const isHolidayAll = holidayRes.includes('all');
             // Oder ob es überhaupt Einträge (partielle Holidays) gibt
@@ -1440,7 +1442,7 @@ function displayDayAppointments(day, selectedUsers) {
             slotDiv.classList.add('unavailable-slot');
           }
           
-          console.log("Slot-Klassen:", slotDiv.className, slotInfo);
+          
 
   
           // Klick-Event -> handleSlotClick
@@ -4181,12 +4183,12 @@ async function editService(serviceId) {
     }
 
     // 3) Felder mit vorhandenen Daten füllen
-    document.getElementById('serviceID').value = service.serviceID || '';
+    /*document.getElementById('serviceID').value = service.serviceID || '';*/
     document.getElementById('serviceName').value = service.serviceName || '';
     document.getElementById('serviceDescription').value = service.serviceDescription || '';
     document.getElementById('servicePrice').value = service.servicePrice || 0;
     document.getElementById('serviceDuration').value = service.serviceDuration || 0;
-
+console.log('FElder werden befüllt mit: ' + service.serviceID + service.serviceName);
     // 4) Formular anzeigen
     showServiceForm();
 
@@ -4202,7 +4204,7 @@ async function editService(serviceId) {
 
         // 7) Updated-Daten
         const updatedService = {
-            serviceID: document.getElementById('serviceID').value,
+            /*serviceID: document.getElementById('serviceID').value,*/
             serviceName: document.getElementById('serviceName').value,
             serviceDescription: document.getElementById('serviceDescription').value,
             servicePrice: parseFloat(document.getElementById('servicePrice').value) || 0,
