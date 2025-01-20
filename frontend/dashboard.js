@@ -354,6 +354,13 @@ async function loadAppointmentRequests() {
 async function displayAppointmentRequests(appointmentRequests) {
     const requestsList = document.getElementById('appointmentRequestsList');
     
+
+    // 2) Falls du hier noch nicht allServices geladen hast:
+    if (!allServices || allServices.length === 0) {
+        await loadServices(); 
+        // Jetzt haben wir in allServices das Array aller Services
+    }
+    
     // HTML für jede Request generieren
     requestsList.innerHTML = appointmentRequests.map(req => {
         // Start-/End-Zeiten ausrechnen bzw. formattieren
@@ -361,6 +368,30 @@ async function displayAppointmentRequests(appointmentRequests) {
         const end = req.endDateTime 
                     ? new Date(req.endDateTime) 
                     : new Date(start.getTime() + (req.duration * 60000));
+
+        const dlString = req.Dienstleistung; 
+                    // => '["1","0","0","1","0"]'
+                
+            
+        const dlArray = JSON.parse(dlString);
+                    // => dlArray = ["1","0","0","1","0"]  (ein echtes JavaScript-Array mit length=5)
+                    let additionalServicesHTML = '';
+                    for (let i = 1; i < dlArray.length; i++) {
+                        if (dlArray[i] === "1") {
+                            // => allServices[i] muss existieren
+                            if (allServices[i]) {
+                                additionalServicesHTML += `<div>${allServices[i].serviceName}</div>`;
+                            } else {
+                                // Falls dein Termin alt ist, aber das System inzwischen mehr/weniger Services hat,
+                                // kann das passieren. Ggf. abfangen oder 'Unbekannter Service #...'
+                                additionalServicesHTML += `<div>Unbekannter Service #${i}</div>`;
+                            }
+                        }
+                    }
+                    if (!additionalServicesHTML) {
+                        additionalServicesHTML = '<div>Keine weiteren Services aktiviert</div>';
+                    }
+                    console.log('dlArray.length' + dlArray.length);
 
         return `
             <div class="termin-request-card">
@@ -372,7 +403,7 @@ async function displayAppointmentRequests(appointmentRequests) {
                         -
                         ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <div>Dienstleistung: ${req.Dienstleistung || "nicht angegeben"}</div>
+                    <div>Dienstleistung: ${additionalServicesHTML || "nicht angegeben"}</div>
                     <div>Beschreibung: ${req.description || "Keine Beschreibung"}</div>
                 </div>
 
