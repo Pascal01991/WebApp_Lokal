@@ -56,7 +56,7 @@ async function editAppointment(appointmentId) {
 
     let dlArray = [];
     if (appointment.Dienstleistung) {
-        dlArray = appointment.Dienstleistung.split(',');
+        dlArray = JSON.parse(appointment.Dienstleistung); 
     }
 
     // Falls `appointment.duration` in Minuten kommt, verteilen auf Stunden/Minuten
@@ -64,7 +64,7 @@ async function editAppointment(appointmentId) {
     document.getElementById('durationHours').value = Math.floor(totalMinutes / 60);
     document.getElementById('durationMinutes').value = totalMinutes % 60;
 
-    document.getElementById('Dienstleistung').value = dlArray || '';
+    //document.getElementById('Dienstleistung').value = dlArray || '';
     document.getElementById('Preis').value = appointment.Preis || '';
     document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
     document.getElementById('description').value = appointment.description || '';
@@ -180,12 +180,28 @@ async function editAppointment(appointmentId) {
         const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
         const totalDuration = hours * 60 + mins;
 
+        // Neues Array in passender Länge für die Dienstleistungen
+        const updatedDlArray = new Array(allServices.length).fill("0");
+
+        // DL-Index 0 = "1" (immer aktiv)
+        updatedDlArray[0] = "1";
+        
+        // Alle gecheckten Checkboxen ermitteln
+        const checkedBoxes = document.querySelectorAll('#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked');
+        checkedBoxes.forEach(cb => {
+            const idx = parseInt(cb.dataset.serviceIndex, 10);
+            updatedDlArray[idx] = "1";
+        });
+
+        // Als JSON-String speichern
+        const dlString = JSON.stringify(updatedDlArray);
+
         const updatedAppointment = {
             KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
             startDateTime: startVal,
             endDateTime: endVal,
             duration: totalDuration,
-            Dienstleistung: document.getElementById('Dienstleistung').value,
+            Dienstleistung: dlString,
             Preis: document.getElementById('Preis').value,
             Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
             description: document.getElementById('description').value,
@@ -360,7 +376,7 @@ async function displayAppointmentRequests(appointmentRequests) {
         await loadServices(); 
         // Jetzt haben wir in allServices das Array aller Services
     }
-    
+
     // HTML für jede Request generieren
     requestsList.innerHTML = appointmentRequests.map(req => {
         // Start-/End-Zeiten ausrechnen bzw. formattieren
@@ -630,13 +646,16 @@ TERMIN-ANFRAGEN BEARBEITEN VOR FREIGEBEN
  * @param {string} requestId - Die ID des Requests
  * @param {Array} appointmentRequests - Array aller Requests
  */
-function editAppointmentRequest(requestId, appointmentRequests) {
+async function editAppointmentRequest(requestId, appointmentRequests) {
     // Request aus Array holen
     const req = appointmentRequests.find(r => r._id === requestId);
     if (!req) {
         alert('Request nicht gefunden!');
         return;
     }
+
+    await loadServices(); // => allServices
+    renderAppointmentServiceCheckboxes(allServices);
 
     // Formular einblenden
     showAppointmentForm(); // Deine Funktion, die das Formular sichtbar macht
@@ -662,7 +681,7 @@ function editAppointmentRequest(requestId, appointmentRequests) {
     document.getElementById('durationMinutes').value = mins;
 
     // Weitere Felder
-    document.getElementById('Dienstleistung').value      = req.Dienstleistung      || '';
+    document.getElementById('Dienstleistung').value = '';
     document.getElementById('Preis').value               = req.Preis              || '';
     document.getElementById('Abrechnungsstatus').value   = req.Abrechnungsstatus  || '';
     document.getElementById('description').value         = req.description        || '';
@@ -685,6 +704,26 @@ function editAppointmentRequest(requestId, appointmentRequests) {
     //  Button "Bearbeiteter Termin Bestätigen" einrichten
     // ---------------------------------------------------
     const appointmentForm = document.getElementById('appointmentForm');
+
+     // 5.a) Dienstleistung in Array konvertieren und Checkboxen setzen
+     let dlArray = [];
+     if (req.Dienstleistung) {
+         try {
+             dlArray = JSON.parse(req.Dienstleistung); 
+         } catch (err) {
+             // Falls alte Daten => Fallback z.B. split(',')
+             dlArray = req.Dienstleistung.split(',');
+         }
+     }
+     for (let i = 1; i < dlArray.length; i++) {
+         if (dlArray[i] === "1") {
+             const cb = document.querySelector(
+                 `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
+             );
+             if (cb) cb.checked = true;
+         }
+     }
+ 
 
     // 1) Alten Event-Listener entfernen, damit nicht das "Standard-Submit" greift.
     //    Das erreichst du, indem du den Button durch eine Klon-Kopie ersetzt.
@@ -746,6 +785,18 @@ function editAppointmentRequest(requestId, appointmentRequests) {
                 rechnungsEmpfaengerNummer = null;
             }
 
+            // 6.b) Checkboxen auslesen => dlArray
+            const updatedDLArray = new Array(allServices.length).fill("0");
+            updatedDLArray[0] = "1";
+            
+            const checkedBoxes = document.querySelectorAll(
+                '#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked'
+            );
+            checkedBoxes.forEach(cb => {
+                const idx = parseInt(cb.dataset.serviceIndex, 10);
+                updatedDLArray[idx] = "1";
+            });
+
             // ---------------------------------------------
             //    b) Object für das neue Appointment
             // ---------------------------------------------
@@ -754,7 +805,7 @@ function editAppointmentRequest(requestId, appointmentRequests) {
                 startDateTime: startVal,
                 endDateTime: endVal,       // Falls leer, kannst du "" schicken
                 duration: totalDuration,
-                Dienstleistung,
+                Dienstleistung: JSON.stringify(updatedDLArray),
                 Preis,
                 Abrechnungsstatus,
                 description,
@@ -2253,16 +2304,19 @@ async function displayAppointments(appointments) {
         const dlString = app.Dienstleistung; 
         // => '["1","0","0","1","0"]'
     
+        //Folgende umwandlung muss entfernt werden und dafür aber sicherstellen dass die werte direkt im richtigen format daher kommen.
+    let dlArray = [];
+    if (dlString.startsWith('[') && dlString.endsWith(']')) {
+        // Gültiger JSON-String => Parsen
+        dlArray = JSON.parse(dlString);
+    } else {
+        // Kommagetrennter String => Umwandeln in Array
+        dlArray = dlString.split(',');
+    }
 
-        const dlArray = JSON.parse(dlString);
-        // => dlArray = ["1","0","0","1","0"]  (ein echtes JavaScript-Array mit length=5)
-
-console.log('app.Dienstleistung' + app.Dienstleistung);
-console.log('dlArray' + dlArray);
         // Falls es ein JSON-String ist: dlArray = JSON.parse(app.Dienstleistung)
 
-        // Index 0 ignorieren wir hier (oder du zeigst ihn irgendwo separat)
-        // Wir bauen uns eine Liste aller aktiven Services ab Index 1:
+
         // Index 0 ignorieren wir hier (oder du zeigst ihn woanders separat).
         // Wir bauen uns eine Liste aller aktiven Services ab Index 1:
         let additionalServicesHTML = '';
