@@ -581,20 +581,40 @@ function confirmBooking() {
     }
   }
 
-  // StartDateTime = original (UTC) (Server rechnet das?)
-  let finalStart = selectedSlot.startDateTime;
+  // StartDateTime = original (UTC)
+    let finalStart = selectedSlot.startDateTime; // ISO-String
+    let startDate = new Date(finalStart); // In ein Date-Objekt umwandeln
 
-  const payload = {
-    startDateTime: finalStart,
-    endDateTime: "", // optional
+    // totalDuration ist in Minuten, daher in Millisekunden umrechnen
+    let endDate = new Date(startDate.getTime() + totalDuration * 60 * 1000); // Endzeit berechnen
+
+    // Datum und Uhrzeit manuell formatieren
+    const formatDateTime = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Monat auf 2 Ziffern
+    const day = String(date.getDate()).padStart(2, '0'); // Tag auf 2 Ziffern
+    const hours = String(date.getHours()).padStart(2, '0'); // Stunden auf 2 Ziffern
+    const minutes = String(date.getMinutes()).padStart(2, '0'); // Minuten auf 2 Ziffern
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    // Start- und Endzeit formatieren
+    let finalEnd = formatDateTime(endDate);
+
+    const payload = {
+    startDateTime: finalStart, // Original Startzeit
+    endDateTime: finalEnd, // Manuell formatierte Endzeit
     duration: totalDuration,
     description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
-    MailAppointmentRequests: personalData.email, // NEU
+    MailAppointmentRequests: personalData.email,
     Preis: String(totalPrice),
     Dienstleistung: JSON.stringify(servicesArray),
     erfasstDurch: "öffentliche Buchungsplattform",
-    Ressource: selectedUser?.username || ""
-  };
+    Ressource: selectedUser?.username || "",
+    };
+
+    console.log("Payload für POST:", payload);
+
 
   console.log("Sende POST /api/appointmentRequests =>", payload);
 
