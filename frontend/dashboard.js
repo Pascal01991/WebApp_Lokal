@@ -4083,7 +4083,7 @@ function hideServiceForm() {
 
 // Formularfelder leeren
 function clearServiceForm() {
-    document.getElementById('serviceID').value = '';
+    
     document.getElementById('serviceName').value = '';
     document.getElementById('serviceDescription').value = '';
     document.getElementById('servicePrice').value = '';

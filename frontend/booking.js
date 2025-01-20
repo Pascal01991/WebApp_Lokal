@@ -357,60 +357,80 @@ function renderWeekTable() {
 // Hilfsfunktionen, um zu prüfen, ob es in den loadedSlots 
 // mind. 1 Slot für diesen Tag + morning/afternoon gibt
 function checkMorningAvailability(dateObj) {
-  const requiredDuration = calculateTotalDuration(); // Summe aus allen gewählten Services
-  const dateStr = formatDate(dateObj); // "YYYY-MM-DD"
+    const requiredDuration = calculateTotalDuration(); 
+    if (!selectedUser) return true;  // oder false, je nach Bedarf
+    if (requiredDuration <= 0) return false; // kein Service gewählt => ?
   
-  // Finde mind. 1 Slot, wo hour < 12 + isAvailable + user
-  if (!selectedUser) {
-    // Noch kein User gewählt => in Step1
-    // Falls du ausgrauen willst, weil kein User = 
-    //   return false;
-    // Hier sagen wir mal "true" => 
-    return true;
+    const dateStr = formatDate(dateObj);
+    const userName = selectedUser.username;
+  
+    // 1) Alle Morning-Slots des Tages sammeln, die für den User verfügbar sind
+    const morningSlots = loadedSlots.filter(slot => {
+      const slotDate = slot.startDateTime.split('T')[0];
+      if (slotDate !== dateStr) return false;
+  
+      // morning => hour < 12
+      const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
+      if (hour >= 12) return false;
+  
+      // Muss für diesen User frei sein
+      if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+  
+      return true;
+    });
+  
+    // 2) Chronologisch sortieren
+    morningSlots.sort((a, b) => {
+      return a.startDateTime.localeCompare(b.startDateTime);
+    });
+  
+    // 3) Prüfen, ob ab einem der Slots die requiredDuration zusammenkommt
+    for (let i = 0; i < morningSlots.length; i++) {
+      if (hasSufficientConsecutiveSlots(morningSlots, i, requiredDuration)) {
+        // Sobald wir eine passende Kette finden, können wir true zurückgeben
+        return true;
+      }
+    }
+  
+    // Keine ausreichende Kette gefunden
+    return false;
   }
+  
 
-  const userName = selectedUser.username;
-  const availableSlot = loadedSlots.find(slot => {
-    const slotDate = slot.startDateTime.split('T')[0];
-    if (slotDate !== dateStr) return false;
-
-    // morning => hour < 12
-    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
-    if (hour >= 12) return false;
-
-    // Check user availability
-    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
-
-    // Optional: Check if there's enough continuous time for requiredDuration 
-    // => In diesem Beispiel ignorieren wir "continuous" und gehen simplifiziert davon aus, 
-    //    wir buchen nur Start-Slot. 
-    //    Für echtes "enough time" bräuchte man aufwändigere Prüfung.
-    return true;
-  });
-
-  return !!availableSlot; // true, wenn wir einen gefunden haben
-}
-
-function checkAfternoonAvailability(dateObj) {
-  const requiredDuration = calculateTotalDuration();
-  const dateStr = formatDate(dateObj);
-
-  if (!selectedUser) return true;
-
-  const userName = selectedUser.username;
-  const availableSlot = loadedSlots.find(slot => {
-    const slotDate = slot.startDateTime.split('T')[0];
-    if (slotDate !== dateStr) return false;
-
-    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
-    if (hour < 12) return false;
-
-    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
-    return true;
-  });
-
-  return !!availableSlot;
-}
+  function checkAfternoonAvailability(dateObj) {
+    const requiredDuration = calculateTotalDuration(); 
+    if (!selectedUser) return true;
+    if (requiredDuration <= 0) return false;
+  
+    const dateStr = formatDate(dateObj);
+    const userName = selectedUser.username;
+  
+    // 1) Alle Afternoon-Slots
+    const afternoonSlots = loadedSlots.filter(slot => {
+      const slotDate = slot.startDateTime.split('T')[0];
+      if (slotDate !== dateStr) return false;
+  
+      const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
+      if (hour < 12) return false;
+  
+      if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+  
+      return true;
+    });
+  
+    // 2) sortieren
+    afternoonSlots.sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+  
+    // 3) Kettenprüfung
+    for (let i = 0; i < afternoonSlots.length; i++) {
+      if (hasSufficientConsecutiveSlots(afternoonSlots, i, requiredDuration)) {
+        return true;
+      }
+    }
+  
+    return false;
+  }
+  
 
 // Prüfen, ob alle Buttons in der Woche disabled sind 
 function areAllDaysDisabled() {
@@ -433,57 +453,61 @@ function goToStep3() {
 }
 
 function renderSlotsForSelectedDay() {
-  const container = document.getElementById('slotsContainer');
-  container.innerHTML = "";
-
-  // Filter loadedSlots => passender Tag + morning/afternoon + user
-  const requiredDuration = calculateTotalDuration();
-  const userName = selectedUser?.username;
-  if (!userName) {
-    container.textContent = "Kein Mitarbeiter gewählt!";
-    return;
-  }
-
-  let filtered = loadedSlots.filter(slot => {
-    // Tag
-    const slotDay = slot.startDateTime.split('T')[0];
-    if (slotDay !== selectedDate) return false;
-
-    // morning / afternoon
-    const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
-    if (selectedPeriod === "morning" && hour >= 12) return false;
-    if (selectedPeriod === "afternoon" && hour < 12) return false;
-
-    // user availability
-    if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
-
-    return true;
-  });
-
-  // Sortieren
-  filtered.sort((a,b) => a.startDateTime.localeCompare(b.startDateTime));
-
-  if (filtered.length === 0) {
-    container.textContent = "Keine freien Slots verfügbar.";
-    return;
-  }
-
-  // Buttons
-  filtered.forEach(slot => {
-    const btn = document.createElement('button');
-    // +1h für Anzeige:
-    const local = offsetByOneHour(slot.startDateTime);
-    const hhmm = local.toISOString().substring(11,16); // "HH:MM"
-    btn.textContent = hhmm + " Uhr";
-
-    btn.addEventListener('click', () => {
-      selectedSlot = slot;
-      goToStep4();
+    const container = document.getElementById('slotsContainer');
+    container.innerHTML = "";
+  
+    const requiredDuration = calculateTotalDuration();
+    const userName = selectedUser?.username;
+    if (!userName) {
+      container.textContent = "Kein Mitarbeiter gewählt!";
+      return;
+    }
+  
+    // 1) Alle Slots, die zum gewählten Tag + morning/afternoon + user passen
+    let filtered = loadedSlots.filter(slot => {
+      const slotDay = slot.startDateTime.split('T')[0];
+      if (slotDay !== selectedDate) return false;
+  
+      const hour = parseInt(slot.startDateTime.split('T')[1].split(':')[0]);
+      if (selectedPeriod === "morning" && hour >= 12) return false;
+      if (selectedPeriod === "afternoon" && hour < 12) return false;
+  
+      if (!slot.isAvailable || !slot.isAvailable[userName]) return false;
+      return true;
     });
-
-    container.appendChild(btn);
-  });
-}
+  
+    // 2) Sortieren
+    filtered.sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+  
+    // 3) Nur die Slots anbieten, ab denen genug Zeit ist
+    const validStartSlots = [];
+    for (let i = 0; i < filtered.length; i++) {
+      if (hasSufficientConsecutiveSlots(filtered, i, requiredDuration)) {
+        validStartSlots.push(filtered[i]);
+      }
+    }
+  
+    if (validStartSlots.length === 0) {
+      container.textContent = "Keine freien Slots für die gewählte Dauer verfügbar.";
+      return;
+    }
+  
+    // 4) Button erstellen für jede mögliche Startzeit
+    validStartSlots.forEach(slot => {
+      const btn = document.createElement('button');
+      const local = offsetByOneHour(slot.startDateTime);
+      const hhmm = local.toISOString().substring(11,16); 
+      btn.textContent = hhmm + " Uhr";
+  
+      btn.addEventListener('click', () => {
+        selectedSlot = slot;
+        goToStep4();
+      });
+  
+      container.appendChild(btn);
+    });
+  }
+  
 
 /***********************************************************
  * 4) PERSÖNLICHE DATEN
@@ -646,6 +670,45 @@ function offsetByOneHour(dateTimeStr) {
   d.setHours(d.getHours() + 1);
   return d;
 }
+
+/**
+ * Prüft, ob ab sortedSlots[startIndex] für requiredDuration 
+ * (z.B. 90 Min) durchgängig Slots verfügbar sind.
+ * 
+ * Annahme: Jeder Slot hat 'slot.duration' (z.B. 30) und 
+ *          'startDateTime' (ISO-String).
+ */
+function hasSufficientConsecutiveSlots(sortedSlots, startIndex, requiredDuration) {
+    // Restzeit, die wir noch abdecken müssen
+    let minutesNeeded = requiredDuration;
+  
+    // Den ersten Slot direkt „belegen“
+    let prevStart = new Date(sortedSlots[startIndex].startDateTime);
+    let slotLength = sortedSlots[startIndex].duration; // meist 30
+    minutesNeeded -= slotLength;
+  
+    // Iteration über die weiteren Slots
+    for (let i = startIndex + 1; i < sortedSlots.length && minutesNeeded > 0; i++) {
+      const currentStart = new Date(sortedSlots[i].startDateTime);
+      // Wie viele Minuten liegen zwischen diesem Slot und dem vorherigen?
+      const diff = (currentStart - prevStart) / 60000; // in Minuten
+  
+      // Ist der aktuelle Slot zeitlich DIREKT an den vorherigen anschließbar?
+      // Beispiel: Wenn jeder Slot 30 Min dauert, 
+      // müsste diff == 30 sein, um "consecutive" zu sein.
+      if (diff === slotLength) {
+        minutesNeeded -= sortedSlots[i].duration;
+        prevStart = currentStart;
+      } else {
+        // Sobald eine Lücke im Zeitplan auftaucht, brechen wir ab
+        break;
+      }
+    }
+  
+    // Geschafft, wenn minutesNeeded <= 0
+    return (minutesNeeded <= 0);
+  }
+  
 
 /***********************************************************
  * INITIALISIERUNG
