@@ -467,17 +467,52 @@ KALENDER
       z-index: 1;
   }
   
+
+
+
   
-  .available-slot {
+
+    /*  // Mind. ein User hat availability = true*/
+    .available-slot {
       background-color: var(--background-dark); /* verfügbare Slots hervorheben */
   }
 
-  .unavailable-holiday {
+
+
+/**/
+/*// => ein oder mehrere User haben Urlaub, aber nicht alle*/
+    .unavailable-holiday-user {
     background-color: rgba(255, 99, 71, 0.5); /* Beispiel: halbtransparentes Rot */
     border: 1px solid rgba(255, 99, 71, 1);
+
+  }
+/* Falls kein "Feiertag für alle", zeigen wir an, ob der Slot "allAvailable" oder "allUnavailable" ist*/
+  .unavailable-slot {
+    background-color: rgba(71, 114, 255, 0.5); /* Beispiel: halbtransparentes Rot */
+    
+
+  }
+  
+
+
+
+  .unavailable-holiday-all {
+    background-color: rgba(71, 255, 86, 0.5); /* Beispiel: halbtransparentes Rot */
+    
 }
 
-  
+
+
+
+
+
+
+
+
+
+
+
+
   /* hover für freie Slots */
   .available-slot:hover {
     background-color: var(--theme-color); /* Hover-Effekt für verfügbare Slots */
@@ -485,7 +520,7 @@ KALENDER
 }
   /* hover für belegte Slots */
   .unavailable-slot:hover {
-    background-color: rgba(223, 49, 49, 0.13); /* Hover-Effekt für belegte Slots */
+    background-color: rgba(223, 49, 49, 0.034); /* Hover-Effekt für belegte Slots */
     cursor: pointer;
 }
 

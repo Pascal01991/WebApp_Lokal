@@ -46,7 +46,7 @@ async function getSlots(req, res) {
         });
 
         // 5) Die Verfügbarkeit für jeden Slot **pro User** updaten
-        updateSlotAvailability(slots, appointments, users);
+        updateSlotAvailability(slots, appointments, users, holidays);
 
         // 6) Für die Ausgabe formatieren
         //    Beachte hier: Wenn du pro User ein Objekt in `slot.isAvailable` hast,
@@ -57,7 +57,8 @@ async function getSlots(req, res) {
             duration: slot.duration,
             // Hier kommt neu: isAvailable (pro User!)
             isAvailable: slot.isAvailable,   
-            isHoliday: slot.isHoliday
+            isHoliday: slot.isHoliday,
+            holidayResources: slot.holidayResources 
         }));
 
         res.json(formattedSlots);

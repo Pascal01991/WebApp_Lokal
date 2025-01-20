@@ -17,7 +17,7 @@ let workingHours = {            //Später aus DB
     mittwoch: {
         active: true,
         morning: { start: '08:00', end: '12:00' },
-        afternoon: { start: '12:30', end: '17:00' }
+        afternoon: { start: '13:30', end: '17:00' }
     },
     donnerstag: {
         active: true,
@@ -81,25 +81,43 @@ function isDateInHoliday(date, holidays) {
 
     //Zeitslots für neue Termine und extenre Buchungsplattform / Generierung der Zeit-Slots basierend auf der Standard-Terminlänge
     // Hilfsfunktion:
-function getHolidayResourcesForDate(date, holidays) {
-    // Gibt ein Array aller Ressourcen zurück, die an 'date' Urlaub haben
-    // oder "all", wenn es ein Eintrag mit resource="all" gibt
-    const dateStr = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
-    const holidayResources = [];
-
-    holidays.forEach(holiday => {
-        const fromDate = new Date(holiday.from).toISOString().split('T')[0];
-        const toDate = new Date(holiday.to).toISOString().split('T')[0];
-        // Prüfen, ob "dateStr" in diesem Holiday-Zeitraum liegt
-        if (dateStr >= fromDate && dateStr <= toDate) {
-            // Dann gehört "holiday.resource" hier rein
-            holidayResources.push(holiday.resource); 
-            // (z.B. "RiccardaKe", "AlexandraHe", oder "all")
-        }
-    });
-
-    return holidayResources; // leeres Array, wenn kein passender Holiday
-}
+    function getHolidayResourcesForDate(date, holidays) {
+        const dateStr = date.toISOString().split('T')[0];
+        const arr = [];
+      
+        holidays.forEach(h => {
+          const fromStr = new Date(h.from).toISOString().split('T')[0];
+          const toStr   = new Date(h.to).toISOString().split('T')[0];
+      
+          // Liegt dateStr in [fromStr, toStr]?
+          if (dateStr >= fromStr && dateStr <= toStr) {
+            // Dann betreffen uns diese "resources"
+            if (h.resource === "all") {
+              arr.push("all");
+            } else {
+              arr.push(h.resource);
+            }
+          }
+        });
+        return arr; // z.B. ["all"], ["RiccardaKe"], []
+      }
+      
+      function generateTimeSlots(holidays, startOfWeek, endOfWeek) {
+        const slots = [];
+        // ... deine Schleifen über die Tage / morning+afternoon ...
+        //   => am Ende in der Innenschleife:
+      
+        const holidayRes = getHolidayResourcesForDate(slotTime, holidays);
+        const newSlot = {
+          startDateTime: slotTime,
+          duration: defaultLength,
+          holidayResources: holidayRes
+        };
+        slots.push(newSlot);
+      
+        return slots;
+      }
+      
 
 function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
     const slots = [];
@@ -152,42 +170,41 @@ function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
 
 function updateSlotAvailability(slots, appointments, users) {
     slots.forEach(slot => {
-        const slotStart = new Date(slot.startDateTime);
-        const slotEnd   = new Date(slotStart.getTime() + slot.duration * 60000);
-
-        slot.isAvailable = {};
-
-        // Wir durchlaufen jeden Benutzer
-        users.forEach(user => {
-            // 1) Hat der User bereits einen Termin-Konflikt in dieser Zeit?
-            const conflict = appointments.some(app => {
-                if (app.Ressource !== user.username) return false;
-                const appStart = new Date(app.startDateTime);
-                const appEnd   = new Date(appStart.getTime() + app.duration * 60000);
-                // Zeitüberlappung?
-                return (slotStart < appEnd) && (appStart < slotEnd);
-            });
-
-            // 2) Ist der User in holidayResources? 
-            //    (Oder steht dort "all"?)
-            const isUserOnHoliday = 
-                slot.holidayResources.includes('all') 
-                || slot.holidayResources.includes(user.username);
-
-            // Wenn entweder Konflikt oder Urlaub, dann nicht verfügbar
-            const notAvailable = (conflict || isUserOnHoliday);
-
-            slot.isAvailable[user.username] = !notAvailable;
-
-            console.log(
-                `User: ${user.username} | SlotStart: ${slotStart.toISOString()} | `
-              + `Holiday: ${isUserOnHoliday} | Konflikt: ${conflict} `
-              + `=> Available: ${!notAvailable}`
-            );
+      const slotStart = new Date(slot.startDateTime);
+      const slotEnd   = new Date(slotStart.getTime() + slot.duration * 60000);
+  
+      // pro Slot legen wir ein Objekt an:
+      slot.isAvailable = {};
+  
+      users.forEach(user => {
+        // 1) Appointment-Konflikt?
+        const conflict = appointments.some(app => {
+          if (app.Ressource !== user.username) return false;
+          const appStart = new Date(app.startDateTime);
+          const appEnd   = new Date(appStart.getTime() + app.duration * 60000);
+  
+          return (slotStart < appEnd) && (appStart < slotEnd);
         });
+  
+        // 2) Urlaub? => holidayResources enthält 'all' oder user.username
+        const isUserOnHoliday = 
+            slot.holidayResources.includes('all') 
+            || slot.holidayResources.includes(user.username);
+  
+        // => gesamt blockiert, wenn conflict ODER holiday
+        const notAvailable = (conflict || isUserOnHoliday);
+  
+        slot.isAvailable[user.username] = !notAvailable;
+  
+        console.log(
+          `User: ${user.username} | SlotStart: ${slotStart.toISOString()} | `
+          + `Holiday: ${isUserOnHoliday} | Konflikt: ${conflict} => Available: ${!notAvailable}`
+        );
+      });
     });
-}
-
+  }
+  
+  
 
       
 

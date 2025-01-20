@@ -1278,7 +1278,7 @@ function displayDayAppointments(day, selectedUsers) {
     if (!slots.length) {
       console.warn('Keine Slots zum Anzeigen gefunden (eventuell keine Arbeitszeiten definiert?).');
     }
-  
+    console.log(slots);
     // 2) Woche bestimmen
     const startOfWeek = getStartOfWeek(currentDate);
   
@@ -1372,17 +1372,76 @@ function displayDayAppointments(day, selectedUsers) {
   
           // Prüfe holiday/available/unavailable etc.
           if (slotInfo) {
-            if (slotInfo.isHoliday) {
-              slotDiv.classList.add('unavailable-holiday');
-            } else if (slotInfo.isAvailable) {
-              slotDiv.classList.add('available-slot');
-            } else {
-              slotDiv.classList.add('unavailable-slot');
+            // 1) Prüfen: Gibt es holidayResources in diesem Slot?
+            //    -> "all" => kompletter Betriebsurlaub
+            //    -> Array mit einzelnen Namen => nur bestimmte User
+            const holidayRes = slotInfo.holidayResources || [];  // falls nicht definiert = leeres Array
+            console.log('holidayResources' + holidayRes);
+            // Falls du weiterhin "isHoliday" nutzt, checke ob "all" drin ist
+            const isHolidayAll = holidayRes.includes('all');
+            // Oder ob es überhaupt Einträge (partielle Holidays) gibt
+            const isHolidayPartial = !isHolidayAll && holidayRes.length > 0;
+            
+            // 2) Prüfen: Ist der Slot für *alle* User nicht verfügbar?
+            //    Wir können "alle" nur erkennen, wenn wir isAvailable pro User haben:
+            let allUnavailable = true;
+            if (slotInfo.isAvailable && typeof slotInfo.isAvailable === 'object') {
+              // Falls wir mind. einen User finden, der "true" hat, ist er nicht "allUnavailable".
+              const values = Object.values(slotInfo.isAvailable);
+              if (values.some(v => v === true)) {
+                allUnavailable = false;
+              }
             }
+            
+            // 3) Klassen/Beschriftung zuweisen
+            if (isHolidayAll) {
+              // => Ein "Feiertag für alle"
+              slotDiv.classList.add('unavailable-holiday-all'); 
+              
+              // Du kannst z.B. noch textContent = "Betriebsurlaub" etc. machen
+            } else if (isHolidayPartial) {
+              // => ein oder mehrere User haben Urlaub, aber nicht alle
+              slotDiv.classList.add('unavailable-holiday-user');
+              
+            }
+            
+            // 4) Falls kein "Feiertag für alle", zeigen wir an, ob der Slot "allAvailable" oder "allUnavailable" ist
+            if (allUnavailable) {
+              slotDiv.classList.add('unavailable-slot');
+            } else {
+              // Mind. ein User hat availability = true
+              slotDiv.classList.add('available-slot');
+            }
+/*
+            if (isHolidayAll) {
+                // => ALLE haben Urlaub => komplett blockiert
+                slotDiv.classList.add('unavailable-slot', 'unavailable-holiday-all');
+              } 
+              else if (isHolidayPartial) {
+                // => Mind. einer im Urlaub, aber andere sind verfügbar
+                // Wir möchten z.B. "teilweise verfügbar" anzeigen (Orange)
+                // => wir könnten extra Klasse + "available-slot"
+                slotDiv.classList.add('unavailable-holiday-user');
+                slotDiv.classList.add('available-slot'); 
+              }
+              else {
+                // Kein Holiday => normaler Pfad: 
+                if (allUnavailable) {
+                  slotDiv.classList.add('unavailable-slot');
+                } else {
+                  slotDiv.classList.add('available-slot');
+                }
+              }
+              */
+
+            
           } else {
-            // kein Slot -> unavailable
+            // => Überhaupt kein Slot (z.B. weil die Arbeitszeit dort nicht definiert)
             slotDiv.classList.add('unavailable-slot');
           }
+          
+          console.log("Slot-Klassen:", slotDiv.className, slotInfo);
+
   
           // Klick-Event -> handleSlotClick
           slotDiv.addEventListener('click', function() {
