@@ -223,9 +223,17 @@
 
             <!-- Dienstleistung, Preis, Abrechnungsstatus -->
             <div>
-                <label>Dienstleistung:</label>
+                <!-- Haupt-Dienstleistung (Index 0) -->
+                <label>Dienstleistung (Index 0):</label>
                 <input type="text" id="Dienstleistung" required>
             </div>
+            
+            <div>
+                <!-- Hier die "restlichen" Services (Index >= 1) -->
+                <label>Weitere Services:</label>
+                <div id="appointmentServicesCheckboxContainer"></div>
+            </div>
+         
             <div>
                 <label>Preis:</label>
                 <input type="number" id="Preis" required>
@@ -234,6 +242,7 @@
                 <label>Abrechnungsstatus:</label>
                 <input type="text" id="Abrechnungsstatus" required>
             </div>
+
         </div>
 
         <!-- ===================================== -->

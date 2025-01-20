@@ -54,12 +54,17 @@ async function editAppointment(appointmentId) {
     setLocalDateTimeInput(appointment.startDateTime, 'startDateTime');
     setLocalDateTimeInput(appointment.endDateTime,   'endDateTime');
 
+    let dlArray = [];
+    if (appointment.Dienstleistung) {
+        dlArray = appointment.Dienstleistung.split(',');
+    }
+
     // Falls `appointment.duration` in Minuten kommt, verteilen auf Stunden/Minuten
     const totalMinutes = parseInt(appointment.duration, 10) || 0;
     document.getElementById('durationHours').value = Math.floor(totalMinutes / 60);
     document.getElementById('durationMinutes').value = totalMinutes % 60;
 
-    document.getElementById('Dienstleistung').value = appointment.Dienstleistung || '';
+    document.getElementById('Dienstleistung').value = dlArray || '';
     document.getElementById('Preis').value = appointment.Preis || '';
     document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
     document.getElementById('description').value = appointment.description || '';
@@ -74,6 +79,27 @@ async function editAppointment(appointmentId) {
     document.getElementById('fakturaNummer').value = appointment.fakturaNummer || '';
     document.getElementById('fakturaBemerkung').value = appointment.fakturaBemerkung || '';
     
+    //Services:
+    // 3.1) Services laden und Checkboxen rendern
+    // 1) Services laden und rendern
+    await loadServices(); // => allServices
+    renderAppointmentServiceCheckboxes(allServices);
+
+    // 2) dlArray => ["1","0","0","1","0"] (z.B. schon vorhanden)
+    for (let i = 1; i < dlArray.length; i++) {
+        // dlArray[i] kann "1" oder "0" sein
+        if (dlArray[i] === "1") {
+            // Dann soll die Checkbox für serviceIndex = i gecheckt sein
+            const cb = document.querySelector(
+                `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
+            );
+            if (cb) {
+                cb.checked = true;
+            }
+        }
+    }
+
+
 
     // 4) Den zugehörigen Kunden suchen und Kundendaten befüllen
     const client = allClients.find(c => c.Kundennummer === appointment.KundennummerzumTermin);
@@ -222,14 +248,52 @@ async function editAppointment(appointmentId) {
         }
     }
 
-    //====================================================================================================================================
-    //====================================================================================================================================
-    //====================================================================================================================================
-    //HOME
-    //====================================================================================================================================
-    //====================================================================================================================================
-    //====================================================================================================================================
-    //Aktueller Benutzer in den DOM laden:
+
+    /**************************************************************
+    *AppointmentForm Serviceses
+    **************************************************************/
+/**
+ * Generiert für Services (Index >= 1) Checkboxen im Container appointmentServicesCheckboxContainer
+ *
+ * @param {Array} services - Array der Services (z.B. allServices)
+ */
+function renderAppointmentServiceCheckboxes(services) {
+    const container = document.getElementById('appointmentServicesCheckboxContainer');
+    container.innerHTML = '';
+
+    // Wir starten bewusst bei i=1 (Index0 wird nicht gezeigt).
+    for (let i = 1; i < services.length; i++) {
+        const service = services[i];
+
+        const label = document.createElement('label');
+        label.style.display = 'block';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        // Ganz wichtig: Der "data-service-index" ist ebenfalls i,
+        // und NICHT (i-1) oder 0..usw.
+        checkbox.dataset.serviceIndex = i;
+        checkbox.className = 'appointment-service-checkbox';
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' ' + service.serviceName));
+        container.appendChild(label);
+    }
+}
+
+
+
+
+
+
+//====================================================================================================================================
+//====================================================================================================================================
+//====================================================================================================================================
+//HOME
+//====================================================================================================================================
+//====================================================================================================================================
+//====================================================================================================================================
+//Aktueller Benutzer in den DOM laden:
     const currentUserName = localStorage.getItem('loggedInUsername') || 'Unbekannt';
     console.log('current user: ' + currentUserName);
    
@@ -242,12 +306,14 @@ async function editAppointment(appointmentId) {
       });
 
 
-    //====================================================================================================================================      
-    //====================================================================================================================================
-    //====================================================================================================================================
-    //Buchungsanfragen
-    //====================================================================================================================================
-    //====================================================================================================================================
+
+
+//====================================================================================================================================      
+//====================================================================================================================================
+//====================================================================================================================================
+//Buchungsanfragen
+//====================================================================================================================================
+//====================================================================================================================================
     
     /**************************************************************
     * GLOBALE VARIABLEN: Filterzustände, Terminliste
@@ -714,6 +780,7 @@ function editAppointmentRequest(requestId, appointmentRequests) {
             // ---------------------------------------------
             //    e) UI anpassen: Formular schließen + Liste neu laden
             // ---------------------------------------------
+            loadAppointments();
             alert('Bearbeiteter Termin erfolgreich gespeichert und Request entfernt!');
 
             // Formular ausblenden
@@ -2007,6 +2074,12 @@ function clearAppointmentForm(currentUserName) {
     } else {
         console.warn('Dropdown "Ressource" nicht gefunden.');
     }
+
+    // Checkboxen alle entchecken
+    const checkboxes = document.querySelectorAll('#appointmentServicesCheckboxContainer .appointment-service-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+    });
 }
 
 
@@ -2129,27 +2202,76 @@ async function loadAppointments() {
  * (I) TERMINLISTE ANZEIGEN / displayAppointments
  **************************************************************/
 async function displayAppointments(appointments) {
-    // Kunden laden (für Kundendatenanzeige)
+    // 1) Kunden laden (für Kundendatenanzeige)
     const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
     const clients = await clientsResponse.json();
 
+    // 2) Falls du hier noch nicht allServices geladen hast:
+    if (!allServices || allServices.length === 0) {
+        await loadServices(); 
+        // Jetzt haben wir in allServices das Array aller Services
+    }
+
     const appointmentsList = document.getElementById('appointmentsList');
+    
     appointmentsList.innerHTML = appointments.map(app => {
         const client = clients.find(c => c.Kundennummer === app.KundennummerzumTermin);
+
+    // Aus dem Termin: "Haarschnitt,Färben,Nagelpflege"
+    
+        const dlString = app.Dienstleistung; 
+        // => '["1","0","0","1","0"]'
+    
+
+        const dlArray = JSON.parse(dlString);
+        // => dlArray = ["1","0","0","1","0"]  (ein echtes JavaScript-Array mit length=5)
+
+console.log('app.Dienstleistung' + app.Dienstleistung);
+console.log('dlArray' + dlArray);
+        // Falls es ein JSON-String ist: dlArray = JSON.parse(app.Dienstleistung)
+
+        // Index 0 ignorieren wir hier (oder du zeigst ihn irgendwo separat)
+        // Wir bauen uns eine Liste aller aktiven Services ab Index 1:
+        // Index 0 ignorieren wir hier (oder du zeigst ihn woanders separat).
+        // Wir bauen uns eine Liste aller aktiven Services ab Index 1:
+        let additionalServicesHTML = '';
+        for (let i = 1; i < dlArray.length; i++) {
+            if (dlArray[i] === "1") {
+                // => allServices[i] muss existieren
+                if (allServices[i]) {
+                    additionalServicesHTML += `<div>${allServices[i].serviceName}</div>`;
+                } else {
+                    // Falls dein Termin alt ist, aber das System inzwischen mehr/weniger Services hat,
+                    // kann das passieren. Ggf. abfangen oder 'Unbekannter Service #...'
+                    additionalServicesHTML += `<div>Unbekannter Service #${i}</div>`;
+                }
+            }
+        }
+        if (!additionalServicesHTML) {
+            additionalServicesHTML = '<div>Keine weiteren Services aktiviert</div>';
+        }
+        console.log('dlArray.length' + dlArray.length);
+
+        // Start/Endzeit berechnen
         const appStart = new Date(app.startDateTime);
-        // Falls Endtermin existiert:
-        const appEnd = app.endDateTime ? new Date(app.endDateTime)
-                                       : new Date(appStart.getTime() + (app.duration * 60000));
+        const appEnd = app.endDateTime 
+            ? new Date(app.endDateTime)
+            : new Date(appStart.getTime() + (app.duration * 60000));
+        
+        
 
         return `
             <div class="termin-card">
                 <!-- Spalte A: Kundendaten -->
                 <div class="termin-info">
-                    <div>${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}</div>
-                    <div>${client ? `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}` : ""}</div>
-                    <div>${client ? `${client.Telefon}, ${client.Mail}` : ""}</div>
+                    ${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}
+                    <!-- usw. -->
                 </div>
-                <!-- Spalte B: Termindetails -->
+                <!-- Spalte B: Services ab Index 1 -->
+                <div class="termin-info">
+                    ${additionalServicesHTML}
+                </div>
+                <!-- Spalte C: weitere Termindetails -->
                 <div class="termin-info">
                     <div>
                         ${appStart.toLocaleDateString()} 
@@ -2157,22 +2279,22 @@ async function displayAppointments(appointments) {
                         -
                         ${appEnd.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                     </div>
-                    <div>${app.Dienstleistung} (${app.duration} Min)</div>
-                    <div>${app.description}</div>
-                </div>
-                <!-- Spalte C: Weitere Details -->
-                <div class="termin-info">
-                    <div>Preis: ${app.Preis || "nicht angegeben"}</div>
-                    <div>Status: ${app.Abrechnungsstatus || "nicht angegeben"}</div>
+                    <div>Dauer: ${app.duration} Min</div>
+                    <div>Preis: ${app.Preis || ''}</div>
+                    <div>Status: ${app.Abrechnungsstatus || ''}</div>
+                    <div>${app.description || ''}</div>
                 </div>
                 <!-- Spalte D: Aktionen -->
                 <div class="termin-actions">
-                    <button class="action-btn appointment-edit-btn" data-app-id="${app._id}" title="Bearbeiten">✏️</button>
-                    <button class="action-btn appointment-delete-btn" data-app-id="${app._id}" title="Löschen">🗑️</button>
+                    <button class="action-btn appointment-edit-btn" data-app-id="${app._id}">✏️</button>
+                    <button class="action-btn appointment-delete-btn" data-app-id="${app._id}">🗑️</button>
                 </div>
             </div>
         `;
     }).join('');
+
+
+
 
     // Klick auf Bearbeiten
     document.querySelectorAll('.appointment-edit-btn').forEach(btn => {
@@ -2385,7 +2507,7 @@ function displaySearchResults() {
     });
         
     
-    // Submit-Event-Listener für das Terminformular
+// Submit-Event-Listener für das Terminformular
 document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -2427,6 +2549,22 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
     const fakturaBemerkung = document.getElementById('fakturaBemerkung').value;
     const fakturaNummer = document.getElementById('fakturaNummer').value;
 
+
+    // 5.5) Abfrage der Checkboxen => Wir bauen ein Array mit "0"/"1" in der Länge allServices
+    //    Zunächst ein Basis-Array mit "0" füllen:
+    const dlArray = new Array(allServices.length).fill("0"); 
+
+    // 5.5.a) Index0 soll immer "1" sein (laut Vorgabe, "immer aktiv")
+    dlArray[0] = "1";
+
+    // 5.5.b) Für alle angehakten Checkboxen => "1"
+    const checkedBoxes = document.querySelectorAll('#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked');
+    checkedBoxes.forEach(cb => {
+        // das data-service-index sagt uns, um welchen Service-Index es geht
+        const idx = parseInt(cb.dataset.serviceIndex, 10);
+        dlArray[idx] = "1";
+    });
+
     // 6) Request-Body (Mongoose-Felder) zusammenstellen
     const newAppointment = {
         // Standard-Felder
@@ -2434,7 +2572,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
         startDateTime: startVal,
         endDateTime: endVal,
         duration: totalDuration,
-        Dienstleistung,
+        Dienstleistung: JSON.stringify(dlArray),
         Preis,
         Abrechnungsstatus,
         description,
