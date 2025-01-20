@@ -133,7 +133,7 @@ async function loadUsers() {
   try {
     const res = await fetch('/api/users');
     const data = await res.json();
-    allUsers = data;
+    allUsers = data.slice(1); // Entfernt den Benutzer mit Index 0 (Admin)
     console.log("allUsers:", allUsers);
     renderUsersList();
   } catch (err) {
@@ -556,7 +556,7 @@ function goToStep5() {
     <p><strong>Email:</strong> ${personalData.email}</p>
     <p><strong>Dienstleistungen:</strong> [${servicesText.join(', ')}]</p>
     <p><strong>Gesamtpreis:</strong> ${totalPrice} CHF</p>
-    <p><strong>Gesamtdauer:</strong> ${totalDuration} Minuten</p>
+    <p><strong>Geschätzte Dauer:</strong> ca. ${totalDuration} Minuten</p>
   `;
   summaryContainer.innerHTML = html;
 }
