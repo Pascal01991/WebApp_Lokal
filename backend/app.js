@@ -25,41 +25,20 @@ const servicesRoutes = require('./routes/services');
 
 const app = express();
 
+
 //Für User-Authentifizierung
 app.use(cookieParser());
 
+//Backend-Konfiguraiton
+const corsOptions = require('./config/cors.config');
 
-
+// CORS-Middleware
+app.use(cors(corsOptions));
 
 // Verbindung zur Datenbank
 connectDB();
 
-// CORS-Einstellungen
-const allowedOrigins = [
-  //'http://localhost:8080',  // Lokale Entwicklung
-  //'http://127.0.0.1:8080',  // Lokale Entwicklung (Alternative)
-    'http://localhost:5000',  // Lokale Entwicklung
-    'https://www.sapps.ch',    // Deine Produktionsdomain
-    'https://sapps.ch'  
-];
 
-
-
-app.use(cors({
-    origin: (origin, callback) => {
-        // Wenn kein Origin (z. B. bei Tools wie Postman), erlaube es
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('CORS policy violation'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-}));
 
 
 // Middleware (für JSON und Logger)
