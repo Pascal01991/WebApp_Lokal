@@ -12,6 +12,7 @@ async function seedStandardUsers() {
           userID: 0,
           username: 'master',
           email: 'master',
+          publicName: 'master',
           password: process.env.Password_User0, // wird in userSchema prä-save gehasht
           color: '#919191'
         },
@@ -19,6 +20,7 @@ async function seedStandardUsers() {
           userID: 1,
           username: 'admin',
           email: 'admin',
+          publicName: 'admin',
           password: process.env.Password_User1,
           color: '#919191'
         }
