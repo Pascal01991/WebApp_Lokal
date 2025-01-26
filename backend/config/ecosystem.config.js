@@ -5,7 +5,7 @@ module.exports = {
   apps: [
     {
       name: process.env.INSTANCE_NAME, 
-      script: "./backend/server.js",
+      script: "./backend/app.js",
       watch: true,
       env: {
         NODE_ENV: "production"
