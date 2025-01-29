@@ -20,6 +20,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify({ username, password, rememberMe }),
         });
 
+        console.log('BACKEND_URL' + BACKEND_URL);
+
         // Verarbeite die Antwort
         const data = await response.json();
 
