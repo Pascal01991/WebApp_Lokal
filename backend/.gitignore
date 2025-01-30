@@ -3,3 +3,8 @@ node_modules/
 
 # Ignoriere die .env-Datei (Enthält sensible Daten)
 .env
+
+# Ignoriere die frontend/config.js
+/frontend/config.js
+
+
