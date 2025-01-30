@@ -38,7 +38,7 @@ const corsOptions = {
     preflightContinue: false,
     optionsSuccessStatus: 204
   };
-
+module.exports = corsOptions;
   
 
 */
@@ -48,7 +48,7 @@ const corsOptions = {
 
 
 
-module.exports = corsOptions;
+
 
 
 
