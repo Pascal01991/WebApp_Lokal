@@ -952,26 +952,6 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
 
 
 
-
-
-/*
-
-        // Beispiel: Falls du die "Ressource" namentlich so in app hast:
-    function getUserColor(resourceName) {
-        // resourceName = "user1", "user2", "user3", ...
-        // Falls du mehr Benutzer hast, füge sie hier hinzu
-        switch (resourceName) {
-        case "admin": return "#414b14";
-        case "Reto": return "var(--user2)";
-        case "user3": return "var(--user3)";
-        case "user4": return "var(--user4)";
-        case "user5": return "var(--user5)";
-        default:      return "var(--user1)"; // fallback
-        }
-
-    }
-    */
-
     //Laden der Fabren der User
 
     let userColors = []; // Globale Variable, um die Benutzer und ihre Farben zu speichern
@@ -1063,6 +1043,7 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
                                 //     aber du kannst es auch umdrehen
         updateNavigationButtons();
         renderCalendar();
+        console.log('toggle: ' + dayView);
     }
     
     /**
@@ -2272,7 +2253,7 @@ async function loadAppointments() {
         if (response.ok) {
             allAppointments = await response.json();
             displayAppointments(allAppointments);
-            renderCalendar(); // Falls du den Kalender neu rendern willst
+            
         } else {
             alert('Fehler beim Laden der Termine');
         }
