@@ -1043,7 +1043,6 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
                                 //     aber du kannst es auch umdrehen
         updateNavigationButtons();
         renderCalendar();
-        console.log('toggle: ' + dayView);
     }
     
     /**
@@ -1715,23 +1714,36 @@ function displayDayAppointments(day, selectedUsers) {
 
 
     /*******************************************************
-     * Hilfsfunktionen
+     * Hilfsfunktionen für 
      *******************************************************/
 
     /**
      * Gibt ein Array der ausgewählten User-Resources (z.B. ["user1", "user2"]) zurück.
-     */
-    function getSelectedUsers() {
-        const checkboxes = document.querySelectorAll('.user-checkbox');
-        const selected = [];
-        checkboxes.forEach(ch => {
-        if (ch.checked) {
-            selected.push(ch.value);
-        }
+     */// Umbenannte Funktion
+    function DisplayUsersButtons(users) {
+        const container = document.getElementById('user-buttons-container');
+        container.innerHTML = '';
+
+        users.forEach(user => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('user-filter-button', 'active');
+            button.textContent = user.username;
+            button.dataset.username = user.username;
+            
+            button.addEventListener('click', () => {
+                button.classList.toggle('active');
+                renderCalendar(); // Verwenden Sie Ihre existierende renderCalendar-Funktion
+            });
+            
+            container.appendChild(button);
         });
-        return selected;
     }
-    
+    // Angepasste Auswahlfunktion
+        function getSelectedUsers() {
+            return Array.from(document.querySelectorAll('.user-filter-button.active'))
+                        .map(btn => btn.dataset.username);
+        }
             /**
      * Formatierte Zeit (HH:MM)
      */
@@ -1909,15 +1921,22 @@ async function displayAppointmentsOnCalendar() {
     // Filtere Termine der aktuellen Woche
     const appointmentsThisWeek = allAppointments.filter(app => {
         const appStartDate = new Date(app.startDateTime);
-        return appStartDate >= startOfWeek && 
-               appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
-               
+        const isInWeek = appStartDate >= startOfWeek && 
+                       appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        // Geänderte Zeile: Überprüfung auf Ressource statt user
+        const isUserSelected = getSelectedUsers().includes(app.Ressource);
+        return isInWeek && isUserSelected;        
     });
     console.log(appointmentsThisWeek.length);
     console.log (appointmentsThisWeek);
     // Finde Gruppen überlappender Termine
     const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
 
+
+
+
+    
     // Platziere die Termine
     overlappingGroups.forEach(group => {
         const groupSize = group.length;
@@ -3989,10 +4008,12 @@ async function loadUsers() {
         if (!response.ok) throw new Error('Netzwerk-Fehler beim Laden der Benutzer');
         
         const users = await response.json();
-        allUsers = users.slice(1); // Entfernt den Benutzer mit Index 0 (Admin)
+        allUsers = users.slice(1); // Admin entfernen
         
-        displayUsers(allUsers); // Benutzerliste anzeigen
-        populateDropdownWithUsersForAppointmentForm(allUsers, currentUserName); // Dropdown mit Benutzern befüllen
+        // Hinzugefügt: Buttons erstellen
+        DisplayUsersButtons(allUsers);
+        displayUsers(allUsers); // Ihre existierende Liste
+        populateDropdownWithUsersForAppointmentForm(allUsers, currentUserName);
         populateDropdownWithUsersForHolidayForm(allUsers);
     } catch (error) {
         console.error('Fehler beim Laden der Benutzer:', error);
