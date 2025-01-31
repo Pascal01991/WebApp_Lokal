@@ -529,7 +529,8 @@ async function approveAppointmentRequest(requestId, appointmentRequests) {
         email: req.MailAppointmentRequests || 'keine Email'
     };
 
-    const servicesArray = req.servicesArray || [];
+    
+    const dienstleistungString = req.Dienstleistung || '[]';  // Direkt als String übernehmen
     const totalPrice = req.totalPrice || 0;
     const selectedUser = { username: req.Ressource || '' };
     
@@ -547,7 +548,7 @@ async function approveAppointmentRequest(requestId, appointmentRequests) {
         description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
         MailAppointmentRequests: personalData.email,
         Preis: String(totalPrice),
-        Dienstleistung: JSON.stringify(servicesArray),
+        Dienstleistung: dienstleistungString,
         erfasstDurch: "öffentliche Buchungsplattform",
         Ressource: selectedUser.username
     };
