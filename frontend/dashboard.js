@@ -1802,21 +1802,7 @@ function dateToLocalString(date) {
             return !isHoliday && isAvailable;
         }
 
-        // In der renderWeek-Funktion erweitern:
-        if (slotInfo) {
-            // ... bestehender Code ...
-            
-            // Verfügbarkeitsprüfung für aktive User
-            const anyUserAvailable = selectedUsers.some(user => 
-                isSlotAvailableForUser(slotInfo, user)
-            );
-            
-            if (!anyUserAvailable) {
-                slotDiv.classList.add('unavailable-slot');
-            } else {
-                slotDiv.classList.add('available-slot');
-            }
-        }
+        
 
         // Formular öffnen und Felder ausfüllen
         showAppointmentForm();
