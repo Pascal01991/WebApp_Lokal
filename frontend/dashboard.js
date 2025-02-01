@@ -1016,14 +1016,6 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
         renderCalendar();
         });
     
-        // Checkboxen für Benutzer
-        const userCheckboxes = document.querySelectorAll('.user-checkbox');
-        userCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            // Wenn eine Checkbox sich ändert, Kalender neu rendern
-            renderCalendar();
-        });
-        });
     
         // Hier könntest du Clients oder Termine laden, z.B.:
         //   allAppointments = await fetchAppointmentsFromBackend();
@@ -1504,73 +1496,39 @@ function displayDayAppointments(day, selectedUsers) {
   
           // Prüfe holiday/available/unavailable etc.
           if (slotInfo) {
-            // 1) Prüfen: Gibt es holidayResources in diesem Slot?
-            //    -> "all" => kompletter Betriebsurlaub
-            //    -> Array mit einzelnen Namen => nur bestimmte User
-            const holidayRes = slotInfo.holidayResources || [];  // falls nicht definiert = leeres Array
-            
-            // Falls du weiterhin "isHoliday" nutzt, checke ob "all" drin ist
+            const holidayRes = slotInfo.holidayResources || [];
             const isHolidayAll = holidayRes.includes('all');
-            // Oder ob es überhaupt Einträge (partielle Holidays) gibt
-            const isHolidayPartial = !isHolidayAll && holidayRes.length > 0;
-            
-            // 2) Prüfen: Ist der Slot für *alle* User nicht verfügbar?
-            //    Wir können "alle" nur erkennen, wenn wir isAvailable pro User haben:
+    
+            // NEU: Filterung basierend auf aktivierten Usern
+            const selectedUsers = getSelectedUsers();
+            const activeHolidayRes = holidayRes.filter(user => selectedUsers.includes(user));
+            const isHolidayPartial = !isHolidayAll && activeHolidayRes.length > 0;
+    
+            // Holiday-All nur berücksichtigen, wenn mindestens ein User aktiv ist
+            if (isHolidayAll && selectedUsers.length > 0) {
+                slotDiv.classList.add('unavailable-holiday-all');
+            } else if (isHolidayPartial) {
+                slotDiv.classList.add('unavailable-holiday-user');
+            }
+    
+            // Verfügbarkeit nur für aktive User prüfen
             let allUnavailable = true;
             if (slotInfo.isAvailable && typeof slotInfo.isAvailable === 'object') {
-              // Falls wir mind. einen User finden, der "true" hat, ist er nicht "allUnavailable".
-              const values = Object.values(slotInfo.isAvailable);
-              if (values.some(v => v === true)) {
-                allUnavailable = false;
-              }
+                allUnavailable = selectedUsers.every(user => 
+                    !slotInfo.isAvailable[user] || activeHolidayRes.includes(user)
+                );
             }
-            
-            // 3) Klassen/Beschriftung zuweisen
-            if (isHolidayAll) {
-              // => Ein "Feiertag für alle"
-              slotDiv.classList.add('unavailable-holiday-all'); 
-              
-              // Du kannst z.B. noch textContent = "Betriebsurlaub" etc. machen
-            } else if (isHolidayPartial) {
-              // => ein oder mehrere User haben Urlaub, aber nicht alle
-              slotDiv.classList.add('unavailable-holiday-user');
-              
-            }
-            
-            // 4) Falls kein "Feiertag für alle", zeigen wir an, ob der Slot "allAvailable" oder "allUnavailable" ist
-            if (allUnavailable) {
-              slotDiv.classList.add('unavailable-slot');
+    
+            // Slot als verfügbar markieren, wenn mindestens ein aktiver User verfügbar ist
+            if (!allUnavailable) {
+                slotDiv.classList.add('available-slot');
             } else {
-              // Mind. ein User hat availability = true
-              slotDiv.classList.add('available-slot');
+                slotDiv.classList.add('unavailable-slot');
             }
-/*
-            if (isHolidayAll) {
-                // => ALLE haben Urlaub => komplett blockiert
-                slotDiv.classList.add('unavailable-slot', 'unavailable-holiday-all');
-              } 
-              else if (isHolidayPartial) {
-                // => Mind. einer im Urlaub, aber andere sind verfügbar
-                // Wir möchten z.B. "teilweise verfügbar" anzeigen (Orange)
-                // => wir könnten extra Klasse + "available-slot"
-                slotDiv.classList.add('unavailable-holiday-user');
-                slotDiv.classList.add('available-slot'); 
-              }
-              else {
-                // Kein Holiday => normaler Pfad: 
-                if (allUnavailable) {
-                  slotDiv.classList.add('unavailable-slot');
-                } else {
-                  slotDiv.classList.add('available-slot');
-                }
-              }
-              */
-
-            
-          } else {
-            // => Überhaupt kein Slot (z.B. weil die Arbeitszeit dort nicht definiert)
+        } else {
+            // Kein Slot definiert (z. B. außerhalb der Arbeitszeiten)
             slotDiv.classList.add('unavailable-slot');
-          }
+        }
           
           
 
@@ -1602,114 +1560,115 @@ function displayDayAppointments(day, selectedUsers) {
     
     // Lade die Clients nur einmal, falls noch nicht geschehen
     if (!clients || clients.length === 0) {
-      const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
-      clients = await clientsResponse.json();
+        const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
+        clients = await clientsResponse.json();
     }
-  
+
     // Filtere Termine dieser Woche (Montag bis Sonntag)
     const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
     const appointmentsThisWeek = allAppointments.filter(app => {
-      const appStartDate = new Date(app.startDateTime);
-      return appStartDate >= startOfWeek && appStartDate < endOfWeek;
+        const appStartDate = new Date(app.startDateTime);
+        return appStartDate >= startOfWeek && appStartDate < endOfWeek;
     });
-  
-  
-    // Finde Gruppen überlappender Termine (falls du das Feature brauchst)
-    const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
+
+    // NEU: Filtere Termine basierend auf der ausgewählten Ressource
+    const selectedUsers = getSelectedUsers();
+    const filteredAppointments = appointmentsThisWeek.filter(app => {
+        return selectedUsers.includes(app.Ressource); // Nur Termine anzeigen, deren Ressource aktiv ist
+    });
+
+    // Finde Gruppen überlappender Termine
+    const overlappingGroups = findOverlappingAppointments(filteredAppointments);
 
     // Platziere jede Gruppe im Kalender
     overlappingGroups.forEach(group => {
-      const groupSize = group.length;
-      group.forEach((app, index) => {
-        // Start/End aus DB
-        const appStartDate = new Date(app.startDateTime);
-        const appEndDate = app.endDateTime
-          ? new Date(app.endDateTime)
-          : new Date(appStartDate.getTime() + app.duration * 60000);
-  
-        // Berechne, an welchem Tag im Grid das liegt (Montag=0, Sonntag=6)
-        const dayIndex = (appStartDate.getDay() + 6) % 7;
-        const startHour = appStartDate.getHours();
-        const endHour = appEndDate.getHours();
-  
-        // Für jede Stunde zwischen StartHour und EndHour
-        for (let hour = startHour; hour <= endHour; hour++) {
-          const calendar = document.getElementById('calendar');
-          // Achtung: Template-String mit Backticks!
-          const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
-          const hourCell = calendar.querySelector(cellSelector);
-  
-          if (hourCell) {
-            // Zeichne den Termin nur einmal in der ersten Stunde
-            if (hour === startHour) {
-              const appointmentDiv = document.createElement('div');
-              appointmentDiv.classList.add('appointment');
-              appointmentDiv.setAttribute('data-app-id', app._id);
-  
-              // Gesamtdauer in Stunden
-              const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
-  
-              // Dynamische CSS (z.B. für mehrere überlappende Termine)
-              // Achtung: überall Backticks benutzen!
-              appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
-              appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
-              appointmentDiv.style.height = `${durationHours * 100}%`;
-              appointmentDiv.style.width = `${100 / groupSize}%`;
-              appointmentDiv.style.left = `${(100 / groupSize) * index}%`;
-              appointmentDiv.style.zIndex = '2';
-  
-              // Terminfarbe basierend auf dem Resource-Feld
-              // (Passe das ggf. auf app.Ressource an, falls du das anders nennst)
-              appointmentDiv.style.backgroundColor = getUserColor(app.Ressource);
-                
-              // Console-Check
-                
-              // Icons
-              const iconContainer = document.createElement('div');
-              iconContainer.classList.add('appointment-icons');
-              iconContainer.innerHTML = `
-                <span class="icon edit-icon" title="Bearbeiten">✏️</span>
-                <span class="icon delete-icon" title="Löschen">🗑️</span>
-              `;
-              // Klicks
-              iconContainer.querySelector('.edit-icon').addEventListener('click', () => {
-                editAppointment(app._id);
-              });
-              iconContainer.querySelector('.delete-icon').addEventListener('click', () => {
-                deleteAppointment(app._id);
-              });
-  
-              // Text-Inhalt (Client + Dienstleistung)
-              // Benutze wieder Backticks für HTML + Variablen
-              const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
-              const appointmentContent = document.createElement('div');
-              appointmentContent.innerHTML = `
-                <div>
-                  ${
-                    clientAppointment 
-                      ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
-                         <br>
-                         ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}`
-                      : "Kunde nicht gefunden"
-                  }
-                </div>
-              `;
-  
-              appointmentDiv.appendChild(iconContainer);
-              appointmentDiv.appendChild(appointmentContent);
-              hourCell.appendChild(appointmentDiv);
+        const groupSize = group.length;
+        group.forEach((app, index) => {
+            // Start/End aus DB
+            const appStartDate = new Date(app.startDateTime);
+            const appEndDate = app.endDateTime
+                ? new Date(app.endDateTime)
+                : new Date(appStartDate.getTime() + app.duration * 60000);
+
+            // Berechne, an welchem Tag im Grid das liegt (Montag=0, Sonntag=6)
+            const dayIndex = (appStartDate.getDay() + 6) % 7;
+            const startHour = appStartDate.getHours();
+            const endHour = appEndDate.getHours();
+
+            // Für jede Stunde zwischen StartHour und EndHour
+            for (let hour = startHour; hour <= endHour; hour++) {
+                const calendar = document.getElementById('calendar');
+                // Achtung: Template-String mit Backticks!
+                const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
+                const hourCell = calendar.querySelector(cellSelector);
+
+                if (hourCell) {
+                    // Zeichne den Termin nur einmal in der ersten Stunde
+                    if (hour === startHour) {
+                        const appointmentDiv = document.createElement('div');
+                        appointmentDiv.classList.add('appointment');
+                        appointmentDiv.setAttribute('data-app-id', app._id);
+
+                        // Gesamtdauer in Stunden
+                        const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
+
+                        // Dynamische CSS (z.B. für mehrere überlappende Termine)
+                        // Achtung: überall Backticks benutzen!
+                        appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
+                        appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
+                        appointmentDiv.style.height = `${durationHours * 100}%`;
+                        appointmentDiv.style.width = `${100 / groupSize}%`;
+                        appointmentDiv.style.left = `${(100 / groupSize) * index}%`;
+                        appointmentDiv.style.zIndex = '2';
+
+                        // Terminfarbe basierend auf dem Resource-Feld
+                        appointmentDiv.style.backgroundColor = getUserColor(app.Ressource);
+
+                        // Icons
+                        const iconContainer = document.createElement('div');
+                        iconContainer.classList.add('appointment-icons');
+                        iconContainer.innerHTML = `
+                            <span class="icon edit-icon" title="Bearbeiten">✏️</span>
+                            <span class="icon delete-icon" title="Löschen">🗑️</span>
+                        `;
+                        // Klicks
+                        iconContainer.querySelector('.edit-icon').addEventListener('click', () => {
+                            editAppointment(app._id);
+                        });
+                        iconContainer.querySelector('.delete-icon').addEventListener('click', () => {
+                            deleteAppointment(app._id);
+                        });
+
+                        // Text-Inhalt (Client + Dienstleistung)
+                        const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
+                        const appointmentContent = document.createElement('div');
+                        appointmentContent.innerHTML = `
+                            <div>
+                                ${
+                                    clientAppointment 
+                                        ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
+                                           <br>
+                                           ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}`
+                                        : "Kunde nicht gefunden"
+                                }
+                            </div>
+                        `;
+
+                        appointmentDiv.appendChild(iconContainer);
+                        appointmentDiv.appendChild(appointmentContent);
+                        hourCell.appendChild(appointmentDiv);
+                    }
+                }
             }
-          }
-        }
-      });
+        });
     });
-  
+
     // Interne Funktion zur Erkennung von Überschneidungen
     function logOverlappingAppointments() {
-      // Falls du hier noch etwas debuggen willst ...
+        // Falls du hier noch etwas debuggen willst ...
     }
     logOverlappingAppointments();
-  }
+}
   
 
 
@@ -1832,6 +1791,33 @@ function dateToLocalString(date) {
             alert(alertMessage);
         }
     
+        // In der handleSlotClick-Funktion oder einer Hilfsfunktion:
+        function isSlotAvailableForUser(slot, user) {
+            // Prüft, ob der Slot für den angegebenen User verfügbar ist
+            const isHoliday = slot.holidayResources?.includes(user) || 
+                             slot.holidayResources?.includes('all');
+            
+            const isAvailable = slot.isAvailable?.[user] !== false;
+            
+            return !isHoliday && isAvailable;
+        }
+
+        // In der renderWeek-Funktion erweitern:
+        if (slotInfo) {
+            // ... bestehender Code ...
+            
+            // Verfügbarkeitsprüfung für aktive User
+            const anyUserAvailable = selectedUsers.some(user => 
+                isSlotAvailableForUser(slotInfo, user)
+            );
+            
+            if (!anyUserAvailable) {
+                slotDiv.classList.add('unavailable-slot');
+            } else {
+                slotDiv.classList.add('available-slot');
+            }
+        }
+
         // Formular öffnen und Felder ausfüllen
         showAppointmentForm();
     
