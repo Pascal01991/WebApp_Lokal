@@ -59,13 +59,13 @@ const appointmentSchema = new mongoose.Schema({
     
     verrechnungsTyp: {
         type: String,
-        enum: ['Verrechnung an Kunde', 'Vertragsleistung', 'Garantie', 'Kulanz'],
+        //enum: ['Verrechnung an Kunde', 'Vertragsleistung', 'Garantie', 'Kulanz'],
         required: false
     },
     
     erbringungsStatus: {
         type: String,
-        enum: ['Geplant', 'in Erbringung', 'Ausgeführt', 'Abgerechnet'],
+        //enum: ['Geplant', 'in Erbringung', 'Ausgeführt', 'Abgerechnet'],
         required: false
     },
     

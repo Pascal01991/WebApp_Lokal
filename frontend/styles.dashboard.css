@@ -342,9 +342,9 @@ KALENDER
     #calendar {
       display: grid;
       grid-template-columns: 80px repeat(7, 1fr);
-      border: 1px solid #ccc;
+      border: 1px solid var(--background-light);
       width: 100%;
-      max-width: 1100px; /* Begrenze die maximale Breite des Kalenders */
+      max-width: 1200px; /* Begrenze die maximale Breite des Kalenders */
       margin: 20px auto; /* Zentriert den Kalender */
       box-sizing: border-box;
       background-color: var(--background-medium);
@@ -581,11 +581,15 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 #appointmentForm {
   display: flex;
   gap: 20px; /* Abstand zwischen den Spalten */
-  max-width: 1100px;
+  max-width: 1200px;
   box-sizing: border-box;
   background-color: var(--background-medium);
   height: 100%; /* Verfügbaren Platz füllen */
-  margin-bottom: 30px;;
+  margin-bottom: 30px;
+  margin-bottom: 30px;
+  padding: 20px; /* Fügt Abstand links und rechts hinzu */
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
 }
 
 /* Stile für die einzelnen Spalten im Formular */
@@ -599,12 +603,45 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   flex-direction: column;
 }
 
+/* Button "Termin hinzufügen" weiter nach unten setzen */
+#submitAppointment {
+  margin-top: 200px; /* Mehr Abstand nach unten */
+}
+
 /* Gleichmäßige Verteilung der Inhalte innerhalb der Kundendaten- und Termindetails-Spalten */
 .customer-info > div,
 .appointment-details > div {
   margin-bottom: 15px;
   flex-grow: 1; /* Elemente gleichmäßig verteilen */
 }
+
+
+/* Fixierte Breite für die Checkboxen und richtige Ausrichtung */
+.service-checkbox-label {
+  display: flex;
+  align-items: center;
+  width: 100%; /* Volle Breite, um den Text besser anzuordnen */
+  cursor: pointer; /* Klickbares Label */
+}
+
+/* Checkbox exakt links ausrichten */
+.appointment-service-checkbox {
+  margin: 0; /* Kein Abstand */
+  flex-shrink: 0; /* Verhindert, dass die Checkbox kleiner wird */
+  width: 16px; /* Standard-Checkbox-Breite */
+  height: 16px; /* Standard-Checkbox-Höhe */
+}
+
+/* Text direkt neben der Checkbox */
+.service-checkbox-label span {
+  margin-left: 5px; /* Minimaler Abstand */
+  white-space: nowrap; /* Verhindert unnötige Umbrüche */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1; /* Lässt den Text den restlichen Platz nutzen */
+  max-width: calc(100% - 25px); /* Sorgt dafür, dass der Text nicht überläuft */
+}
+
 
 
 
@@ -622,7 +659,7 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
   flex-grow: 1;
   resize: none;
   padding: 10px;
-  height: 150px;
+  height: 230px;
   border-radius: 5px;
   border: 1px solid #ccc;
   background-color: var(--background-light);
@@ -632,13 +669,19 @@ TERMINVERWALTUNG FORMULAR FÜR TERMINBEARBEITUNG
 }
 
 /* Buttons innerhalb von .description */
-.description button {
+#submitAppointment {
   width: 150px; /* Fixierte Breite für die Buttons */
   align-self: center; /* Buttons zentrieren */
   padding: 10px;
-  margin-top: 10px;
+  margin-top: 0px;
 }
 
+#CancelAppointmentFormButton {
+  width: 150px; /* Fixierte Breite für die Buttons */
+  align-self: center; /* Buttons zentrieren */
+  /*padding: 10px;*/
+  margin-top: 10px;
+}
 
 /* Stile für das Kunden-Suchfeld */
 #customer-search {
@@ -850,6 +893,8 @@ KUNDENVERWALTUNG
   border-radius: 10px;
   padding: 0;
   transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
 }
 
 #kundenFormular.show {
@@ -1011,6 +1056,8 @@ Absenzverwaltung
   border-radius: 10px;
   padding: 0;
   transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  border: 1px solid var(--background-light);
+  border-radius: 8px;
 }
 
 #holidaysForm.show {

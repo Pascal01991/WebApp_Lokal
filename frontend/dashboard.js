@@ -301,33 +301,40 @@ async function editAppointment(appointmentId) {
     *AppointmentForm Serviceses
     **************************************************************/
 /**
- * Generiert für Services (Index >= 1) Checkboxen im Container appointmentServicesCheckboxContainer
- *
+ * Erstellt eine Liste von Checkboxen für die angegebenen Services.
+ * Checkbox linksbündig, Text direkt daneben.
  * @param {Array} services - Array der Services (z.B. allServices)
  */
+// Nach dem Rendern der Checkboxen die Preisberechnung aktivieren
 function renderAppointmentServiceCheckboxes(services) {
     const container = document.getElementById('appointmentServicesCheckboxContainer');
     container.innerHTML = '';
 
-    // Wir starten bewusst bei i=1 (Index0 wird nicht gezeigt).
-    for (let i = 1; i < services.length; i++) {
+    for (let i = 1; i < services.length; i++) { // Index 0 wird nicht genutzt
         const service = services[i];
 
         const label = document.createElement('label');
-        label.style.display = 'block';
+        label.className = 'service-checkbox-label';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        // Ganz wichtig: Der "data-service-index" ist ebenfalls i,
-        // und NICHT (i-1) oder 0..usw.
         checkbox.dataset.serviceIndex = i;
         checkbox.className = 'appointment-service-checkbox';
 
+        // Text als Span für bessere Kontrolle
+        const textSpan = document.createElement('span');
+        textSpan.textContent = `${service.serviceName}`;
+        
+        // Reihenfolge: Checkbox, dann Text
         label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(' ' + service.serviceName));
+        label.appendChild(textSpan);
         container.appendChild(label);
     }
-    console.log("rendercheckbox Ausgeführt");
+    
+    // Event-Listener für die Preisberechnung nach dem Rendering der Checkboxen anhängen
+    attachPriceCalculation(services);
+    
+    console.log("renderCheckbox ausgeführt");
 }
 
 
@@ -2976,69 +2983,35 @@ startInput.addEventListener('change', calculateEndDateTime);
 // Wenn Endtermin geändert => Dauer neu berechnen
 endInput.addEventListener('change', calculateDuration);
 
+function updateTotalPrice(services) {
+    const checkboxes = document.querySelectorAll('.appointment-service-checkbox');
+    let totalPrice = 0;
 
-/*
-//Senden & Speichern im Backend
-document.getElementById('appointmentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            const index = checkbox.dataset.serviceIndex;
+            totalPrice += services[index].servicePrice; // Preis addieren
+        }
+    });
 
-    // Start-/Endtermin
-    const startVal = document.getElementById('startDateTime').value;
-    const endVal = document.getElementById('endDateTime').value;
-
-    // Als Date-Objekt für das Backend
-    const startDateObj = startVal ? new Date(startVal) : null;
-    const endDateObj = endVal ? new Date(endVal) : null;
-
-    // Dauer
-    let totalMinutes = 0;
-    const hours = parseInt(document.getElementById('durationHours').value) || 0;
-    const mins = parseInt(document.getElementById('durationMinutes').value) || 0;
-    totalMinutes = hours * 60 + mins;
-
-    // Alle weiteren Felder
-    const data = {
-      startDateTime: startDateObj,
-      endDateTime: endDateObj,
-      duration: totalMinutes,
-      description: document.getElementById('description').value,
-      KundennummerzumTermin: parseInt(document.getElementById('KundennummerzumTermin').value) || 0,
-      Preis: document.getElementById('Preis').value,
-      Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
-      Dienstleistung: document.getElementById('Dienstleistung').value,
-      erfasstDurch: document.getElementById('erfasstDurch').value,
-      letzterBearbeiter: document.getElementById('letzterBearbeiter').value,
-      Ressource: document.getElementById('Ressource').value,
-      projektId: parseInt(document.getElementById('projektId').value) || null,
-      verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
-      erbringungsStatus: document.getElementById('erbringungsStatus').value,
-      fakturaBemerkung: document.getElementById('fakturaBemerkung').value,
-      fakturaNummer: document.getElementById('fakturaNummer').value
-      // usw...
-    };
-
-    // Falls abweichender Rechnungsempfänger ausgewählt wurde:
-    const reNr = document.getElementById('RechnungsempfaengerNummerDisplay').textContent;
-    if (reNr) {
-      data.rechnungsEmpfaengerNummer = parseInt(reNr) || null;
-      data.rechnungsEmpfaengerName = document.getElementById('RechnungsempfaengerName').textContent;
-      data.rechnungsEmpfaengerAdresse = document.getElementById('RechnungsempfaengerAdresse').textContent;
-      data.rechnungsEmpfaengerTelefon = document.getElementById('RechnungsempfaengerTelefon').textContent;
-      data.rechnungsEmpfaengerMail = document.getElementById('RechnungsempfaengerMail').textContent;
+    // Den berechneten Preis in das Feld mit der ID "Preis" schreiben
+    const priceField = document.getElementById('Preis');
+    if (priceField) {
+        priceField.value = totalPrice.toFixed(2); // Preis als Zahl mit zwei Dezimalstellen anzeigen
     }
+}
 
-    // Nun per Fetch oder AJAX an dein Backend senden
-    console.log('Termin-Daten zur Speicherung:', data);
-    // z.B.:
-    // fetch('/api/appointments', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // }).then(...)
+function attachPriceCalculation(services) {
+    const checkboxes = document.querySelectorAll('.appointment-service-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            updateTotalPrice(services);
+        });
+    });
+}
 
-});
 
-*/
 
     //====================================================================================================================================
     //====================================================================================================================================

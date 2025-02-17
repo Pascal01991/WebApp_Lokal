@@ -203,13 +203,13 @@
             <!-- Dienstleistung, Preis, Abrechnungsstatus -->
             <div>
                 <!-- Haupt-Dienstleistung (Index 0) -->
-                <label>Dienstleistung (Index 0):</label>
-                <input type="text" id="Dienstleistung">
+                <label hidden>Dienstleistung (Index 0):</label>
+                <input hidden type="text" id="Dienstleistung">
             </div>
             
             <div>
                 <!-- Hier die "restlichen" Services (Index >= 1) -->
-                <label>Weitere Services:</label>
+                <label>Services:</label>
                 <div id="appointmentServicesCheckboxContainer"></div>
             </div>
          
@@ -218,8 +218,8 @@
                 <input type="number" id="Preis" required>
             </div>
             <div>
-                <label>Abrechnungsstatus:</label>
-                <input type="text" id="Abrechnungsstatus" required>
+                <label hidden>Abrechnungsstatus:</label>
+                <input hidden type="text" id="Abrechnungsstatus">
             </div>
 
         </div>
@@ -229,7 +229,7 @@
         <!-- ===================================== -->
         <div class="form-column additional-fields">
             <div>
-                <label>Erfasst durch:</label>
+                <label >Erfasst durch:</label>
                 <input type="text" id="erfasstDurch">
             </div>
             <div>
@@ -243,12 +243,12 @@
                 </select>
             </div>
             <div>
-                <label>Verknüpftes Projekt (ID):</label>
-                <input type="number" id="projektId">
+                <label hidden>Verknüpftes Projekt (ID):</label>
+                <input hidden type="number" id="projektId">
             </div>
             <div>
-                <label>Verrechnungs-Typ:</label>
-                <select id="verrechnungsTyp">
+                <label hidden>Verrechnungs-Typ:</label>
+                <select hidden id="verrechnungsTyp">
                     <option value="">-- bitte wählen --</option>
                     <option value="Verrechnung an Kunde">Verrechnung an Kunde</option>
                     <option value="Vertragsleistung">Vertragsleistung</option>
@@ -257,8 +257,8 @@
                 </select>
             </div>
             <div>
-                <label>Erbringungsstatus:</label>
-                <select id="erbringungsStatus">
+                <label hidden>Erbringungsstatus:</label>
+                <select hidden id="erbringungsStatus">
                     <option value="">-- bitte wählen --</option>
                     <option value="Geplant">Geplant</option>
                     <option value="in Erbringung">in Erbringung</option>
@@ -284,7 +284,7 @@
                 <label>Beschreibung:</label>
                 <textarea id="description" required></textarea>
             </div>
-            <button type="submit">Termin hinzufügen</button>
+            <button id="submitAppointment" type="submit">Termin hinzufügen</button>
             <button type="button" id="CancelAppointmentFormButton">Abbrechen</button>
         </div>
 
@@ -369,7 +369,7 @@
                     <div class="form-column">
                         <div>
                             <label>Beschreibung:</label>
-                            <input type="text" id="holidayDescription" placeholder="Beschreibung" required>
+                            <input hidden type="text" id="holidayDescription" placeholder="Beschreibung">
                         </div>
                         <div>
                             <label>Von:</label>
