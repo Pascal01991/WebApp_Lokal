@@ -16,7 +16,9 @@
      * 0) GLOBALE VARIABLEN
      ***************************************************/
 
+    
     //Globale Variable für Appointments
+    let allAppointmentRequests = []; // Termin-Anfragen global speichern
     let allAppointments = []; // Termine global speichern
 
     // Globale Variable für die Kundenliste
@@ -29,7 +31,7 @@
     // Globale Variable für die Serviceliste
     let allServices = [];
     
- 
+    const currentUserName = localStorage.getItem('loggedInUsername') || 'Unbekannt';
 
     /***************************************************
      * 1) GRUNDLEGENDE Elemente Users
@@ -51,6 +53,17 @@
     
     loadAppointmentRequests();
 
+    //Service-Checkboxen
+    async function initialServiceLoadAndRender() {
+        await loadServices();                  // <-- hier warten
+        renderAppointmentServiceCheckboxes(allServices);
+    }
+    
+    // Dann an passender Stelle aufrufen, z.B. direkt nach DOM-Load oder wann du das Formular zum ersten Mal öffnest:
+    document.addEventListener('DOMContentLoaded', () => {
+        initialServiceLoadAndRender();
+    });
+    
     // Funktion zum Bearbeiten des Termins
 // Für "Bearbeiten"-Button im Termin
 
@@ -314,6 +327,7 @@ function renderAppointmentServiceCheckboxes(services) {
         label.appendChild(document.createTextNode(' ' + service.serviceName));
         container.appendChild(label);
     }
+    console.log("rendercheckbox Ausgeführt");
 }
 
 
@@ -329,7 +343,7 @@ function renderAppointmentServiceCheckboxes(services) {
 //====================================================================================================================================
 //====================================================================================================================================
 //Aktueller Benutzer in den DOM laden:
-    const currentUserName = localStorage.getItem('loggedInUsername') || 'Unbekannt';
+    
     console.log('current user: ' + currentUserName);
    
 
@@ -350,11 +364,7 @@ function renderAppointmentServiceCheckboxes(services) {
 //====================================================================================================================================
 //====================================================================================================================================
     
-    /**************************************************************
-    * GLOBALE VARIABLEN: Filterzustände, Terminliste
-    **************************************************************/
     
-    let allAppointmentRequests = []; // Termin-Anfragen global speichern
 
 /**************************************************************
  * (H) LOAD APPOINTMENT REQUESTS (GET) UND ANZEIGE
@@ -2236,7 +2246,7 @@ function populateDropdownWithUsersForAppointmentForm(users) {
  * (B) Formular anzeigen (Unterschied: Neu vs. Edit)
  * @param {boolean} [isEditMode=false] 
  */
-async function showAppointmentForm(isEditMode = false) {
+function showAppointmentForm(isEditMode = false) {
     // 1) Formular einblenden
     appointmentFormContainer.style.display = 'block';
     setTimeout(() => {
@@ -2249,28 +2259,7 @@ async function showAppointmentForm(isEditMode = false) {
 
     // 3) Alten Event-Listener entfernen
     submitButton.replaceWith(submitButton.cloneNode(true));
-
-    // 4) Dienstleistungen laden und Checkboxen rendern
-    await loadServices(); // Verfügbare Dienstleistungen laden
-    renderAppointmentServiceCheckboxes(allServices); // Checkboxen für Services anzeigen
-
-    // 5) Standardwerte für neue Termine setzen (falls nicht Edit-Modus)
-    if (!isEditMode) {
-        let dlArray = new Array(allServices.length).fill("0");
-        dlArray[0] = "1"; // Standardmäßig aktiv
-
-        // Checkboxen initialisieren (alle deaktiviert außer Index 0)
-        for (let i = 1; i < dlArray.length; i++) {
-            const cb = document.querySelector(
-                `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
-            );
-            if (cb) {
-                cb.checked = false; // Alle anderen deaktivieren
-            }
-        }
-    }
 }
-
 
 /**
  * (C) Formular ausblenden (Abbrechen oder Speichern)
