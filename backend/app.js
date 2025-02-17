@@ -76,6 +76,10 @@ app.use('/api/appointmentrequests', appointmentrequestRoutes);// appointmentrequ
 // Client-Routen hinzufügen
 app.use('/api/clients', clientRoutes);
 
+// Einbinden der Settings-Route
+const settingsRouter = require('./routes/settings');
+app.use('/api/settings', settingsRouter);
+
 // Geschützte Route
 app.get('/api/protected', auth, (req, res) => {
     res.json({ msg: 'Dies ist eine geschützte Route', user: req.user });

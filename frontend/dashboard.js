@@ -13,6 +13,24 @@
     //====================================================================================================================================
    
     /***************************************************
+     * 0) GLOBALE VARIABLEN
+     ***************************************************/
+
+    //Globale Variable für Appointments
+    let allAppointments = []; // Termine global speichern
+
+    // Globale Variable für die Kundenliste
+    let allClients = [];
+
+    // Globale Variablen für die Arbeitszeiten und den Default Slot Length
+    let workingHours = {};
+    let defaultSlotLength = 30; // Standardwert, falls nicht aus der DB geladen
+
+    // Globale Variable für die Serviceliste
+    let allServices = [];
+    
+
+    /***************************************************
      * 1) GRUNDLEGENDE Elemente Users
      ***************************************************/
 
@@ -899,7 +917,7 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
 
 
     //speicherung der arbeitszeiten
-    let workingHours = {            //Später aus DB
+  /*  let workingHours = {            //Später aus DB
         montag: {
             active: true,
             morning: { start: '08:00', end: '12:00' },
@@ -936,6 +954,8 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
             afternoon: { start: null, end: null }
         }
     };
+
+    */
 
 
 
@@ -1206,9 +1226,9 @@ async function renderDay() {
       endHour = Math.ceil(maxTime / 60);
     }
   
-    // defaultLength z.B. 15 Min
-    const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-    const slotsPerHour = 60 / defaultLength;
+    // defaultSlotLength z.B. 15 Min
+    const defaultSlotLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+    const slotsPerHour = 60 / defaultSlotLength;
   
     // Jetzt pro Stunde => pro Benutzer => pro 15min-Block
     for (let hour = startHour; hour <= endHour; hour++) {
@@ -1233,7 +1253,7 @@ async function renderDay() {
   
         // Schleife über die Blöcke (z.B. 15-Min-Schritte)
         for (let s = 0; s < slotsPerHour; s++) {
-          const minute = s * defaultLength;
+          const minute = s * defaultSlotLength;
           const key = `${userResource}-${hour}-${minute}`;
           const slotInfo = slotsMap[key];
   
@@ -1262,11 +1282,11 @@ async function renderDay() {
   
           // Klick-Event (handleSlotClick)
           slotDiv.addEventListener('click', function () {
-            // handleSlotClick( day, userResource, hour, minute, defaultLength ) 
+            // handleSlotClick( day, userResource, hour, minute, defaultSlotLength ) 
             // => Du kannst dir Tag/Benutzer hier so übergeben, wie du es brauchst
             //   oder analog zur Wochenansicht: handleSlotClick(startOfWeek, dayIndex, hour, minute,...)
             //   In der Tagesansicht brauchst du keinen dayIndex - oder du nimmst "0".
-            handleSlotClick(day, 0, hour, minute, defaultLength);
+            handleSlotClick(day, 0, hour, minute, defaultSlotLength);
           });
   
           cellContainer.appendChild(slotDiv);
@@ -1391,24 +1411,24 @@ function displayDayAppointments(day, selectedUsers) {
    * -> im Prinzip dein vorhandenes renderCalendar() => rename
    *******************************************************/
   async function renderWeek() {
-    
-  
+    console.log("testlog");
     // Zuerst Kalender-HTML leeren
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
-  
+    console.log("testlog2");
     // 1) Slots asynchron vom Backend laden
     const slots = await fetchAvailableSlots();
     if (!slots.length) {
       console.warn('Keine Slots zum Anzeigen gefunden (eventuell keine Arbeitszeiten definiert?).');
     }
+    console.log("testlog3");
     console.log(slots);
     // 2) Woche bestimmen
     const startOfWeek = getStartOfWeek(currentDate);
   
     // 3) Grid-Layout: 8 Spalten (Zeitspalte + 7 Tage)
     calendar.style.gridTemplateColumns = '80px repeat(7, 1fr)';
-  
+    console.log("testlog4");
     // Leere Ecke oben links
     const emptyCorner = document.createElement('div');
     emptyCorner.textContent = "";
@@ -1423,7 +1443,7 @@ function displayDayAppointments(day, selectedUsers) {
       dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
       calendar.appendChild(dayHeader);
     }
-  
+    console.log("testlog5");
     // 4) Map für Slots anlegen (um hinterher schnell abzufragen, ob holiday/available)
     const slotsMap = {};
     // In deinem ursprünglichen Code hieß es z.B.: 
@@ -1441,7 +1461,7 @@ function displayDayAppointments(day, selectedUsers) {
   
       slotsMap[key] = slot; 
     });
-  
+    console.log("testlog6");
     // 5) Start-/Endzeit der Woche herausfinden oder einfach festlegen
     // Du kannst das natürlich dynamisch anhand der Slots bestimmen.
     const allTimes = slots.map(slot => {
@@ -1453,10 +1473,13 @@ function displayDayAppointments(day, selectedUsers) {
   
     const startHour = Math.floor(minTime / 60);
     const endHour = Math.ceil(maxTime / 60);
-  
-    // 6) defaultLength (z.B. 15 min pro Slot)
-    const defaultLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-    const slotsPerHour = 60 / defaultLength;
+    console.log("testlog7");
+    // 6) defaultSlotLength (z.B. 15 min pro Slot)
+    const defaultSlotLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+    console.log("testlog8");
+    console.log("defaultSlotLenght:" + defaultSlotLength);
+    
+    const slotsPerHour = 60 / defaultSlotLength;
   
     // 7) Zeilen erzeugen: Stunde + 7 Spalten
     for (let hour = startHour; hour <= endHour; hour++) {
@@ -1478,9 +1501,9 @@ function displayDayAppointments(day, selectedUsers) {
         cellContainer.style.position = 'relative';
         cellContainer.style.height = '100%';
   
-        // Innerhalb jeder Stunde die einzelnen 15min Blöcke (oder 10/5 min, je nach defaultLength)
+        // Innerhalb jeder Stunde die einzelnen 15min Blöcke (oder 10/5 min, je nach defaultSlotLength)
         for (let s = 0; s < slotsPerHour; s++) {
-          const minute = s * defaultLength;
+          const minute = s * defaultSlotLength;
           const key = `${i}-${hour}-${minute}`;
           const slotInfo = slotsMap[key];
   
@@ -1535,8 +1558,8 @@ function displayDayAppointments(day, selectedUsers) {
   
           // Klick-Event -> handleSlotClick
           slotDiv.addEventListener('click', function() {
-            // i = dayIndex, hour, minute, defaultLength
-            handleSlotClick(startOfWeek, i, hour, minute, defaultLength);
+            // i = dayIndex, hour, minute, defaultSlotLength
+            handleSlotClick(startOfWeek, i, hour, minute, defaultSlotLength);
           });
   
           cellContainer.appendChild(slotDiv);
@@ -1760,7 +1783,7 @@ function dateToLocalString(date) {
  }
     
     //Anklicken eines Slots öffnet Terminformular
-    function handleSlotClick(startOfWeek, dayIndex, hour, minute, defaultLength) {
+    function handleSlotClick(startOfWeek, dayIndex, hour, minute, defaultSlotLength) {
         const selectedDate = new Date(startOfWeek);
         selectedDate.setDate(startOfWeek.getDate() + dayIndex);
         selectedDate.setHours(hour, minute, 0, 0);
@@ -1779,7 +1802,7 @@ function dateToLocalString(date) {
         const overlappingAppointment = allAppointments.some(app => {
             const appStart = new Date(app.startDateTime);
             const appEnd = new Date(appStart.getTime() + app.duration * 60000);
-            const slotEnd = new Date(selectedDate.getTime() + defaultLength * 60000);
+            const slotEnd = new Date(selectedDate.getTime() + defaultSlotLength * 60000);
             return (selectedDate < appEnd && appStart < slotEnd);
         });
     
@@ -1816,8 +1839,8 @@ function dateToLocalString(date) {
         document.getElementById('endDateTime').value = '';
     
         // Dauer-Default in Stunden/Minuten
-        const defHours = Math.floor(defaultLength / 60);
-        const defMins = defaultLength % 60;
+        const defHours = Math.floor(defaultSlotLength / 60);
+        const defMins = defaultSlotLength % 60;
         document.getElementById('durationHours').value = defHours;
         document.getElementById('durationMinutes').value = defMins;
     }
@@ -2053,11 +2076,7 @@ async function displayAppointmentsOnCalendar() {
 
 
 
-    
-    document.getElementById('toggleSlotGridLines').addEventListener('click', function () {
-        const calendar = document.getElementById('calendar');
-        calendar.classList.toggle('hide-slot-lines');
-      });
+   
     //====================================================================================================================================      
     //====================================================================================================================================
     //====================================================================================================================================
@@ -2069,7 +2088,7 @@ async function displayAppointmentsOnCalendar() {
  **************************************************************/
 let filterFutureActive = false;
 let filterPastActive = false;
-let allAppointments = []; // Termine global speichern
+
 // Falls benötigt: let allClients = []; // schon in deinem Code definiert?
 
 /**************************************************************
@@ -2964,8 +2983,7 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
 /***************************************************
  * 1) GRUNDLEGENDE SETUPS
  ***************************************************/
-// Globale Variable für die Kundenliste
-let allClients = [];
+
 
 // Kundenformular und Terminformular beim Laden der Seite ausblenden
 document.addEventListener('DOMContentLoaded', function() {
@@ -3711,62 +3729,167 @@ loadHolidays();
     //====================================================================================================================================
     //====================================================================================================================================
     //====================================================================================================================================
+    // SaveTimeSettings.js
     
-    // Arbeitszeiten speichern: Event-Listener für den "Speichern"-Button hinzufügen
-    document.getElementById('saveWorkingHours').addEventListener('click', saveWorkingHours);
+    let settingsId = null;
 
-
-    function saveWorkingHours() {
-        const days = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
-    
-        days.forEach(day => {
-            const active = document.getElementById(`${day}Active`).checked;
-            const morningStart = document.getElementById(`${day}MorningStart`).value;
-            const morningEnd = document.getElementById(`${day}MorningEnd`).value;
-            const afternoonStart = document.getElementById(`${day}AfternoonStart`).value;
-            const afternoonEnd = document.getElementById(`${day}AfternoonEnd`).value;
-    
-            workingHours[day] = {
-                active: active,
-                morning: { start: morningStart, end: morningEnd },
-                afternoon: { start: afternoonStart, end: afternoonEnd }
-            };
-        });
-    
-        // Arbeitszeiten in localStorage speichern
-        localStorage.setItem('workingHours', JSON.stringify(workingHours));
-    
-        // Kalender neu rendern
-        renderCalendar();
-    }
-    
-    function loadWorkingHours() {
-        const savedHours = localStorage.getItem('workingHours');
-        if (savedHours) {
-            workingHours = JSON.parse(savedHours);
-        }
-    
-        const days = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag'];
-        days.forEach(day => {
-            if (workingHours[day]) {
-                document.getElementById(`${day}Active`).checked = workingHours[day].active;
-                document.getElementById(`${day}MorningStart`).value = workingHours[day].morning.start;
-                document.getElementById(`${day}MorningEnd`).value = workingHours[day].morning.end;
-                document.getElementById(`${day}AfternoonStart`).value = workingHours[day].afternoon.start;
-                document.getElementById(`${day}AfternoonEnd`).value = workingHours[day].afternoon.end;
-            } else {
-                console.warn(`Arbeitszeiten für ${day} sind nicht definiert.`);
+    // Diese Funktion lädt die Settings aus dem Backend und füllt die Tabelle.
+    function loadTimeSettings() {
+        // GET /api/settings (oder /settings, je nachdem wie du es in app.js konfigurierst)
+        fetch(`${BACKEND_URL}/settings`)
+          .then(response => {
+            if (!response.ok) {
+              // Falls der Status kein 200er Code ist (bspw. 404, 500, etc.)
+              throw new Error(`HTTP-Error: ${response.status}`);
             }
+            return response.json();
+          })
+          .then(data => {
+            // data sollte ein Settings-Objekt sein
+            settingsId = data._id;  // MongoDB-Dokument-ID
+            workingHours = data.workingHours;
+            defaultSlotLength = data.defaultSlotLength;
+  
+            // Tage array
+            const days = ['montag','dienstag','mittwoch','donnerstag','freitag','samstag','sonntag'];
+  
+            days.forEach(day => {
+              // Falls im DB-Dokument irgendetwas fehlt, initialisiere es notfalls leer
+              const dayData = workingHours[day] || {};
+              
+              // Checkbox 'active'
+              const activeEl = document.getElementById(`${day}Active`);
+              if (activeEl) {
+                activeEl.checked = dayData.active || false;
+              }
+  
+              // morning
+              const morningStart = document.getElementById(`${day}MorningStart`);
+              if (morningStart && dayData.morning) {
+                morningStart.value = dayData.morning.start || '';
+              }
+              const morningEnd = document.getElementById(`${day}MorningEnd`);
+              if (morningEnd && dayData.morning) {
+                morningEnd.value = dayData.morning.end || '';
+              }
+  
+              // afternoon
+              const afternoonStart = document.getElementById(`${day}AfternoonStart`);
+              if (afternoonStart && dayData.afternoon) {
+                afternoonStart.value = dayData.afternoon.start || '';
+              }
+              const afternoonEnd = document.getElementById(`${day}AfternoonEnd`);
+              if (afternoonEnd && dayData.afternoon) {
+                afternoonEnd.value = dayData.afternoon.end || '';
+              }
+  
+              // optional
+              const optionalStart = document.getElementById(`${day}OptionalStart`);
+              if (optionalStart && dayData.optional) {
+                optionalStart.value = dayData.optional.start || '';
+              }
+              const optionalEnd = document.getElementById(`${day}OptionalEnd`);
+              if (optionalEnd && dayData.optional) {
+                optionalEnd.value = dayData.optional.end || '';
+              }
+            });
+  
+            // defaultSlotLength in Formularfeld eintragen
+            const defaultLenEl = document.getElementById('defaultAppointmentLength');
+            if (defaultLenEl) {
+              defaultLenEl.value = defaultSlotLength;
+            }
+          })
+          .catch(err => {
+            console.error('Fehler beim Laden der Time Settings:', err);
+          });
+      }
+  
+      // Diese Funktion liest die Werte aus der Tabelle aus und schickt sie per PUT an /api/settings/:id
+      function saveTimeSettings() {
+        // Falls kein settingsId gesetzt ist, brechen wir ab (oder man nutzt POST, falls man mehrere Documents will)
+        if (!settingsId) {
+          console.error('Keine Settings-ID gefunden – kann nicht aktualisieren.');
+          return;
+        }
+  
+        const days = ['montag','dienstag','mittwoch','donnerstag','freitag','samstag','sonntag'];
+        days.forEach(day => {
+          const active = document.getElementById(`${day}Active`)?.checked ?? false;
+          
+          const morningStart = document.getElementById(`${day}MorningStart`)?.value || null;
+          const morningEnd = document.getElementById(`${day}MorningEnd`)?.value || null;
+  
+          const afternoonStart = document.getElementById(`${day}AfternoonStart`)?.value || null;
+          const afternoonEnd = document.getElementById(`${day}AfternoonEnd`)?.value || null;
+  
+          const optionalStart = document.getElementById(`${day}OptionalStart`)?.value || null;
+          const optionalEnd = document.getElementById(`${day}OptionalEnd`)?.value || null;
+  
+          // Baue das Objekt neu auf
+          workingHours[day] = {
+            active: active,
+            morning: {
+              start: morningStart,
+              end: morningEnd
+            },
+            afternoon: {
+              start: afternoonStart,
+              end: afternoonEnd
+            },
+            optional: {
+              start: optionalStart,
+              end: optionalEnd
+            }
+          };
         });
-    }
-    
-    
-    // Beim Laden der Seite aufrufen
-    document.addEventListener('DOMContentLoaded', function() {
-        loadWorkingHours();
-    });
-    
-    
+  
+        // defaultSlotLength aus dem Formularfeld auslesen
+        const defaultLenEl = document.getElementById('defaultAppointmentLength');
+        if (defaultLenEl) {
+          defaultSlotLength = parseInt(defaultLenEl.value, 10) || 30;
+        }
+  
+        // JSON für den PUT-Aufruf
+        const settingsData = {
+          workingHours,
+          defaultSlotLength
+        };
+  
+        // PUT /api/settings/:id
+        fetch(`${BACKEND_URL}/settings/${settingsId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settingsData)
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP-Error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Time Settings erfolgreich gespeichert:', data);
+        })
+        .catch(err => {
+          console.error('Fehler beim Speichern der Time Settings:', err);
+        });
+      }
+  
+      // Event-Listener auf den "Speichern"-Button
+      document.getElementById('saveTimeSettings').addEventListener('click', saveTimeSettings);
+  
+      // Beim Laden der Seite die Daten vom Backend laden
+      document.addEventListener('DOMContentLoaded', loadTimeSettings);
+
+
+/***************************************************
+ FARBAUSWAHL
+ ***************************************************/
+
+
     //FARBAUSWAHL THEMA DESIGN DARKMODE
     // Funktion zum Aktualisieren der Themenfarbe
     function updateThemeColor(color) {
@@ -3774,6 +3897,11 @@ loadHolidays();
         // Optional: Speichere die Farbe in localStorage
         localStorage.setItem('themeColor', color);
     }
+
+
+/***************************************************
+DARKMODE
+ ***************************************************/
 
     // Funktion zum Umschalten des Tag-Nacht-Modus
     function toggleDarkMode(isDark) {
@@ -3790,6 +3918,8 @@ loadHolidays();
     document.getElementById('themeColor').addEventListener('input', function() {
         updateThemeColor(this.value);
     });
+
+    
 
     // Event-Listener für den Tag-Nacht-Schalter
     document.getElementById('darkModeToggle').addEventListener('change', function() {
@@ -4213,8 +4343,6 @@ async function deleteUser(userId) {
 /***************************************************
  * 1) GRUNDLEGENDE SETUPS
  ***************************************************/
-// Globale Variable für die Serviceliste
-let allServices = [];
 
 // Serviceformular beim Laden der Seite ausblenden
 document.addEventListener('DOMContentLoaded', function() {

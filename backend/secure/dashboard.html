@@ -427,95 +427,109 @@
     <h2>Abwesenheiten</h2>
     <h3>BETA! Öffnungszeiten</h3>
   <form id="workingHoursForm">
-      <table>
-          <thead>
-              <tr>
-                  <th>Tag</th>
-                  <th>Aktiv</th>
-                  <th>Vormittag Start</th>
-                  <th>Vormittag Ende</th>
-                  <th>Nachmittag Start</th>
-                  <th>Nachmittag Ende</th>
-              </tr>
-          </thead>
-          <tbody>
-              <!-- Montag -->
-              <tr>
-                  <td>Montag</td>
-                  <td><input type="checkbox" id="montagActive" checked></td>
-                  <td><input type="time" id="montagMorningStart" value="08:00"></td>
-                  <td><input type="time" id="montagMorningEnd" value="12:00"></td>
-                  <td><input type="time" id="montagAfternoonStart" value="13:00"></td>
-                  <td><input type="time" id="montagAfternoonEnd" value="17:00"></td>
-              </tr>
-              <!-- Dienstag -->
-              <tr>
-                  <td>Dienstag</td>
-                  <td><input type="checkbox" id="dienstagActive" checked></td>
-                  <td><input type="time" id="dienstagMorningStart" value="08:00"></td>
-                  <td><input type="time" id="dienstagMorningEnd" value="12:00"></td>
-                  <td><input type="time" id="dienstagAfternoonStart" value="13:00"></td>
-                  <td><input type="time" id="dienstagAfternoonEnd" value="17:00"></td>
-              </tr>
-              <!-- Mittwoch -->
-              <tr>
-                  <td>Mittwoch</td>
-                  <td><input type="checkbox" id="mittwochActive" checked></td>
-                  <td><input type="time" id="mittwochMorningStart" value="08:00"></td>
-                  <td><input type="time" id="mittwochMorningEnd" value="12:00"></td>
-                  <td><input type="time" id="mittwochAfternoonStart" value="13:00"></td>
-                  <td><input type="time" id="mittwochAfternoonEnd" value="17:00"></td>
-              </tr>
-              <!-- Donnerstag -->
-              <tr>
-                  <td>Donnerstag</td>
-                  <td><input type="checkbox" id="donnerstagActive" checked></td>
-                  <td><input type="time" id="donnerstagMorningStart" value="08:00"></td>
-                  <td><input type="time" id="donnerstagMorningEnd" value="12:00"></td>
-                  <td><input type="time" id="donnerstagAfternoonStart" value="13:00"></td>
-                  <td><input type="time" id="donnerstagAfternoonEnd" value="17:00"></td>
-              </tr>
-              <!-- Freitag -->
-              <tr>
-                  <td>Freitag</td>
-                  <td><input type="checkbox" id="freitagActive" checked></td>
-                  <td><input type="time" id="freitagMorningStart" value="08:00"></td>
-                  <td><input type="time" id="freitagMorningEnd" value="12:00"></td>
-                  <td><input type="time" id="freitagAfternoonStart" value="13:00"></td>
-                  <td><input type="time" id="freitagAfternoonEnd" value="17:00"></td>
-              </tr>
-              <!-- Samstag -->
-              <tr>
-                  <td>Samstag</td>
-                  <td><input type="checkbox" id="samstagActive"></td>
-                  <td><input type="time" id="samstagMorningStart"></td>
-                  <td><input type="time" id="samstagMorningEnd"></td>
-                  <td><input type="time" id="samstagAfternoonStart"></td>
-                  <td><input type="time" id="samstagAfternoonEnd"></td>
-              </tr>
-              <!-- Sonntag -->
-              <tr>
-                  <td>Sonntag</td>
-                  <td><input type="checkbox" id="sonntagActive"></td>
-                  <td><input type="time" id="sonntagMorningStart"></td>
-                  <td><input type="time" id="sonntagMorningEnd"></td>
-                  <td><input type="time" id="sonntagAfternoonStart"></td>
-                  <td><input type="time" id="sonntagAfternoonEnd"></td>
-              </tr>
-          </tbody>
+    <table>
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Aktiv?</th>
+            <th>Morning Start</th>
+            <th>Morning End</th>
+            <th>Afternoon Start</th>
+            <th>Afternoon End</th>
+            <th>Optional Start</th>
+            <th>Optional End</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Montag -->
+          <tr>
+            <td>Montag</td>
+            <td><input type="checkbox" id="montagActive" /></td>
+            <td><input type="time" id="montagMorningStart" /></td>
+            <td><input type="time" id="montagMorningEnd" /></td>
+            <td><input type="time" id="montagAfternoonStart" /></td>
+            <td><input type="time" id="montagAfternoonEnd" /></td>
+            <td><input type="time" id="montagOptionalStart" /></td>
+            <td><input type="time" id="montagOptionalEnd" /></td>
+          </tr>
+          <!-- Dienstag -->
+          <tr>
+            <td>Dienstag</td>
+            <td><input type="checkbox" id="dienstagActive" /></td>
+            <td><input type="time" id="dienstagMorningStart" /></td>
+            <td><input type="time" id="dienstagMorningEnd" /></td>
+            <td><input type="time" id="dienstagAfternoonStart" /></td>
+            <td><input type="time" id="dienstagAfternoonEnd" /></td>
+            <td><input type="time" id="dienstagOptionalStart" /></td>
+            <td><input type="time" id="dienstagOptionalEnd" /></td>
+          </tr>
+          <!-- Mittwoch -->
+          <tr>
+            <td>Mittwoch</td>
+            <td><input type="checkbox" id="mittwochActive" /></td>
+            <td><input type="time" id="mittwochMorningStart" /></td>
+            <td><input type="time" id="mittwochMorningEnd" /></td>
+            <td><input type="time" id="mittwochAfternoonStart" /></td>
+            <td><input type="time" id="mittwochAfternoonEnd" /></td>
+            <td><input type="time" id="mittwochOptionalStart" /></td>
+            <td><input type="time" id="mittwochOptionalEnd" /></td>
+          </tr>
+          <!-- Donnerstag -->
+          <tr>
+            <td>Donnerstag</td>
+            <td><input type="checkbox" id="donnerstagActive" /></td>
+            <td><input type="time" id="donnerstagMorningStart" /></td>
+            <td><input type="time" id="donnerstagMorningEnd" /></td>
+            <td><input type="time" id="donnerstagAfternoonStart" /></td>
+            <td><input type="time" id="donnerstagAfternoonEnd" /></td>
+            <td><input type="time" id="donnerstagOptionalStart" /></td>
+            <td><input type="time" id="donnerstagOptionalEnd" /></td>
+          </tr>
+          <!-- Freitag -->
+          <tr>
+            <td>Freitag</td>
+            <td><input type="checkbox" id="freitagActive" /></td>
+            <td><input type="time" id="freitagMorningStart" /></td>
+            <td><input type="time" id="freitagMorningEnd" /></td>
+            <td><input type="time" id="freitagAfternoonStart" /></td>
+            <td><input type="time" id="freitagAfternoonEnd" /></td>
+            <td><input type="time" id="freitagOptionalStart" /></td>
+            <td><input type="time" id="freitagOptionalEnd" /></td>
+          </tr>
+          <!-- Samstag -->
+          <tr>
+            <td>Samstag</td>
+            <td><input type="checkbox" id="samstagActive" /></td>
+            <td><input type="time" id="samstagMorningStart" /></td>
+            <td><input type="time" id="samstagMorningEnd" /></td>
+            <td><input type="time" id="samstagAfternoonStart" /></td>
+            <td><input type="time" id="samstagAfternoonEnd" /></td>
+            <td><input type="time" id="samstagOptionalStart" /></td>
+            <td><input type="time" id="samstagOptionalEnd" /></td>
+          </tr>
+          <!-- Sonntag -->
+          <tr>
+            <td>Sonntag</td>
+            <td><input type="checkbox" id="sonntagActive" /></td>
+            <td><input type="time" id="sonntagMorningStart" /></td>
+            <td><input type="time" id="sonntagMorningEnd" /></td>
+            <td><input type="time" id="sonntagAfternoonStart" /></td>
+            <td><input type="time" id="sonntagAfternoonEnd" /></td>
+            <td><input type="time" id="sonntagOptionalStart" /></td>
+            <td><input type="time" id="sonntagOptionalEnd" /></td>
+          </tr>
+        </tbody>
       </table>
+  
+      <!-- Eingabe für defaultSlotLength -->
+  <div>
+    <label for="defaultAppointmentLength">Dauer pro Termin (Minuten):</label>
+    <input type="number" id="defaultAppointmentLength" value="30" />
+  </div>
 
-      <h3>Slot-Länge</h3>
-    
-          <!-- In deinem HTML unter Einstellungen -->
-          <label for="defaultAppointmentLength">Standard-Terminlänge (Minuten):</label>
-          <input type="number" id="defaultAppointmentLength" value="30">
+      <button id="saveTimeSettings">Speichern</button>
+        
 
-          <!-- Gitternetzlinien der Standarttermine toggeln -->
-          <button id="toggleSlotGridLines">Gitterlinien umschalten</button>
-
-
-      <button type="button" id="saveWorkingHours">Speichern</button>
   </form>
 
   <h3>Benutzer</h>

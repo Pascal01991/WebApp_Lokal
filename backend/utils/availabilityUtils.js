@@ -1,8 +1,44 @@
 let currentDate = new Date();
 let defaultAppointmentLength = 30; // in Minuten, später aus DB
 
+// utils/availabilityUtils.js
+const Settings = require('../models/settingsModel');
+
+// Eine globale Variable, in der wir das aktuelle "workingHours"-Objekt zwischenspeichern.
+let workingHours = {}; // <-- Hier ist unser "Cache"
+
+// Wir laden das Settings-Dokument aus der DB und aktualisieren "workingHours".
+async function loadWorkingHours() {
+  try {
+    const settings = await Settings.findOne();
+    if (!settings) {
+      console.warn("⚠️  Kein Settings-Dokument in der Datenbank gefunden. Verwende Standardwerte.");
+      workingHours = {};
+      return workingHours;
+    }
+
+    workingHours = settings.workingHours; // Im Cache speichern
+    console.log("✅ Arbeitszeiten aus der DB geladen und zwischengespeichert.");
+    return workingHours;
+  } catch (error) {
+    console.error("❌ Fehler beim Laden der Arbeitszeiten:", error);
+    workingHours = {};
+    return workingHours;
+  }
+}
+
+/**
+ * Gibt das zwischengespeicherte `workingHours`-Objekt zurück.
+ */
+function getWorkingHours() {
+  return workingHours;
+}
+
+// Direkt beim Start einmalig laden (optional)
+loadWorkingHours();
 
 
+/*
 let workingHours = {            //Später aus DB
     montag: {
         active: true,
@@ -40,6 +76,7 @@ let workingHours = {            //Später aus DB
         afternoon: { start: '13:00', end: '17:30' }
     }
 };
+*/
 
     // Funktion, um den Start der Woche (Montag) zu erhalten
     function getStartOfWeek(date) {
@@ -110,7 +147,7 @@ function isDateInHoliday(date, holidays) {
         const holidayRes = getHolidayResourcesForDate(slotTime, holidays);
         const newSlot = {
           startDateTime: slotTime,
-          duration: defaultLength,
+          duration: defaultSlotLength,
           holidayResources: holidayRes
         };
         slots.push(newSlot);
@@ -121,7 +158,7 @@ function isDateInHoliday(date, holidays) {
 
 function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
     const slots = [];
-    const defaultLength = 30;
+    const defaultSlotLength = 30;
     
     for (let i = 0; i < 7; i++) {
         const day = new Date(startOfWeek);
@@ -139,7 +176,7 @@ function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
             const startMinutes = parseTime(start);
             const endMinutes = parseTime(end);
 
-            for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultLength) {
+            for (let minutes = startMinutes; minutes < endMinutes; minutes += defaultSlotLength) {
                 const slotTime = new Date(day);
                 slotTime.setHours(0, minutes, 0, 0);
                 
@@ -150,7 +187,7 @@ function generateTimeSlots(holidays = [], startOfWeek, endOfWeek) {
                 const newSlot = {
                     dayIndex: i,
                     startDateTime: slotTime,
-                    duration: defaultLength,
+                    duration: defaultSlotLength,
                     holidayResources: holidayRes, // z.B. [] oder ["RiccardaKe"] oder ["all"]
                 };
                 
@@ -226,6 +263,9 @@ function updateSlotAvailability(slots, appointments, users) {
         parseTime,
         getDayName,
         dateToLocalString,
+        loadWorkingHours,
+        getWorkingHours,
+
         // workingHours und defaultAppointmentLength könnten später aus DB kommen
     };
 
