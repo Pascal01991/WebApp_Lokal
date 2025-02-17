@@ -392,8 +392,8 @@ KALENDER
       background-color: var(--background-light); /* Grau für nicht arbeitende Stunden */
     }
 
+    /* Der bereits vorhandene Style für .appointment */
     .appointment {
-/*      background-color: var(--user1);*/
       position: absolute;
       box-sizing: border-box;
       padding: 2px;
@@ -401,11 +401,24 @@ KALENDER
       border: 1px solid var(--background-dark);
       border-radius: 5px;
       z-index: 200;
-      /* Entferne `left: 0` und füge Breitensteuerung hinzu */
+
+      /* Entferne left: 0 und breite falls nötig dynamisch */
       left: unset;
-      width: auto; /* Dynamische Breite zulassen */
-  }
-  
+      width: auto;
+    }
+
+    /* Neuer Bereich: der Textcontainer innerhalb des Appointments */
+    .appointment-content {
+      /* Damit Text nicht überläuft, scrollen wir ggf. vertikal */
+      overflow-y: auto;
+      /* Die Höhe selbst bleibt von der .appointment-Box gesteuert */
+      height: 100%;
+
+      /* Wir können auch Wortumbrüche erlauben, damit lange Wörter nicht überlaufen */
+      word-wrap: break-word;        /* Alte Eigenschaft */
+      overflow-wrap: break-word;    /* Neue Eigenschaft */
+    }
+
   
   
 

@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
         // Validierung (Pflichtfelder)
         // Bisher stand dort "!duration || !dateTime || !description"
         // Jetzt prüfen wir "!startDateTime"
-        if (!startDateTime || !duration || !description) {
+        if (!startDateTime || !duration) {
             return res.status(400).json({
                 msg: "Fehlende Felder: startDateTime, duration oder description"
             });
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
             // Pflicht:
             startDateTime,
             duration,
-            description,
+            
 
             // Optionale Felder:
             endDateTime,
@@ -67,7 +67,8 @@ router.post('/', async (req, res) => {
             Abrechnungsstatus,
             MailAppointment,
             Dienstleistung,
-    
+            description,
+            
             // Abwicklung
             erfasstDurch,
             letzterBearbeiter,
