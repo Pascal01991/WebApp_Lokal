@@ -29,6 +29,7 @@
     // Globale Variable für die Serviceliste
     let allServices = [];
     
+ 
 
     /***************************************************
      * 1) GRUNDLEGENDE Elemente Users
@@ -1148,31 +1149,33 @@ async function renderCalendar() {
       console.log('renderweek aufgerufen');
     }
   }
-  
 /*******************************************************
  * Tagesansicht
- * -> Zeigt nur den aktuellen Tag an
- * -> Jeder aktivierte Benutzer bekommt seine eigene Spalte
+ *  - Zeigt nur den aktuellen Tag an
+ *  - Jeder aktivierte Benutzer (Ressource) bekommt eine eigene Spalte
+ *  - Termine außerhalb der Arbeitszeit werden berücksichtigt
+ *  - Startet nicht mehr fix bei 06:00, sondern nutzt denselben Mechanismus 
+ *    wie in renderWeek (Fallback 08:00–18:00).
  *******************************************************/
-async function renderDay() {  
-    // Kalender leeren
+async function renderDay() {
+    // 1) Kalender leeren
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
   
-    // Slots vom Backend holen (falls du Feiertage/Verfügbarkeiten anzeigen willst)
+    // 2) Slots vom Backend holen (Arbeitszeit + isAvailable + holidayResources)
     const slots = await fetchAvailableSlots();
-    if (!slots.length) {
+    if (!slots || !slots.length) {
       console.warn('Keine Slots zum Anzeigen gefunden (Tagesansicht).');
     }
   
-    // Aktuellen Tag bestimmen (z.B. "2025-01-12" ab 00:00)
-    const day = new Date(currentDate);
-    day.setHours(0, 0, 0, 0);
+    // 3) Aktuellen Tag bestimmen (0 Uhr)
+    const dayDate = new Date(currentDate);
+    dayDate.setHours(0, 0, 0, 0);
   
-    // Array aller ausgewählten Benutzer (["user1", "user2", ...])
+    // 4) Nutzer (Ressourcen) ermitteln
     const selectedUsers = getSelectedUsers();
   
-    // Grid: 1 Zeitspalte + pro Benutzer 1 Spalte
+    // 5) Grid: 1 Zeitspalte + pro Benutzer 1 Spalte
     calendar.style.gridTemplateColumns = `80px repeat(${selectedUsers.length}, 1fr)`;
   
     // Leere Ecke oben links
@@ -1180,57 +1183,80 @@ async function renderDay() {
     emptyCorner.textContent = "";
     calendar.appendChild(emptyCorner);
   
-    // Tages-Header je Benutzer
-    for (let userResource of selectedUsers) {
+    // Tages-Header je Benutzer (z.B. "MASTER - 2025-01-12")
+    for (const userResource of selectedUsers) {
       const dayHeader = document.createElement('div');
       dayHeader.classList.add('day-header');
-      dayHeader.textContent = `${userResource.toUpperCase()} - ${formatDate(day)}`;
+      dayHeader.textContent = `${userResource.toUpperCase()} - ${formatDate(dayDate)}`;
       calendar.appendChild(dayHeader);
     }
   
-    // Slots in eine Map packen, damit wir auf holiday/available/unavailable prüfen können
-    // Schlüssel = "userX-hour-minute", da wir hier pro BenutzerSpalte gehen
-    const slotsMap = {};
-  
-    // Filter die Slots nur für **diesen einen Tag** 
-    // (falls dein Backend Slots für mehrere Tage liefert)
+    // 6) Slots nur für **diesen Tag** (falls dein Backend mehrere Tage liefert)
     const daySlots = slots.filter(slot => {
       const slotDate = new Date(slot.startDateTime);
-      return slotDate.toDateString() === day.toDateString();
+      return slotDate.toDateString() === dayDate.toDateString();
     });
   
-    // Pro daySlot ermitteln wir: welcher User? welche Stunde? welche Minute?
-    // Das setzt natürlich voraus, dass dein Slot-Objekt sagt, **welcher Benutzer** gemeint ist.
-    // Falls dein Backend das anders regelt, musst du es anpassen.
-    daySlots.forEach(slot => {
-        const slotDate = new Date(slot.startDateTime);
-        const user = slot.ressource; // oder slot.user o.ä.
-        const hour = slotDate.getHours();
-        const minute = slotDate.getMinutes();
-        const key = `${user}-${hour}-${minute}`;
-        slotsMap[key] = slot;
-      });
+    // 7) Tages-Termine (z. B. aus allAppointments) filtern,
+    //    damit wir Zeiten außerhalb der Arbeitszeit ermitteln können
+    const startOfDay = new Date(dayDate);
+    const endOfDay = new Date(dayDate);
+    endOfDay.setHours(23, 59, 59, 999);
   
-    // Ermittel Start-/Endstunde dynamisch anhand daySlots oder fallback 6 - 20
-    let startHour = 6;
-    let endHour = 20;
-    if (daySlots.length > 0) {
-      // Minimale Zeit
-      const allTimes = daySlots.map(slot => {
-        const d = new Date(slot.startDateTime);
-        return d.getHours() * 60 + d.getMinutes();
-      });
-      const minTime = Math.min(...allTimes);
-      const maxTime = Math.max(...allTimes);
-      startHour = Math.floor(minTime / 60);
-      endHour = Math.ceil(maxTime / 60);
+    // Du hast global z.B. allAppointments
+    const appointmentsThisDay = allAppointments.filter(app => {
+      const appStart = new Date(app.startDateTime);
+      return appStart >= startOfDay && appStart <= endOfDay;
+    });
+  
+    // Nur aktive Ressourcen (Benutzer)
+    const filteredAppointments = appointmentsThisDay.filter(app => {
+      return selectedUsers.includes(app.Ressource);
+    });
+  
+    // 8) Erzeuge ein Array an Startzeiten (Slots + Appointments), um minTime/maxTime zu bestimmen
+    const slotTimes = daySlots.map(slot => {
+      const d = new Date(slot.startDateTime);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+    const appointmentTimes = filteredAppointments.map(app => {
+      const d = new Date(app.startDateTime);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+    const combinedTimes = [...slotTimes, ...appointmentTimes];
+  
+    // 9) Fallback z. B. 8:00–18:00 (passt du an, wie du willst)
+    let minTime = 8 * 60;   // 08:00
+    let maxTime = 18 * 60;  // 18:00
+  
+    // Wenn wir tatsächlich frühere/spätere Daten haben => anpassen
+    if (combinedTimes.length > 0) {
+      const calcMin = Math.min(...combinedTimes);
+      const calcMax = Math.max(...combinedTimes);
+  
+      if (calcMin < minTime) minTime = calcMin;
+      if (calcMax > maxTime) maxTime = calcMax;
     }
   
-    // defaultSlotLength z.B. 15 Min
-    const defaultSlotLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
+    const startHour = Math.floor(minTime / 60);
+    const endHour = Math.ceil(maxTime / 60);
+  
+    // 10) Slots in eine Map legen: "hour-minute" => slotInfo
+    //     (Da wir keinen `slot.ressource` nutzen, gehört jeder Slot potenziell allen.)
+    const slotsMap = {};
+    daySlots.forEach(slot => {
+      const slotDate = new Date(slot.startDateTime);
+      const hour = slotDate.getHours();
+      const minute = slotDate.getMinutes();
+      const key = `${hour}-${minute}`;
+      slotsMap[key] = slot;
+    });
+  
+    // 11) defaultSlotLength (z.B. 15/30 Min)
+    const defaultSlotLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10) || 30;
     const slotsPerHour = 60 / defaultSlotLength;
   
-    // Jetzt pro Stunde => pro Benutzer => pro 15min-Block
+    // 12) Zeilen erzeugen: stündlich + pro User + pro Slot
     for (let hour = startHour; hour <= endHour; hour++) {
       // Zeit-Spalte
       const timeLabel = document.createElement('div');
@@ -1239,24 +1265,25 @@ async function renderDay() {
       calendar.appendChild(timeLabel);
   
       // Pro Benutzer
-      for (let userResource of selectedUsers) {
+      for (const userResource of selectedUsers) {
         const cell = document.createElement('div');
         cell.classList.add('hour-cell');
         cell.style.position = 'relative';
         cell.dataset.userResource = userResource;
         cell.dataset.hour = hour;
   
-        // Container (damit man absolute Positionierung drin machen kann)
+        // Container (damit man absolute Positionierung nutzen kann)
         const cellContainer = document.createElement('div');
         cellContainer.style.position = 'relative';
         cellContainer.style.height = '100%';
   
-        // Schleife über die Blöcke (z.B. 15-Min-Schritte)
+        // Schleife über die Blöcke (z.B. 15/30-Min-Schritte)
         for (let s = 0; s < slotsPerHour; s++) {
           const minute = s * defaultSlotLength;
-          const key = `${userResource}-${hour}-${minute}`;
-          const slotInfo = slotsMap[key];
+          const key = `${hour}-${minute}`;
+          const slotInfo = slotsMap[key]; // evtl. undefined
   
+          // Neuer Div
           const slotDiv = document.createElement('div');
           slotDiv.classList.add('time-slot-div');
           slotDiv.style.position = 'absolute';
@@ -1266,27 +1293,45 @@ async function renderDay() {
           slotDiv.style.right = '0';
           slotDiv.style.zIndex = '1';
   
-          // Prüfe holiday / available / unavailable
+          /*****************************
+           *  HOLIDAY / AVAILABLE / UNAVAILABLE
+           *****************************/
           if (slotInfo) {
-            if (slotInfo.isHoliday) {
-              slotDiv.classList.add('unavailable-holiday');
-            } else if (slotInfo.isAvailable) {
+            const holidayRes = slotInfo.holidayResources || [];
+            const isHolidayAll = holidayRes.includes('all');
+            const userIsHoliday = holidayRes.includes(userResource);
+  
+            // => Holiday-Klassen
+            if (isHolidayAll) {
+              slotDiv.classList.add('unavailable-holiday-all');
+            } else if (userIsHoliday) {
+              slotDiv.classList.add('unavailable-holiday-user');
+            }
+  
+            // => Verfügbarkeit (aus slotInfo.isAvailable[userResource])
+            let userIsAvailable = false;
+            if (slotInfo.isAvailable && typeof slotInfo.isAvailable === 'object') {
+              userIsAvailable = !!slotInfo.isAvailable[userResource];
+            }
+            // falls holiday => userIsAvailable = false
+            if (isHolidayAll || userIsHoliday) {
+              userIsAvailable = false;
+            }
+  
+            // => CSS-Klasse
+            if (userIsAvailable) {
               slotDiv.classList.add('available-slot');
             } else {
               slotDiv.classList.add('unavailable-slot');
             }
           } else {
-            // kein passender Slot => unavailable
+            // kein Slot => außerhalb der Arbeitszeit => unavailable
             slotDiv.classList.add('unavailable-slot');
           }
   
-          // Klick-Event (handleSlotClick)
+          // Klick-Event
           slotDiv.addEventListener('click', function () {
-            // handleSlotClick( day, userResource, hour, minute, defaultSlotLength ) 
-            // => Du kannst dir Tag/Benutzer hier so übergeben, wie du es brauchst
-            //   oder analog zur Wochenansicht: handleSlotClick(startOfWeek, dayIndex, hour, minute,...)
-            //   In der Tagesansicht brauchst du keinen dayIndex - oder du nimmst "0".
-            handleSlotClick(day, 0, hour, minute, defaultSlotLength);
+            handleSlotClick(dayDate, userResource, hour, minute, defaultSlotLength);
           });
   
           cellContainer.appendChild(slotDiv);
@@ -1296,17 +1341,17 @@ async function renderDay() {
       }
     }
   
-    // Abschließend die Termine platzieren
-    displayDayAppointments(day, selectedUsers);
+    // 13) Abschließend die Termine platzieren
+    displayDayAppointments(dayDate, selectedUsers);
   }
   
   
-  /**
-   * Termine in der Tagesansicht platzieren
-   */
-  /**
- * Termine in der Tagesansicht platzieren
- */
+  
+  
+  /*******************************************************
+   * Termine für den Tag platzieren
+   *******************************************************/
+ 
 function displayDayAppointments(day, selectedUsers) {
     // 1) Finde alle Termine, die an *diesem Tag* sind
     const dayStart = new Date(day);
@@ -1407,28 +1452,69 @@ function displayDayAppointments(day, selectedUsers) {
   
   
   /*******************************************************
-   * Wochenansicht
-   * -> im Prinzip dein vorhandenes renderCalendar() => rename
-   *******************************************************/
-  async function renderWeek() {
-    console.log("testlog");
-    // Zuerst Kalender-HTML leeren
+ * Wochenansicht
+ *******************************************************/
+async function renderWeek() {
+    // 1) Zuerst Kalender-HTML leeren
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
-    console.log("testlog2");
-    // 1) Slots asynchron vom Backend laden
+  
+    // 2) Asynchron Slots (Arbeitszeit) vom Backend laden
     const slots = await fetchAvailableSlots();
-    if (!slots.length) {
+    if (!slots || !slots.length) {
       console.warn('Keine Slots zum Anzeigen gefunden (eventuell keine Arbeitszeiten definiert?).');
     }
-    console.log("testlog3");
-    console.log(slots);
-    // 2) Woche bestimmen
-    const startOfWeek = getStartOfWeek(currentDate);
   
-    // 3) Grid-Layout: 8 Spalten (Zeitspalte + 7 Tage)
+    // 3) Bestimme Start und Ende der aktuellen Woche
+    const startOfWeek = getStartOfWeek(currentDate);
+    const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 Tage
+  
+    // 4) Lade/Filtere Termine dieser Woche
+    //    Wir greifen auf die globale allAppointments zu (wie in displayWeekAppointments).
+    //    Achtung: Falls allAppointments leer ist, musst du ggf. ein fetch() machen.
+    const appointmentsThisWeek = allAppointments.filter(app => {
+      const appStartDate = new Date(app.startDateTime);
+      return appStartDate >= startOfWeek && appStartDate < endOfWeek;
+    });
+  
+    // 5) Auf aktuell gewählte User (Ressourcen) filtern
+    const selectedUsers = getSelectedUsers();
+    const filteredAppointments = appointmentsThisWeek.filter(app => {
+      return selectedUsers.includes(app.Ressource);
+    });
+  
+    // 6) Erzeuge aus slots und appointmentsTogether ein gemeinsames Array aller Startzeiten
+    //    - slots → wir holen Stunde+Minute raus
+    //    - appointments → wir holen Stunde+Minute raus
+    const slotTimes = slots.map(slot => {
+      const d = new Date(slot.startDateTime);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+  
+    const appointmentTimes = filteredAppointments.map(app => {
+      const d = new Date(app.startDateTime);
+      return d.getHours() * 60 + d.getMinutes();
+    });
+  
+    // Kombiniere die Zeiten
+    const combinedTimes = [...slotTimes, ...appointmentTimes];
+  
+    // 7) Ermittle minTime / maxTime (Fälle: keine Daten => fallback 8:00–18:00)
+    let minTime = 8 * 60;   // Standard = 08:00
+    let maxTime = 18 * 60;  // Standard = 18:00
+    if (combinedTimes.length > 0) {
+      const calculatedMin = Math.min(...combinedTimes);
+      const calculatedMax = Math.max(...combinedTimes);
+      minTime = calculatedMin < minTime ? calculatedMin : minTime;
+      maxTime = calculatedMax > maxTime ? calculatedMax : maxTime;
+    }
+  
+    const startHour = Math.floor(minTime / 60);
+    const endHour = Math.ceil(maxTime / 60);
+  
+    // 8) Grid-Layout: 8 Spalten (Zeitspalte + 7 Tage)
     calendar.style.gridTemplateColumns = '80px repeat(7, 1fr)';
-    console.log("testlog4");
+  
     // Leere Ecke oben links
     const emptyCorner = document.createElement('div');
     emptyCorner.textContent = "";
@@ -1443,71 +1529,51 @@ function displayDayAppointments(day, selectedUsers) {
       dayHeader.textContent = getDayName(day) + ', ' + formatDate(day);
       calendar.appendChild(dayHeader);
     }
-    console.log("testlog5");
-    // 4) Map für Slots anlegen (um hinterher schnell abzufragen, ob holiday/available)
+  
+    // 9) Map für Slots anlegen (um hinterher schnell abzufragen, ob holiday/available)
     const slotsMap = {};
-    // In deinem ursprünglichen Code hieß es z.B.: 
-    //   const date = new Date(slot.startDateTime);
-    //   dayIndex = slot.dayIndex oder per Rechnen
-    // Wir bauen hier eine Map mit "Schlüssel" = `tagIndex-stunde-minute`
     slots.forEach(slot => {
-      // dayIndex aus slot ermitteln – je nachdem, wie dein Backend die Slots liefert.
-      // Oft ist es so, dass "slot.dayIndex = 0..6" (Mo=0?), oder wir rechnen aus dem Datum:
+      // dayIndex aus Datum (Montag=0)
       const date = new Date(slot.startDateTime);
-      const dayIndex = (date.getDay() + 6) % 7; // Montag=0
+      const dayIndex = (date.getDay() + 6) % 7;
       const hour = date.getHours();
       const minute = date.getMinutes();
       const key = `${dayIndex}-${hour}-${minute}`;
-  
-      slotsMap[key] = slot; 
+      slotsMap[key] = slot;
     });
-    console.log("testlog6");
-    // 5) Start-/Endzeit der Woche herausfinden oder einfach festlegen
-    // Du kannst das natürlich dynamisch anhand der Slots bestimmen.
-    const allTimes = slots.map(slot => {
-      const d = new Date(slot.startDateTime);
-      return d.getHours() * 60 + d.getMinutes();
-    });
-    const minTime = (allTimes.length ? Math.min(...allTimes) : 8*60);  // fallback 8:00
-    const maxTime = (allTimes.length ? Math.max(...allTimes) : 18*60); // fallback 18:00
   
-    const startHour = Math.floor(minTime / 60);
-    const endHour = Math.ceil(maxTime / 60);
-    console.log("testlog7");
-    // 6) defaultSlotLength (z.B. 15 min pro Slot)
-    const defaultSlotLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10);
-    console.log("testlog8");
-    console.log("defaultSlotLenght:" + defaultSlotLength);
-    
+    // 10) defaultSlotLength z. B. 15/30 Min
+    const defaultSlotLength = parseInt(document.getElementById('defaultAppointmentLength').value, 10) || 30;
     const slotsPerHour = 60 / defaultSlotLength;
   
-    // 7) Zeilen erzeugen: Stunde + 7 Spalten
+    // 11) Zeilen erzeugen: für jede volle Stunde und Tag 0..6
     for (let hour = startHour; hour <= endHour; hour++) {
       // Zeit-Spalte links
       const timeLabel = document.createElement('div');
       timeLabel.classList.add('time-slot');
-      timeLabel.textContent = (hour < 10 ? '0'+hour : hour) + ':00';
+      timeLabel.textContent = (hour < 10 ? '0' + hour : hour) + ':00';
       calendar.appendChild(timeLabel);
   
-      // 7 Tage -> i=0..6
+      // Für 7 Tage ...
       for (let i = 0; i < 7; i++) {
         const cell = document.createElement('div');
         cell.classList.add('hour-cell');
         cell.style.position = 'relative';
         cell.dataset.dayIndex = i;
         cell.dataset.hour = hour;
+  
         // Container für die Slots pro Stunde
         const cellContainer = document.createElement('div');
         cellContainer.style.position = 'relative';
         cellContainer.style.height = '100%';
   
-        // Innerhalb jeder Stunde die einzelnen 15min Blöcke (oder 10/5 min, je nach defaultSlotLength)
+        // Innerhalb der Stunde die Blöcke (z. B. 2 × 30min oder 4 × 15min)
         for (let s = 0; s < slotsPerHour; s++) {
           const minute = s * defaultSlotLength;
           const key = `${i}-${hour}-${minute}`;
           const slotInfo = slotsMap[key];
   
-          // Div für diesen Slot
+          // Div für diesen Zeitblock
           const slotDiv = document.createElement('div');
           slotDiv.classList.add('time-slot-div');
           slotDiv.style.position = 'absolute';
@@ -1517,48 +1583,38 @@ function displayDayAppointments(day, selectedUsers) {
           slotDiv.style.right = '0';
           slotDiv.style.zIndex = '1';
   
-          // Prüfe holiday/available/unavailable etc.
+          // holiday/unavailable/available?
           if (slotInfo) {
             const holidayRes = slotInfo.holidayResources || [];
             const isHolidayAll = holidayRes.includes('all');
-    
-            // NEU: Filterung basierend auf aktivierten Usern
-            const selectedUsers = getSelectedUsers();
             const activeHolidayRes = holidayRes.filter(user => selectedUsers.includes(user));
             const isHolidayPartial = !isHolidayAll && activeHolidayRes.length > 0;
-    
-            // Holiday-All nur berücksichtigen, wenn mindestens ein User aktiv ist
+  
+            // Holiday-Logik ...
             if (isHolidayAll && selectedUsers.length > 0) {
-                slotDiv.classList.add('unavailable-holiday-all');
+              slotDiv.classList.add('unavailable-holiday-all');
             } else if (isHolidayPartial) {
-                slotDiv.classList.add('unavailable-holiday-user');
+              slotDiv.classList.add('unavailable-holiday-user');
             }
-    
-            // Verfügbarkeit nur für aktive User prüfen
+  
             let allUnavailable = true;
             if (slotInfo.isAvailable && typeof slotInfo.isAvailable === 'object') {
-                allUnavailable = selectedUsers.every(user => 
-                    !slotInfo.isAvailable[user] || activeHolidayRes.includes(user)
-                );
+              allUnavailable = selectedUsers.every(user =>
+                !slotInfo.isAvailable[user] || activeHolidayRes.includes(user)
+              );
             }
-    
-            // Slot als verfügbar markieren, wenn mindestens ein aktiver User verfügbar ist
             if (!allUnavailable) {
-                slotDiv.classList.add('available-slot');
+              slotDiv.classList.add('available-slot');
             } else {
-                slotDiv.classList.add('unavailable-slot');
+              slotDiv.classList.add('unavailable-slot');
             }
-        } else {
-            // Kein Slot definiert (z. B. außerhalb der Arbeitszeiten)
+          } else {
+            // Kein Slot => außerhalb der Arbeitszeit => unbekannt => als unavailable kennzeichnen
             slotDiv.classList.add('unavailable-slot');
-        }
-          
-          
-
+          }
   
           // Klick-Event -> handleSlotClick
           slotDiv.addEventListener('click', function() {
-            // i = dayIndex, hour, minute, defaultSlotLength
             handleSlotClick(startOfWeek, i, hour, minute, defaultSlotLength);
           });
   
@@ -1570,9 +1626,11 @@ function displayDayAppointments(day, selectedUsers) {
       }
     }
   
-    // 8) Jetzt die Termine in die Zellen "malen"
+    // 12) Jetzt die Termine in die Zellen "malen"
+    //     (Wird in displayWeekAppointments() gemacht.)
     displayWeekAppointments(startOfWeek);
   }
+  
   
   
   /**
@@ -2178,7 +2236,7 @@ function populateDropdownWithUsersForAppointmentForm(users) {
  * (B) Formular anzeigen (Unterschied: Neu vs. Edit)
  * @param {boolean} [isEditMode=false] 
  */
-function showAppointmentForm(isEditMode = false) {
+async function showAppointmentForm(isEditMode = false) {
     // 1) Formular einblenden
     appointmentFormContainer.style.display = 'block';
     setTimeout(() => {
@@ -2191,7 +2249,28 @@ function showAppointmentForm(isEditMode = false) {
 
     // 3) Alten Event-Listener entfernen
     submitButton.replaceWith(submitButton.cloneNode(true));
+
+    // 4) Dienstleistungen laden und Checkboxen rendern
+    await loadServices(); // Verfügbare Dienstleistungen laden
+    renderAppointmentServiceCheckboxes(allServices); // Checkboxen für Services anzeigen
+
+    // 5) Standardwerte für neue Termine setzen (falls nicht Edit-Modus)
+    if (!isEditMode) {
+        let dlArray = new Array(allServices.length).fill("0");
+        dlArray[0] = "1"; // Standardmäßig aktiv
+
+        // Checkboxen initialisieren (alle deaktiviert außer Index 0)
+        for (let i = 1; i < dlArray.length; i++) {
+            const cb = document.querySelector(
+                `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
+            );
+            if (cb) {
+                cb.checked = false; // Alle anderen deaktivieren
+            }
+        }
+    }
 }
+
 
 /**
  * (C) Formular ausblenden (Abbrechen oder Speichern)
@@ -3782,7 +3861,7 @@ loadHolidays();
               if (afternoonEnd && dayData.afternoon) {
                 afternoonEnd.value = dayData.afternoon.end || '';
               }
-  
+              /* Funktioniert nicht und aktuell nicht benötigt desshalb auskommentiert
               // optional
               const optionalStart = document.getElementById(`${day}OptionalStart`);
               if (optionalStart && dayData.optional) {
@@ -3791,7 +3870,7 @@ loadHolidays();
               const optionalEnd = document.getElementById(`${day}OptionalEnd`);
               if (optionalEnd && dayData.optional) {
                 optionalEnd.value = dayData.optional.end || '';
-              }
+              }*/
             });
   
             // defaultSlotLength in Formularfeld eintragen
@@ -3822,10 +3901,11 @@ loadHolidays();
   
           const afternoonStart = document.getElementById(`${day}AfternoonStart`)?.value || null;
           const afternoonEnd = document.getElementById(`${day}AfternoonEnd`)?.value || null;
-  
+
+          /* Funktioniert nicht und aktuell nicht benötigt desshalb auskommentiert
           const optionalStart = document.getElementById(`${day}OptionalStart`)?.value || null;
           const optionalEnd = document.getElementById(`${day}OptionalEnd`)?.value || null;
-  
+            */
           // Baue das Objekt neu auf
           workingHours[day] = {
             active: active,
@@ -3837,10 +3917,12 @@ loadHolidays();
               start: afternoonStart,
               end: afternoonEnd
             },
+            /* Funktioniert nicht und aktuell nicht benötigt desshalb auskommentiert
             optional: {
               start: optionalStart,
               end: optionalEnd
-            }
+              
+            }*/
           };
         });
   

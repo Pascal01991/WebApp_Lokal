@@ -1,5 +1,17 @@
 const jwt = require('jsonwebtoken');
 
+const rateLimit = require('express-rate-limit');
+
+// Erstelle eine Middleware für die Begrenzung der Loginversuche
+const loginLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 Minute Zeitfenster
+    max: 5, // Maximal 5 Anfragen pro Minute
+    message: { msg: 'Zu viele fehlgeschlagene Login-Versuche. Bitte versuche es in einer Minute erneut.' },
+    standardHeaders: true, // Zeigt Rate-Limit-Header an (X-RateLimit-*)
+    legacyHeaders: false,  // Verwendet keine veralteten Header
+});
+
+module.exports = loginLimiter;
 
 
 function auth(req, res, next) {

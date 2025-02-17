@@ -449,8 +449,8 @@
             <td><input type="time" id="montagMorningEnd" /></td>
             <td><input type="time" id="montagAfternoonStart" /></td>
             <td><input type="time" id="montagAfternoonEnd" /></td>
-            <td><input type="time" id="montagOptionalStart" /></td>
-            <td><input type="time" id="montagOptionalEnd" /></td>
+            <!--<td><input type="time" id="montagOptionalStart" /></td>-->
+            <!--<td><input type="time" id="montagOptionalEnd" /></td>-->
           </tr>
           <!-- Dienstag -->
           <tr>
@@ -460,8 +460,8 @@
             <td><input type="time" id="dienstagMorningEnd" /></td>
             <td><input type="time" id="dienstagAfternoonStart" /></td>
             <td><input type="time" id="dienstagAfternoonEnd" /></td>
-            <td><input type="time" id="dienstagOptionalStart" /></td>
-            <td><input type="time" id="dienstagOptionalEnd" /></td>
+            <!--<td><input type="time" id="dienstagOptionalStart" /></td>-->
+            <!--<td><input type="time" id="dienstagOptionalEnd" /></td>-->
           </tr>
           <!-- Mittwoch -->
           <tr>
@@ -471,8 +471,8 @@
             <td><input type="time" id="mittwochMorningEnd" /></td>
             <td><input type="time" id="mittwochAfternoonStart" /></td>
             <td><input type="time" id="mittwochAfternoonEnd" /></td>
-            <td><input type="time" id="mittwochOptionalStart" /></td>
-            <td><input type="time" id="mittwochOptionalEnd" /></td>
+            <!--<td><input type="time" id="mittwochOptionalStart" /></td>-->
+            <!--<td><input type="time" id="mittwochOptionalEnd" /></td>-->
           </tr>
           <!-- Donnerstag -->
           <tr>
@@ -482,8 +482,8 @@
             <td><input type="time" id="donnerstagMorningEnd" /></td>
             <td><input type="time" id="donnerstagAfternoonStart" /></td>
             <td><input type="time" id="donnerstagAfternoonEnd" /></td>
-            <td><input type="time" id="donnerstagOptionalStart" /></td>
-            <td><input type="time" id="donnerstagOptionalEnd" /></td>
+            <!--<td><input type="time" id="donnerstagOptionalStart" /></td>-->
+            <!--<td><input type="time" id="donnerstagOptionalEnd" /></td>-->
           </tr>
           <!-- Freitag -->
           <tr>
@@ -493,8 +493,8 @@
             <td><input type="time" id="freitagMorningEnd" /></td>
             <td><input type="time" id="freitagAfternoonStart" /></td>
             <td><input type="time" id="freitagAfternoonEnd" /></td>
-            <td><input type="time" id="freitagOptionalStart" /></td>
-            <td><input type="time" id="freitagOptionalEnd" /></td>
+            <!--<td><input type="time" id="freitagOptionalStart" /></td>-->
+            <!--<td><input type="time" id="freitagOptionalEnd" /></td>-->
           </tr>
           <!-- Samstag -->
           <tr>
@@ -504,8 +504,8 @@
             <td><input type="time" id="samstagMorningEnd" /></td>
             <td><input type="time" id="samstagAfternoonStart" /></td>
             <td><input type="time" id="samstagAfternoonEnd" /></td>
-            <td><input type="time" id="samstagOptionalStart" /></td>
-            <td><input type="time" id="samstagOptionalEnd" /></td>
+            <!--<td><input type="time" id="samstagOptionalStart" /></td>-->
+            <!--<td><input type="time" id="samstagOptionalEnd" /></td>-->
           </tr>
           <!-- Sonntag -->
           <tr>
@@ -515,18 +515,20 @@
             <td><input type="time" id="sonntagMorningEnd" /></td>
             <td><input type="time" id="sonntagAfternoonStart" /></td>
             <td><input type="time" id="sonntagAfternoonEnd" /></td>
-            <td><input type="time" id="sonntagOptionalStart" /></td>
-            <td><input type="time" id="sonntagOptionalEnd" /></td>
+            <!--<td><input type="time" id="sonntagOptionalStart" /></td>-->
+            <!--<td><input type="time" id="sonntagOptionalEnd" /></td>-->
           </tr>
         </tbody>
       </table>
   
-      <!-- Eingabe für defaultSlotLength -->
-  <div>
+  
+      <!-- Eingabe für defaultSlotLength funktioniert aktuell nicht es wird immer standart 30 genommen-->
+       <!-- HIDDEN GEMACHT WEILS AKTUELL NOCH NICHT KORREKT FUNKTIONIERT-->
+  <div hidden>
     <label for="defaultAppointmentLength">Dauer pro Termin (Minuten):</label>
     <input type="number" id="defaultAppointmentLength" value="30" />
-  </div>
-
+  </div><!-- HIDDEN GEMACHT WEILS AKTUELL NOCH NICHT KORREKT FUNKTIONIERT-->
+ 
       <button id="saveTimeSettings">Speichern</button>
         
 

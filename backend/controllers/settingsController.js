@@ -85,23 +85,6 @@ async function createSettings(req, res) {
   }
 }
 
-/**
- * PUT /api/settings/:id
- * Aktualisiert ein bestehendes Settings-Dokument anhand seiner ID.
- */
-async function updateSettings(req, res) {
-  try {
-    const { id } = req.params;
-    const updatedSettings = await Settings.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updatedSettings) {
-      return res.status(404).json({ error: 'Settings nicht gefunden' });
-    }
-    return res.json(updatedSettings);
-  } catch (error) {
-    console.error('Fehler beim Aktualisieren der Settings:', error);
-    return res.status(500).json({ error: 'Fehler beim Aktualisieren der Settings' });
-  }
-}
 
 module.exports = {
   getSettings,
