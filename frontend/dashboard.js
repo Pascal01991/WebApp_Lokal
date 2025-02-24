@@ -259,7 +259,6 @@ async function editAppointment(appointmentId) {
             });
 
             if (response.ok) {
-                renderCalendar();
                 alert('Termin erfolgreich aktualisiert');
                 hideAppointmentForm();
                 loadAppointments(); 
@@ -287,8 +286,7 @@ async function editAppointment(appointmentId) {
             });
     
             if (response.ok) {
-                renderCalendar();
-                alert('Termin erfolgreich gelöscht');
+                renderCalendar();alert('Termin erfolgreich gelöscht');
                 loadAppointments();
             } else {
                 alert('Fehler beim Löschen des Termins');
@@ -1976,7 +1974,7 @@ function dateToLocalString(date) {
     // Beispiel für eine Funktion, die nach dem Laden der Clients aufgerufen wird
     async function initializeAppointments() {
         await loadClients(); // Zuerst Clients laden
-        displayAppointmentsOnCalendar(); // Kalender mit Terminen anzeigen
+        cKOoOfl9206lZzZNFG(); // Kalender mit Terminen anzeigen
         displayAppointments(allAppointments); // Terminliste anzeigen
     }
     
@@ -1984,7 +1982,6 @@ function dateToLocalString(date) {
 async function displayAppointmentsOnCalendar() {
     const startOfWeek = getStartOfWeek(currentDate);
     console.log('displayAppointmentsOnCalendar() ausgeführt');
-
     // Lade die Clients nur einmal, falls noch nicht geschehen
     if (!clients || clients.length === 0) {
         const clientsResponse = await fetch(`${BACKEND_URL}/clients`);
@@ -1994,20 +1991,22 @@ async function displayAppointmentsOnCalendar() {
     // Filtere Termine der aktuellen Woche
     const appointmentsThisWeek = allAppointments.filter(app => {
         const appStartDate = new Date(app.startDateTime);
-        const isInWeek = appStartDate >= startOfWeek &&
-                         appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-        // Überprüfung auf Ressource statt vorher user
+        const isInWeek = appStartDate >= startOfWeek && 
+                       appStartDate < new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        // Geänderte Zeile: Überprüfung auf Ressource statt user
         const isUserSelected = getSelectedUsers().includes(app.Ressource);
-        return isInWeek && isUserSelected;
+        return isInWeek && isUserSelected;        
     });
-
     console.log(appointmentsThisWeek.length);
-    console.log(appointmentsThisWeek);
-
+    console.log (appointmentsThisWeek);
     // Finde Gruppen überlappender Termine
     const overlappingGroups = findOverlappingAppointments(appointmentsThisWeek);
 
+
+
+
+    
     // Platziere die Termine
     overlappingGroups.forEach(group => {
         const groupSize = group.length;
@@ -2024,8 +2023,8 @@ async function displayAppointmentsOnCalendar() {
                 appEndDate = new Date(appStartDate.getTime() + app.duration * 60000);
             }
 
-            // Ermittelung des Wochentages (Montag=0, Sonntag=6)
-            const dayIndex = (appStartDate.getDay() + 6) % 7;
+            const dayIndex = (appStartDate.getDay() + 6) % 7; // Montag=0, Sonntag=6
+//console.log('Behandele appStartDate:' + appStartDate)
             const startHour = appStartDate.getHours();
             const endHour = appEndDate.getHours();
 
@@ -2033,18 +2032,23 @@ async function displayAppointmentsOnCalendar() {
                 const calendar = document.getElementById('calendar');
                 const cellSelector = `.hour-cell[data-day-index='${dayIndex}'][data-hour='${hour}']`;
                 const hourCell = calendar.querySelector(cellSelector);
+                
+
 
                 if (hourCell) {
-                    // Nur einmal in der ersten Stunde ein neues Appointment-Element platzieren
-                    if (hour === startHour) {
+
+                    if (hour === startHour) 
+                        {
+                            
+                        // Nur einmal "drawen" in der ersten Stunde
                         const appointmentDiv = document.createElement('div');
                         appointmentDiv.classList.add('appointment');
                         appointmentDiv.setAttribute('data-app-id', app._id);
 
-                        // Berechne die Gesamtstunden (für Höhe und Position)
+                        // Berechne die Gesamtstunden zwischen Start & Ende
                         const durationHours = (appEndDate.getTime() - appStartDate.getTime()) / (60 * 60 * 1000);
 
-                        // Grid-Styles setzen
+                        // CSS
                         appointmentDiv.style.gridRow = `span ${Math.ceil(durationHours)}`;
                         appointmentDiv.style.top = `${(appStartDate.getMinutes() / 60) * 100}%`;
                         appointmentDiv.style.height = `${durationHours * 100}%`;
@@ -2052,7 +2056,7 @@ async function displayAppointmentsOnCalendar() {
                         appointmentDiv.style.left = `${(100 / groupSize) * index}%`;
                         appointmentDiv.style.zIndex = '2';
 
-                        // Icons (Bearbeiten / Löschen)
+                        // Icons
                         const iconContainer = document.createElement('div');
                         iconContainer.classList.add('appointment-icons');
                         iconContainer.innerHTML = `
@@ -2066,71 +2070,36 @@ async function displayAppointmentsOnCalendar() {
                             deleteAppointment(app._id);
                         });
 
-                        // ============= ANPASSUNGEN BEGINN =============
-
-                        // 1) Finde passenden Client
-                        const clientAppointment = clients.find(
-                            client => client.Kundennummer === app.KundennummerzumTermin
-                        );
-
-                        // 2) Zeigt entweder den Kundennamen oder 'Kunde nicht gefunden'
-                        const firstLine = clientAppointment
-                            ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>`
-                            : 'Kunde nicht gefunden';
-
-                        // 3) Dienstleistungsnamen aus app.Dienstleistung auflisten
-                        //    (app.Dienstleistung ist ein JSON-String mit 0/1-Werten)
-                        let additionalServicesHTML = '';
-                        let dlArray = [];
-
-                        try {
-                            dlArray = JSON.parse(app.Dienstleistung);
-                        } catch(e) {
-                            console.warn('Fehler beim Parsen von app.Dienstleistung:', e);
-                            dlArray = [];
-                        }
-
-                        // Wir gehen ab Index 1 durch, da Index 0 häufig reserviert wird
-                        for (let i = 1; i < dlArray.length; i++) {
-                            if (dlArray[i] === '1') {
-                                if (allServices[i]) {
-                                    additionalServicesHTML += `<div>${allServices[i].serviceName}</div>`;
-                                } else {
-                                    additionalServicesHTML += `<div>Unbekannter Service #${i}</div>`;
-                                }
-                            }
-                        }
-
-                        if (!additionalServicesHTML) {
-                            additionalServicesHTML = '<div>Keine weiteren Services aktiviert</div>';
-                        }
-
-                        // 4) HTML-Bereich zusammensetzen
+                        // Inhalte
+                        const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
                         const appointmentContent = document.createElement('div');
+                        
+                        //AUS DEM STRING VORÜBERGEHEND ENTFERNT DA NICHT KORREKT ANGEZEIGT
+                        //<br> ${app.Preis} ${app.Dienstleistung}
+                        
                         appointmentContent.innerHTML = `
                             <div>
-                                ${firstLine}
-                            </div>
-                            ${additionalServicesHTML}
-                        `;
+                                ${clientAppointment
+                                    ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
+                                       `
+                                    : "Kunde nicht gefunden"
+                                }
+                            </div>`;
 
-                        // ============= ANPASSUNGEN ENDE =============
-
-                        // Inhalte anhängen
                         appointmentDiv.appendChild(iconContainer);
                         appointmentDiv.appendChild(appointmentContent);
 
-                        // Abschließend in die Kalenderzelle einfügen
                         hourCell.appendChild(appointmentDiv);
-                    } else {
-                        // Falls es nicht die Startstunde ist, wird in dieser Schleife nichts gezeichnet
+                        
+                    }
+                    else {
+                        
                     }
                 }
+                
             }
         });
     });
-
-
 
     // Interne Funktion zur Erkennung von Überschneidungen:
     function logOverlappingAppointments() {
@@ -2789,7 +2758,6 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
         });
 
         if (response.ok) {
-            renderCalendar();
             alert('Termin erfolgreich hinzugefügt!');
             hideAppointmentForm();
             loadAppointments();
