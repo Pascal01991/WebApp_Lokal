@@ -4026,6 +4026,10 @@ DARKMODE
 
 // Siehe Allgemein
 
+function validatePassword(password) {
+    const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{10,}$/;
+    return regex.test(password);
+}
 
 /***************************************************
  * 2) USER-FORMULAR: ÖFFNEN, SCHLIESSEN, LEEREN
@@ -4128,6 +4132,12 @@ async function addNewUser() {
     const publicName = document.getElementById('publicName').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    // Passwortvalidierung
+    if (!validatePassword(password)) {
+        alert('Passwort muss mindestens 10 Zeichen lang sein und Groß-/Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.');
+        return;
+    }
+    
     const color = document.getElementById('color').value; // Farbauswahl
 
     // ausgewählte Services ermitteln
@@ -4328,14 +4338,24 @@ async function editUser(userId) {
     // 1. Passwort nur hinzufügen, wenn nicht leer
     const passwordInput = document.getElementById('password').value.trim();
 
-    // 2. Grundlegende Benutzerdaten abrufen
+// 2. Grundlegende Benutzerdaten abrufen
     const updatedUser = {
-        userID: document.getElementById('userID').value,
-        username: document.getElementById('username').value,
-        publicName: document.getElementById('publicName').value,
-        email: document.getElementById('email').value,
-        color: document.getElementById('color').value,
-    };
+    userID: document.getElementById('userID').value,
+    username: document.getElementById('username').value,
+    publicName: document.getElementById('publicName').value,
+    email: document.getElementById('email').value,
+    color: document.getElementById('color').value,
+};
+    // 2.5 Passwortvalidierung nur wenn Passwort geändert wurde
+    if (passwordInput !== "") {
+        if (!validatePassword(passwordInput)) {
+            alert('Passwort muss mindestens 10 Zeichen lang sein und Groß-/Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.');
+            return;
+        }
+        updatedUser.password = passwordInput;
+    }
+
+    
 
     if (passwordInput !== "") {
         updatedUser.password = passwordInput;
