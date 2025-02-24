@@ -1338,7 +1338,10 @@ Serviceverwaltung
   border: none;
   border-radius: 3px;
   cursor: pointer;
+
+
 }
+
 
 #openUserFormButton:hover, #openServiceFormButton:hover {
   background-color: var(--primary-color-hover);

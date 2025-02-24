@@ -23,8 +23,8 @@
           <span class="text">Termine</span>
       </a>
       <a href="#Project-section" class="sidebar-button">
-        <span class="icon">💼</span>
-        <span class="text">Projekte</span>
+        <span hidden class="icon">💼</span>
+        <span hidden class="text">Projekte</span>
       </a>
       <a href="#customer-management-section" class="sidebar-button">
           <span class="icon">🧍</span>
@@ -39,8 +39,8 @@
           <span class="text">Einstellungen</span>
       </a>
       <a href="#logout-section" class="sidebar-button">
-          <span class="icon">🔒</span>
-          <span class="text">Logout</span>
+          <span hidden class="icon">🔒</span>
+          <span hidden class="text">Logout</span>
       </a>
     </div>
 
@@ -311,7 +311,7 @@
         </section>
     
     <!-- Inhalt des Projekt-Abschnitts -->
-<section id="Project-section">
+<section hidden id="Project-section">
         <h2>BETA! Projekte</h2>
         <div id="projectList" class="projct-list"></div>
         <p>Projekte zur Verknüpfung mit Terminen folgt.</p>
@@ -369,7 +369,7 @@
                     <div class="form-column">
                         <div>
                             <label>Beschreibung:</label>
-                            <input hidden type="text" id="holidayDescription" placeholder="Beschreibung">
+                            <input type="text" id="holidayDescription" placeholder="Beschreibung">
                         </div>
                         <div>
                             <label>Von:</label>

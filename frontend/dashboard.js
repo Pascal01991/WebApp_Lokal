@@ -259,6 +259,7 @@ async function editAppointment(appointmentId) {
             });
 
             if (response.ok) {
+                renderCalendarWithDelay();
                 alert('Termin erfolgreich aktualisiert');
                 hideAppointmentForm();
                 loadAppointments(); 
@@ -286,7 +287,8 @@ async function editAppointment(appointmentId) {
             });
     
             if (response.ok) {
-                renderCalendar();alert('Termin erfolgreich gelöscht');
+                renderCalendarWithDelay();
+                alert('Termin erfolgreich gelöscht');
                 loadAppointments();
             } else {
                 alert('Fehler beim Löschen des Termins');
@@ -622,7 +624,7 @@ async function approveAppointmentRequest(requestId, appointmentRequests) {
         // UI neu rendern
         displayAppointmentRequests(appointmentRequests);
         loadAppointments();
-            renderCalendar();
+        renderCalendarWithDelay();
         alert('Termin erfolgreich aus Request erstellt und Request entfernt!');
         
     } catch (err) {
@@ -900,6 +902,7 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
             //    e) UI anpassen: Formular schließen + Liste neu laden
             // ---------------------------------------------
             loadAppointments();
+            renderCalendarWithDelay();
             alert('Bearbeiteter Termin erfolgreich gespeichert und Request entfernt!');
 
             // Formular ausblenden
@@ -1149,7 +1152,14 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
             return [];
         }
     }
-    
+
+    /*******************************************************
+ * Haupt-Funktion: renderCalendar()
+ * -> Ruft je nach Modus renderDay oder renderWeek auf
+ *******************************************************/
+function renderCalendarWithDelay() {
+    setTimeout(renderCalendar, 500);
+}
 
 
 /*******************************************************
@@ -2758,6 +2768,7 @@ document.getElementById('appointmentForm').addEventListener('submit', async func
         });
 
         if (response.ok) {
+            renderCalendarWithDelay();
             alert('Termin erfolgreich hinzugefügt!');
             hideAppointmentForm();
             loadAppointments();
@@ -3578,7 +3589,7 @@ async function editHoliday(index) {
 
             if (response.ok) {
                 await loadHolidays();
-                renderCalendar();
+                renderCalendarWithDelay();
                 alert('Feiertag/Urlaub erfolgreich aktualisiert');
                 hideHolidayForm();
             } else {
@@ -3607,6 +3618,7 @@ async function deleteHoliday(index) {
         });
         if (response.ok) {
             await loadHolidays();
+            renderCalendarWithDelay();
             alert('Feiertag/Urlaub erfolgreich gelöscht');
         } else {
             alert('Fehler beim Löschen (Status: ' + response.status + ')');
@@ -3918,6 +3930,7 @@ loadHolidays();
           return response.json();
         })
         .then(data => {
+          renderCalendarWithDelay();
           console.log('Time Settings erfolgreich gespeichert:', data);
         })
         .catch(err => {
