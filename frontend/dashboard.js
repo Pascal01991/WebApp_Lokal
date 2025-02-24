@@ -143,7 +143,7 @@ async function editAppointment(appointmentId) {
         document.getElementById('KundenTelefon').textContent = client.Telefon || '';
         document.getElementById('KundenMail').textContent = client.Mail || '';
     } else {
-        document.getElementById('KundenName').textContent = 'Kunde nicht gefunden';
+        document.getElementById('KundenName').textContent = 'Kunde nicht erfasst';
         document.getElementById('KundenAdresse').textContent = '';
         document.getElementById('KundenTelefon').textContent = '';
         document.getElementById('KundenMail').textContent = '';
@@ -1467,7 +1467,7 @@ function displayDayAppointments(day, selectedUsers) {
               clientAppointment
                 ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong><br>
                    `
-                : "Kunde nicht gefunden"
+                : "Kunde nicht erfasst"
             }
           </div>
         `;
@@ -1761,7 +1761,7 @@ async function renderWeek() {
                                         ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
                                            <br>
                                            `
-                                        : "Kunde nicht gefunden"
+                                        : "Kunde nicht erfasst"
                                 }
                             </div>
                         `;
@@ -1991,7 +1991,7 @@ function dateToLocalString(date) {
         cKOoOfl9206lZzZNFG(); // Kalender mit Terminen anzeigen
         displayAppointments(allAppointments); // Terminliste anzeigen
     }
-    
+/*    
 // Nun kannst du auf die clients-Daten in displayAppointmentsOnCalendar zugreifen:
 async function displayAppointmentsOnCalendar() {
     const startOfWeek = getStartOfWeek(currentDate);
@@ -2114,6 +2114,7 @@ async function displayAppointmentsOnCalendar() {
             }
         });
     });
+    
 
     // Interne Funktion zur Erkennung von Überschneidungen:
     function logOverlappingAppointments() {
@@ -2151,7 +2152,7 @@ async function displayAppointmentsOnCalendar() {
 
     logOverlappingAppointments();
 }
-
+*/
 
 
 
@@ -2433,7 +2434,7 @@ async function displayAppointments(appointments) {
             <div class="termin-card">
                 <!-- Spalte A: Kundendaten -->
                 <div class="termin-info">
-                    ${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht gefunden"}
+                    ${client ? `${client.Vorname} ${client.Nachname}` : "Kunde nicht erfasst"}
                     <!-- usw. -->
                 </div>
                 <!-- Spalte B: Services ab Index 1 -->
@@ -3228,7 +3229,7 @@ async function editClient(clientId) {
     // 2) Client-Objekt finden
     const client = allClients.find(c => c._id === clientId);
     if (!client) {
-        alert('Kunde nicht gefunden');
+        alert('Kunde nicht erfasst');
         return;
     }
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AppointmentRequests = require('../models/AppointmentRequestsModel');
+const Client = require('../models/clientModel');
 
 // GET: Alle Termine abrufen
 router.get('/', async (req, res) => {
@@ -20,7 +21,6 @@ router.post('/', async (req, res) => {
     try {
         console.log("POST Request empfangen:", req.body);
 
-        // Wir lesen jetzt startDateTime, optional endDateTime und duration etc.
         const {
             startDateTime,
             endDateTime,
@@ -39,36 +39,46 @@ router.post('/', async (req, res) => {
             erbringungsStatus,
             fakturaBemerkung,
             fakturaNummer,
-    
-            // Abweichender Rechnungsempfänger
             rechnungsEmpfaengerNummer
         } = req.body;
 
         // Validierung (Pflichtfelder)
-        // Bisher stand dort "!duration || !dateTime || !description"
-        // Jetzt prüfen wir "!startDateTime"
         if (!startDateTime || !duration || !description) {
             return res.status(400).json({
                 msg: "Fehlende Felder: startDateTime, duration oder description"
             });
         }
 
-        // Neues AppointmentRequests-Objekt anlegen
+        // 1) Kundensuche anhand der E-Mail
+        let finalKundennummer = KundennummerzumTermin || "";
+        if (MailAppointmentRequests) {
+            try {
+                const normalizedEmail = MailAppointmentRequests.toLowerCase().trim();
+                const existingClient = await Client.findOne({ 
+                    Mail: { $regex: new RegExp(`^${normalizedEmail}$`, "i") } 
+                });
+
+                if (existingClient) {
+                    finalKundennummer = existingClient.Kundennummer;
+                    console.log(`Kunde gefunden: ${existingClient.Kundennummer} für Mail ${normalizedEmail}`);
+                }
+            } catch (err) {
+                console.error("Fehler bei der Kundensuche:", err);
+                // Fehler nicht abbrechen lassen, nur loggen
+            }
+        }
+
+        // 2) Neuen Request mit ermittelter Kundennummer erstellen
         const newAppointmentRequests = new AppointmentRequests({
-            // Pflicht:
             startDateTime,
             duration,
             description,
-
-            // Optionale Felder:
             endDateTime,
-            KundennummerzumTermin,
+            KundennummerzumTermin: finalKundennummer,  // Hier wird die ermittelte Nummer eingesetzt
             Preis,
             Abrechnungsstatus,
             MailAppointmentRequests,
             Dienstleistung,
-    
-            // Abwicklung
             erfasstDurch,
             letzterBearbeiter,
             Ressource,
@@ -77,20 +87,13 @@ router.post('/', async (req, res) => {
             erbringungsStatus,
             fakturaBemerkung,
             fakturaNummer,
-    
-            // Abweichender Rechnungsempfänger
             rechnungsEmpfaengerNummer
-
-
         });
 
-        // Speichern
+        // 3) Speichern
         await newAppointmentRequests.save();
 
         console.log("Neuer Termin gespeichert:", newAppointmentRequests);
-        console.log("POST Request empfangen:", req.body);
-        console.log("Schema: ", AppointmentRequests.schema.paths);
-
         res.status(201).json(newAppointmentRequests);
 
     } catch (err) {
@@ -102,7 +105,6 @@ router.post('/', async (req, res) => {
         });
     }
 });
-
 
 // Route für Löschen Button
 router.delete('/:id', async (req, res) => {

@@ -607,7 +607,9 @@ function confirmBooking() {
     startDateTime: finalStart, // Original Startzeit
     endDateTime: finalEnd, // Manuell formatierte Endzeit
     duration: totalDuration,
-    description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
+    description: `Kunde: ${personalData.firstName} ${personalData.lastName}
+Mail: ${personalData.email}
+(Gebucht über Öffentliche Buchungsplattform))`,
     MailAppointmentRequests: personalData.email,
     Preis: String(totalPrice),
     Dienstleistung: JSON.stringify(servicesArray),

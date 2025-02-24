@@ -26,6 +26,10 @@ const AppointmentRequestsSchema = new mongoose.Schema({
         type: String,            //NEU: hier die vom Kunden eingetragene Mailadresse eintragen als String
         required: true,
     },
+    KundennummerzumTermin: { 
+        type: String, // oder Number, je nachdem wie die Kundennummer gespeichert wird
+        default: "" 
+    },
     Preis: {
         type: String,   //Hier der Preis bzw. total der Preise aller gewählten services inkl. index0
         required: true,
