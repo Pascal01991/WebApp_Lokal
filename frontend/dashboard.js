@@ -571,7 +571,8 @@ async function approveAppointmentRequest(requestId, appointmentRequests) {
     const dienstleistungString = req.Dienstleistung || '[]';  // Direkt als String übernehmen
     const totalPrice = req.totalPrice || 0;
     const selectedUser = { username: req.Ressource || '' };
-    
+    const description = req.description || `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`;
+
     // Falls du in deinem Request abweichend startDateTime schon hast,
     // kannst du das direkt verwenden:
     const finalStart = req.startDateTime;
@@ -583,7 +584,8 @@ async function approveAppointmentRequest(requestId, appointmentRequests) {
         startDateTime: finalStart,
         endDateTime: req.endDateTime || '',  // optional
         duration: totalDuration,
-        description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
+        description: description,
+        //description: `Öffentliche Buchungsplattform (Kunde: ${personalData.firstName} ${personalData.lastName})`,
         MailAppointmentRequests: personalData.email,
         Preis: String(totalPrice),
         Dienstleistung: dienstleistungString,
@@ -1458,12 +1460,13 @@ function displayDayAppointments(day, selectedUsers) {
         });
   
         const appointmentContent = document.createElement('div');
+        //AUS UNTENSTEHENDEM STRING VORÜBERGEHEND ENTFERNT: ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}
         appointmentContent.innerHTML = `
           <div>
             ${
               clientAppointment
                 ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong><br>
-                   ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}`
+                   `
                 : "Kunde nicht gefunden"
             }
           </div>
@@ -1750,13 +1753,14 @@ async function renderWeek() {
                         // Text-Inhalt (Client + Dienstleistung)
                         const clientAppointment = clients.find(client => client.Kundennummer === app.KundennummerzumTermin);
                         const appointmentContent = document.createElement('div');
+                        //AUS UNTENSTEHENDEM STRING VORÜBERGEHEND ENTFERNT: ${app.Preis ?? ''} ${app.Dienstleistung} ?? ''
                         appointmentContent.innerHTML = `
                             <div>
                                 ${
                                     clientAppointment 
                                         ? `<strong>${clientAppointment.Vorname} ${clientAppointment.Nachname}</strong>
                                            <br>
-                                           ${app.Preis ?? ''} ${app.Dienstleistung ?? ''}`
+                                           `
                                         : "Kunde nicht gefunden"
                                 }
                             </div>
