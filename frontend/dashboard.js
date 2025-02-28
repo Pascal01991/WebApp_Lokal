@@ -67,212 +67,201 @@
     // Funktion zum Bearbeiten des Termins
 // Für "Bearbeiten"-Button im Termin
 
-
-async function editAppointment(appointmentId) {
-    // 1) Button "Termin erstellen" ausblenden
-    openAppointmentFormButton.style.display = 'none';
-
-    // 2) Terminobjekt finden
-    const appointment = allAppointments.find(app => app._id === appointmentId);
-    if (!appointment) {
-        alert('Termin nicht gefunden');
-        return;
+    /**
+     * Normalisiert eine Kundennummer, indem führende Nullen entfernt werden.
+     * Beispiel: "000001" → "1"
+     */
+    function normalizeKundennummer(kNum) {
+        return String(parseInt(kNum, 10));
     }
-
-    // 3) Formularfelder für den Termin befüllen
-    document.getElementById('KundennummerzumTermin').value = appointment.KundennummerzumTermin || '';
-
-    // Start & Endzeit ins datetime-local-Feld packen
-    setLocalDateTimeInput(appointment.startDateTime, 'startDateTime');
-    setLocalDateTimeInput(appointment.endDateTime,   'endDateTime');
-
-    let dlArray = [];
-    if (appointment.Dienstleistung) {
-        dlArray = JSON.parse(appointment.Dienstleistung); 
-    }
-
-    // Falls `appointment.duration` in Minuten kommt, verteilen auf Stunden/Minuten
-    const totalMinutes = parseInt(appointment.duration, 10) || 0;
-    document.getElementById('durationHours').value = Math.floor(totalMinutes / 60);
-    document.getElementById('durationMinutes').value = totalMinutes % 60;
-
-    //document.getElementById('Dienstleistung').value = dlArray || '';
-    document.getElementById('Preis').value = appointment.Preis || '';
-    document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
-    document.getElementById('description').value = appointment.description || '';
-
-    document.getElementById('erfasstDurch').value = appointment.erfasstDurch || '';
-    document.getElementById('letzterBearbeiter').value = appointment.letzterBearbeiter || '';
-    document.getElementById('Ressource').value = appointment.Ressource || '';
-    document.getElementById('projektId').value = appointment.projektId || '';
-    document.getElementById('verrechnungsTyp').value = appointment.verrechnungsTyp || '';
-    document.getElementById('erbringungsStatus').value = appointment.erbringungsStatus || '';
-    document.getElementById('rechnungsEmpfaengerNummer').value = appointment.rechnungsEmpfaengerNummer || '';
-    document.getElementById('fakturaNummer').value = appointment.fakturaNummer || '';
-    document.getElementById('fakturaBemerkung').value = appointment.fakturaBemerkung || '';
     
-    //Services:
-    // 3.1) Services laden und Checkboxen rendern
-    // 1) Services laden und rendern
-    await loadServices(); // => allServices
-    renderAppointmentServiceCheckboxes(allServices);
+    /**
+     * Formatiert eine Kundennummer als sechsstelligen String.
+     * Beispiel: "1" → "000001"
+     */
+    function formatKundennummer(kNum) {
+        return String(kNum).padStart(6, '0');
+    }
+    
 
-    // 2) dlArray => ["1","0","0","1","0"] (z.B. schon vorhanden)
-    for (let i = 1; i < dlArray.length; i++) {
-        // dlArray[i] kann "1" oder "0" sein
-        if (dlArray[i] === "1") {
-            // Dann soll die Checkbox für serviceIndex = i gecheckt sein
-            const cb = document.querySelector(
-                `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
-            );
-            if (cb) {
-                cb.checked = true;
+    async function editAppointment(appointmentId) {
+        // Button "Termin erstellen" ausblenden
+        openAppointmentFormButton.style.display = 'none';
+    
+        // Terminobjekt finden
+        const appointment = allAppointments.find(app => app._id === appointmentId);
+        if (!appointment) {
+            alert('Termin nicht gefunden');
+            return;
+        }
+    
+        // Formularfelder für den Termin befüllen
+        // Kundennummer übernehmen und normalisieren
+        const normalizedKundennummer = normalizeKundennummer(appointment.KundennummerzumTermin);
+        document.getElementById('KundennummerzumTermin').value = normalizedKundennummer;
+        document.getElementById('KundennummerzumTerminDisplay').textContent = formatKundennummer(appointment.KundennummerzumTermin || '');
+    
+        // Start- & Endzeit in das datetime-local-Feld schreiben
+        setLocalDateTimeInput(appointment.startDateTime, 'startDateTime');
+        setLocalDateTimeInput(appointment.endDateTime, 'endDateTime');
+    
+        // Dienstleistungs-Array laden
+        let dlArray = [];
+        if (appointment.Dienstleistung) {
+            try {
+                dlArray = JSON.parse(appointment.Dienstleistung);
+            } catch (err) {
+                dlArray = appointment.Dienstleistung.split(',');
             }
         }
-    }
-
-
-
-    // 4) Den zugehörigen Kunden suchen und Kundendaten befüllen
-    const client = allClients.find(c => c.Kundennummer === appointment.KundennummerzumTermin);
-    if (client) {
-        document.getElementById('KundennummerzumTermin').value = client.Kundennummer;
-        document.getElementById('KundennummerzumTerminDisplay').textContent = String(client.Kundennummer).padStart(6, '0');
-        document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
-        document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
-        document.getElementById('KundenTelefon').textContent = client.Telefon || '';
-        document.getElementById('KundenMail').textContent = client.Mail || '';
-    } else {
-        document.getElementById('KundenName').textContent = 'Kunde nicht erfasst';
-        document.getElementById('KundenAdresse').textContent = '';
-        document.getElementById('KundenTelefon').textContent = '';
-        document.getElementById('KundenMail').textContent = '';
-    }
-
-     // 4.5 RechnungsEmpfänger Daten laden
-     document.getElementById('rechnungsEmpfaengerNummer').value 
-     = appointment.rechnungsEmpfaengerNummer || '';
-
-    // Falls du die <span>-Felder hast
-    // => Display-Nummer direkt befüllen, z.B.:
-    if (appointment.rechnungsEmpfaengerNummer) {
-        // Suche den passenden Client
-        const recClient = allClients.find(c => c.Kundennummer === appointment.rechnungsEmpfaengerNummer);
-
-        // Block einblenden
-        const block = document.getElementById('abweichenderRechnungsempfaengerBlock');
-        if (block) block.style.display = 'block';
-
-        if (recClient) {
-            document.getElementById('RechnungsempfaengerNummerDisplay').textContent 
-                = String(recClient.Kundennummer).padStart(6, '0');
-            document.getElementById('RechnungsempfaengerName').textContent 
-                = `${recClient.Vorname} ${recClient.Nachname}`;
-            document.getElementById('RechnungsempfaengerAdresse').textContent 
-                = `${recClient.Strasse} ${recClient.Hausnummer}, ${recClient.Postleitzahl} ${recClient.Ort}`;
-            document.getElementById('RechnungsempfaengerTelefon').textContent 
-                = recClient.Telefon;
-            document.getElementById('RechnungsempfaengerMail').textContent 
-                = recClient.Mail;
+    
+        // Dauer in Stunden/Minuten berechnen
+        const totalMinutes = parseInt(appointment.duration, 10) || 0;
+        document.getElementById('durationHours').value = Math.floor(totalMinutes / 60);
+        document.getElementById('durationMinutes').value = totalMinutes % 60;
+    
+        document.getElementById('Preis').value = appointment.Preis || '';
+        document.getElementById('Abrechnungsstatus').value = appointment.Abrechnungsstatus || '';
+        document.getElementById('description').value = appointment.description || '';
+        document.getElementById('erfasstDurch').value = appointment.erfasstDurch || '';
+        document.getElementById('letzterBearbeiter').value = appointment.letzterBearbeiter || '';
+        document.getElementById('Ressource').value = appointment.Ressource || '';
+        document.getElementById('projektId').value = appointment.projektId || '';
+        document.getElementById('verrechnungsTyp').value = appointment.verrechnungsTyp || '';
+        document.getElementById('erbringungsStatus').value = appointment.erbringungsStatus || '';
+        document.getElementById('rechnungsEmpfaengerNummer').value = appointment.rechnungsEmpfaengerNummer || '';
+        document.getElementById('fakturaNummer').value = appointment.fakturaNummer || '';
+        document.getElementById('fakturaBemerkung').value = appointment.fakturaBemerkung || '';
+    
+        // Services laden und Checkboxen rendern
+        await loadServices();
+        renderAppointmentServiceCheckboxes(allServices);
+        for (let i = 1; i < dlArray.length; i++) {
+            if (dlArray[i] === "1") {
+                const cb = document.querySelector(
+                    `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
+                );
+                if (cb) {
+                    cb.checked = true;
+                }
+            }
+        }
+    
+        // Den zugehörigen Kunden suchen anhand der normalisierten Kundennummer
+        const client = allClients.find(c => normalizeKundennummer(c.Kundennummer) === normalizedKundennummer);
+        if (client) {
+            document.getElementById('KundennummerzumTermin').value = normalizeKundennummer(client.Kundennummer);
+            document.getElementById('KundennummerzumTerminDisplay').textContent = formatKundennummer(client.Kundennummer);
+            document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
+            document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
+            document.getElementById('KundenTelefon').textContent = client.Telefon || '';
+            document.getElementById('KundenMail').textContent = client.Mail || '';
         } else {
-            // Falls die Nummer nicht zu einem bekannten Client passt
+            document.getElementById('KundenName').textContent = 'Kunde nicht erfasst';
+            document.getElementById('KundenAdresse').textContent = '';
+            document.getElementById('KundenTelefon').textContent = '';
+            document.getElementById('KundenMail').textContent = '';
+        }
+    
+        // Rechnungs-Empfänger-Daten analog behandeln (wie in deinem Codebeispiel)
+        if (appointment.rechnungsEmpfaengerNummer) {
+            const recClient = allClients.find(c => normalizeKundennummer(c.Kundennummer) === normalizeKundennummer(appointment.rechnungsEmpfaengerNummer));
+            const block = document.getElementById('abweichenderRechnungsempfaengerBlock');
+            if (block) block.style.display = 'block';
+            if (recClient) {
+                document.getElementById('RechnungsempfaengerNummerDisplay').textContent = formatKundennummer(recClient.Kundennummer);
+                document.getElementById('RechnungsempfaengerName').textContent = `${recClient.Vorname} ${recClient.Nachname}`;
+                document.getElementById('RechnungsempfaengerAdresse').textContent = `${recClient.Strasse} ${recClient.Hausnummer}, ${recClient.Postleitzahl} ${recClient.Ort}`;
+                document.getElementById('RechnungsempfaengerTelefon').textContent = recClient.Telefon;
+                document.getElementById('RechnungsempfaengerMail').textContent = recClient.Mail;
+            } else {
+                document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
+                document.getElementById('RechnungsempfaengerName').textContent = 'Nicht gefunden';
+                document.getElementById('RechnungsempfaengerAdresse').textContent = '';
+                document.getElementById('RechnungsempfaengerTelefon').textContent = '';
+                document.getElementById('RechnungsempfaengerMail').textContent = '';
+            }
+        } else {
+            document.getElementById('abweichenderRechnungsempfaengerBlock').style.display = 'none';
             document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
-            document.getElementById('RechnungsempfaengerName').textContent = 'Nicht gefunden';
+            document.getElementById('RechnungsempfaengerName').textContent = '';
             document.getElementById('RechnungsempfaengerAdresse').textContent = '';
             document.getElementById('RechnungsempfaengerTelefon').textContent = '';
             document.getElementById('RechnungsempfaengerMail').textContent = '';
         }
-    } else {
-        // Falls keine rechnungsEmpfaengerNummer => Block ausblenden
-        document.getElementById('abweichenderRechnungsempfaengerBlock').style.display = 'none';
-        document.getElementById('RechnungsempfaengerNummerDisplay').textContent = '';
-        document.getElementById('RechnungsempfaengerName').textContent = '';
-        document.getElementById('RechnungsempfaengerAdresse').textContent = '';
-        document.getElementById('RechnungsempfaengerTelefon').textContent = '';
-        document.getElementById('RechnungsempfaengerMail').textContent = '';
-    }
-
-    // 5) Formular anzeigen (Edit-Modus)
-    showAppointmentForm(true);
-
-    // 6) Button "Änderungen speichern" (PUT) neu binden
-    const submitButton = appointmentForm.querySelector('button[type="submit"]');
-    submitButton.replaceWith(submitButton.cloneNode(true));  // Event-Listener entfernen
-    const newSubmitButton = appointmentForm.querySelector('button[type="submit"]');
-    newSubmitButton.innerText = 'Änderungen speichern';
-    newSubmitButton.addEventListener('click', async (e) => {
-        e.preventDefault();
-
-        // Neue Start- und Endzeit auslesen
-        const startVal = document.getElementById('startDateTime').value;  // z.B. "2025-01-02T10:00"
-        const endVal   = document.getElementById('endDateTime').value;    // z.B. "2025-01-02T11:30"
-
-        // Dauer in Stunden/Minuten => Gesamtminuten
-        const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
-        const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
-        const totalDuration = hours * 60 + mins;
-
-        // Neues Array in passender Länge für die Dienstleistungen
-        const updatedDlArray = new Array(allServices.length).fill("0");
-
-        // DL-Index 0 = "1" (immer aktiv)
-        updatedDlArray[0] = "1";
-        
-        // Alle gecheckten Checkboxen ermitteln
-        const checkedBoxes = document.querySelectorAll('#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked');
-        checkedBoxes.forEach(cb => {
-            const idx = parseInt(cb.dataset.serviceIndex, 10);
-            updatedDlArray[idx] = "1";
-        });
-
-        // Als JSON-String speichern
-        const dlString = JSON.stringify(updatedDlArray);
-
-        const updatedAppointment = {
-            KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
-            startDateTime: startVal,
-            endDateTime: endVal,
-            duration: totalDuration,
-            Dienstleistung: dlString,
-            Preis: document.getElementById('Preis').value,
-            Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
-            description: document.getElementById('description').value,
-            erfasstDurch: document.getElementById('erfasstDurch').value,
-            letzterBearbeiter: document.getElementById('letzterBearbeiter').value,
-            Ressource: document.getElementById('Ressource').value,
-            projektId: document.getElementById('projektId').value,
-            verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
-            erbringungsStatus: document.getElementById('erbringungsStatus').value,
-            rechnungsEmpfaengerNummer: document.getElementById('rechnungsEmpfaengerNummer').value,
-            fakturaNummer: document.getElementById('fakturaNummer').value,
-            fakturaBemerkung: document.getElementById('fakturaBemerkung').value
-        };
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updatedAppointment)
+    
+        // Formular im Edit-Modus anzeigen
+        showAppointmentForm(true);
+    
+        // Button "Änderungen speichern" (PUT) neu binden
+        const appointmentForm = document.getElementById('appointmentForm');
+        const submitButton = appointmentForm.querySelector('button[type="submit"]');
+        submitButton.replaceWith(submitButton.cloneNode(true));  // Event-Listener entfernen
+        const newSubmitButton = appointmentForm.querySelector('button[type="submit"]');
+        newSubmitButton.innerText = 'Änderungen speichern';
+        newSubmitButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+    
+            // Neue Werte auslesen und aktualisiertes Appointment-Objekt zusammenstellen
+            const startVal = document.getElementById('startDateTime').value;
+            const endVal = document.getElementById('endDateTime').value;
+            const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
+            const mins = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
+            const totalDuration = hours * 60 + mins;
+    
+            const updatedDlArray = new Array(allServices.length).fill("0");
+            updatedDlArray[0] = "1";
+            const checkedBoxes = document.querySelectorAll('#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked');
+            checkedBoxes.forEach(cb => {
+                const idx = parseInt(cb.dataset.serviceIndex, 10);
+                updatedDlArray[idx] = "1";
             });
-
-            if (response.ok) {
-                renderCalendarWithDelay();
-                alert('Termin erfolgreich aktualisiert');
-                hideAppointmentForm();
-                loadAppointments(); 
-            } else {
-                alert('Fehler beim Aktualisieren des Termins');
+            const dlString = JSON.stringify(updatedDlArray);
+    
+            const updatedAppointment = {
+                KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
+                startDateTime: startVal,
+                endDateTime: endVal,
+                duration: totalDuration,
+                Dienstleistung: dlString,
+                Preis: document.getElementById('Preis').value,
+                Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
+                description: document.getElementById('description').value,
+                erfasstDurch: document.getElementById('erfasstDurch').value,
+                letzterBearbeiter: document.getElementById('letzterBearbeiter').value,
+                Ressource: document.getElementById('Ressource').value,
+                projektId: document.getElementById('projektId').value,
+                verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
+                erbringungsStatus: document.getElementById('erbringungsStatus').value,
+                rechnungsEmpfaengerNummer: document.getElementById('rechnungsEmpfaengerNummer').value,
+                fakturaNummer: document.getElementById('fakturaNummer').value,
+                fakturaBemerkung: document.getElementById('fakturaBemerkung').value
+            };
+    
+            try {
+                const response = await fetch(`${BACKEND_URL}/appointments/${appointmentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedAppointment)
+                });
+    
+                if (response.ok) {
+                    renderCalendarWithDelay();
+                    alert('Termin erfolgreich aktualisiert');
+                    hideAppointmentForm();
+                    loadAppointments(); 
+                } else {
+                    alert('Fehler beim Aktualisieren des Termins');
+                }
+            } catch (err) {
+                alert('Fehler: ' + err.message);
             }
-        } catch (err) {
-            alert('Fehler: ' + err.message);
-        }
-    });
-}
-
-
+        });
+    }
+    
 
     //Button für Löschen des Termins
     async function deleteAppointment(appointmentId) {
@@ -688,185 +677,140 @@ TERMIN-ANFRAGEN BEARBEITEN VOR FREIGEBEN
  * @param {Array} appointmentRequests - Array aller Requests
  */
 async function editAppointmentRequest(requestId, appointmentRequests) {
-    // Request aus Array holen
     const req = appointmentRequests.find(r => r._id === requestId);
     if (!req) {
         alert('Request nicht gefunden!');
         return;
     }
+    
+    console.log("[DEBUG] editAppointmentRequest aufgerufen. Request:", req);
 
-    await loadServices(); // => allServices
+    // Sicherstellen, dass die Services geladen sind
+    await loadServices();
     renderAppointmentServiceCheckboxes(allServices);
-
-    // Formular einblenden
-    showAppointmentForm(); // Deine Funktion, die das Formular sichtbar macht
+    showAppointmentForm();
 
     // -------------------------
-    // Felder des Formulars befüllen
+    // Formularfelder befüllen: Kundennummer
     // -------------------------
-    document.getElementById('KundennummerzumTermin').value = req.KundennummerzumTermin || '';
+    const kundennummerRaw = req.KundennummerzumTermin;
+    const normalizedKundennummer = normalizeKundennummer(kundennummerRaw);
+    console.log("[DEBUG] KundennummerzumTermin aus Request (normalisiert):", normalizedKundennummer);
+    document.getElementById('KundennummerzumTermin').value = normalizedKundennummer;
 
-    // Start-/End-Zeit in "YYYY-MM-DDTHH:mm" konvertieren (falls type="datetime-local")
+    // Kundendetails anzeigen anhand der Kundennummer
+    const client = allClients.find(c => normalizeKundennummer(c.Kundennummer) === normalizedKundennummer);
+    if (client) {
+        console.log("[DEBUG] Kunde gefunden:", client);
+        // Anzeige im Formular: hier sowohl das Eingabefeld als auch ein Display-Feld
+        document.getElementById('KundennummerzumTerminDisplay').textContent = formatKundennummer(client.Kundennummer);
+        document.getElementById('KundenName').textContent = `${client.Vorname} ${client.Nachname}`;
+        document.getElementById('KundenAdresse').textContent = `${client.Strasse} ${client.Hausnummer}, ${client.Postleitzahl} ${client.Ort}`;
+        document.getElementById('KundenTelefon').textContent = client.Telefon || '';
+        document.getElementById('KundenMail').textContent = client.Mail || '';
+    } else {
+        console.warn("[DEBUG] Kein Kunde gefunden für Kundennummer:", normalizedKundennummer);
+        document.getElementById('KundennummerzumTerminDisplay').textContent = normalizedKundennummer;
+        document.getElementById('KundenName').textContent = 'Kunde nicht erfasst';
+        document.getElementById('KundenAdresse').textContent = '';
+        document.getElementById('KundenTelefon').textContent = '';
+        document.getElementById('KundenMail').textContent = '';
+    }
+
+    // -------------------------
+    // Weitere Formularfelder befüllen
+    // -------------------------
     if (req.startDateTime) {
-        document.getElementById('startDateTime').value = req.startDateTime.slice(0,16);
+        document.getElementById('startDateTime').value = req.startDateTime.slice(0, 16);
     }
     if (req.endDateTime) {
-        document.getElementById('endDateTime').value = req.endDateTime.slice(0,16);
+        document.getElementById('endDateTime').value = req.endDateTime.slice(0, 16);
     }
-
-    // Dauer in Stunden und Minuten aufsplitten
     const totalMinutes = req.duration || 0;
     const hours = Math.floor(totalMinutes / 60);
-    const mins  = totalMinutes % 60;
-    document.getElementById('durationHours').value   = hours;
+    const mins = totalMinutes % 60;
+    document.getElementById('durationHours').value = hours;
     document.getElementById('durationMinutes').value = mins;
-
-    // Weitere Felder
-    document.getElementById('Dienstleistung').value = '';
-    document.getElementById('Preis').value               = req.Preis              || '';
-    document.getElementById('Abrechnungsstatus').value   = req.Abrechnungsstatus  || '';
-    document.getElementById('description').value         = req.description        || '';
-    document.getElementById('erfasstDurch').value        = req.erfasstDurch       || '';
-    document.getElementById('letzterBearbeiter').value   = req.letzterBearbeiter  || '';
-    document.getElementById('Ressource').value           = req.Ressource          || '';
+    
+    document.getElementById('Preis').value = req.Preis || '';
+    document.getElementById('Abrechnungsstatus').value = req.Abrechnungsstatus || '';
+    document.getElementById('description').value = req.description || '';
+    document.getElementById('erfasstDurch').value = req.erfasstDurch || '';
+    document.getElementById('letzterBearbeiter').value = req.letzterBearbeiter || '';
+    document.getElementById('Ressource').value = req.Ressource || '';
+    
     if (req.projektId) {
-        document.getElementById('projektId').value       = req.projektId;
+        document.getElementById('projektId').value = req.projektId;
     }
-    document.getElementById('verrechnungsTyp').value     = req.verrechnungsTyp    || '';
-    document.getElementById('erbringungsStatus').value   = req.erbringungsStatus  || '';
-    document.getElementById('fakturaBemerkung').value    = req.fakturaBemerkung   || '';
-    document.getElementById('fakturaNummer').value       = req.fakturaNummer      || '';
+    document.getElementById('verrechnungsTyp').value = req.verrechnungsTyp || '';
+    document.getElementById('erbringungsStatus').value = req.erbringungsStatus || '';
+    document.getElementById('fakturaBemerkung').value = req.fakturaBemerkung || '';
+    document.getElementById('fakturaNummer').value = req.fakturaNummer || '';
 
-    // Abweichender Rechnungsempfänger (Anzeige, falls vorhanden)
-    const reNum = req.rechnungsEmpfaengerNummer;
-    document.getElementById('RechnungsempfaengerNummerDisplay').textContent = reNum ? String(reNum) : '';
+    // -------------------------
+    // DIENSTLEISTUNG CHECKBOXEN BEFÜLLEN
+    // -------------------------
+    let dlArray = [];
+    if (req.Dienstleistung) {
+        try {
+            dlArray = JSON.parse(req.Dienstleistung);
+        } catch (err) {
+            dlArray = req.Dienstleistung.split(',');
+        }
+    }
+    for (let i = 1; i < dlArray.length; i++) {
+        if (dlArray[i] === "1") {
+            const cb = document.querySelector(
+                `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
+            );
+            if (cb) cb.checked = true;
+        }
+    }
 
-    // ---------------------------------------------------
-    //  Button "Bearbeiteter Termin Bestätigen" einrichten
-    // ---------------------------------------------------
+    // -------------------------
+    // Submit-Handler einrichten
+    // -------------------------
     const appointmentForm = document.getElementById('appointmentForm');
-
-     // 5.a) Dienstleistung in Array konvertieren und Checkboxen setzen
-     let dlArray = [];
-     if (req.Dienstleistung) {
-         try {
-             dlArray = JSON.parse(req.Dienstleistung); 
-         } catch (err) {
-             // Falls alte Daten => Fallback z.B. split(',')
-             dlArray = req.Dienstleistung.split(',');
-         }
-     }
-     for (let i = 1; i < dlArray.length; i++) {
-         if (dlArray[i] === "1") {
-             const cb = document.querySelector(
-                 `#appointmentServicesCheckboxContainer .appointment-service-checkbox[data-service-index="${i}"]`
-             );
-             if (cb) cb.checked = true;
-         }
-     }
- 
-
-    // 1) Alten Event-Listener entfernen, damit nicht das "Standard-Submit" greift.
-    //    Das erreichst du, indem du den Button durch eine Klon-Kopie ersetzt.
     const oldSubmitButton = appointmentForm.querySelector('button[type="submit"]');
-    const newSubmitButton = oldSubmitButton.cloneNode(true); // Button kopieren
-
-    // 2) Alten Button ersetzen
+    const newSubmitButton = oldSubmitButton.cloneNode(true);
     oldSubmitButton.parentNode.replaceChild(newSubmitButton, oldSubmitButton);
-
-    // 3) Button-Text anpassen
     newSubmitButton.innerText = 'Bearbeiteter Termin Bestätigen';
 
-    // 4) Neuen Klick-/Submit-Listener binden
     newSubmitButton.addEventListener('click', async (e) => {
-        e.preventDefault(); // Verhindert das Standard-Formular-Verhalten
+        e.preventDefault();
 
         try {
-            // ---------------------------------------------
-            //    a) Daten aus Formularfeldern auslesen
-            // ---------------------------------------------
-            // Du kannst exakt die gleiche Logik wie in deinem normalen
-            // Submit-Handler verwenden, nur eben hier lokal.
-
-            // Auftraggeber
-            const KundennummerzumTermin = document.getElementById('KundennummerzumTermin').value || '';
-
-            // Start-/Endtermin
-            const startVal = document.getElementById('startDateTime').value;
-            const endVal   = document.getElementById('endDateTime').value;
-
-            // Dauer
-            const hours = parseInt(document.getElementById('durationHours').value, 10) || 0;
-            const mins  = parseInt(document.getElementById('durationMinutes').value, 10) || 0;
-            const totalDuration = hours * 60 + mins;
-
-            // Weitere Pflicht-/Zusatzfelder
-            const Dienstleistung     = document.getElementById('Dienstleistung').value;
-            const Preis             = document.getElementById('Preis').value;
-            const Abrechnungsstatus = document.getElementById('Abrechnungsstatus').value;
-            const description       = document.getElementById('description').value;
-            const erfasstDurch      = document.getElementById('erfasstDurch').value;
-            const letzterBearbeiter = document.getElementById('letzterBearbeiter').value;
-            const Ressource         = document.getElementById('Ressource').value;
-
-            // Projekt-ID
-            let projektId = parseInt(document.getElementById('projektId').value, 10);
-            if (isNaN(projektId)) {
-                projektId = null;
-            }
-
-            const verrechnungsTyp   = document.getElementById('verrechnungsTyp').value;
-            const erbringungsStatus = document.getElementById('erbringungsStatus').value;
-            const fakturaBemerkung  = document.getElementById('fakturaBemerkung').value;
-            const fakturaNummer     = document.getElementById('fakturaNummer').value;
-
-            // Abweichender Rechnungsempfänger
-            let rechnungsEmpfaengerNummer = document.getElementById('RechnungsempfaengerNummerDisplay').textContent;
-            if (!rechnungsEmpfaengerNummer) {
-                rechnungsEmpfaengerNummer = null;
-            }
-
-            // 6.b) Checkboxen auslesen => dlArray
-            const updatedDLArray = new Array(allServices.length).fill("0");
-            updatedDLArray[0] = "1";
-            
-            const checkedBoxes = document.querySelectorAll(
-                '#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked'
-            );
-            checkedBoxes.forEach(cb => {
-                const idx = parseInt(cb.dataset.serviceIndex, 10);
-                updatedDLArray[idx] = "1";
-            });
-
-            // ---------------------------------------------
-            //    b) Object für das neue Appointment
-            // ---------------------------------------------
             const newAppointment = {
-                KundennummerzumTermin,
-                startDateTime: startVal,
-                endDateTime: endVal,       // Falls leer, kannst du "" schicken
-                duration: totalDuration,
-                Dienstleistung: JSON.stringify(updatedDLArray),
-                Preis,
-                Abrechnungsstatus,
-                description,
-
-                erfasstDurch,
-                letzterBearbeiter,
-                Ressource,
-                projektId,
-                verrechnungsTyp,
-                erbringungsStatus,
-                fakturaBemerkung,
-                fakturaNummer,
-
-                // Abweichender Rechnungsempfänger
-                rechnungsEmpfaengerNummer
+                MailAppointmentRequests: req.MailAppointmentRequests,
+                erfasstDurch: "öffentliche Buchungsplattform",
+                Ressource: req.Ressource || '',
+                KundennummerzumTermin: document.getElementById('KundennummerzumTermin').value,
+                startDateTime: document.getElementById('startDateTime').value,
+                endDateTime: document.getElementById('endDateTime').value,
+                duration: parseInt(document.getElementById('durationHours').value, 10) * 60 +
+                          parseInt(document.getElementById('durationMinutes').value, 10),
+                Preis: document.getElementById('Preis').value,
+                Abrechnungsstatus: document.getElementById('Abrechnungsstatus').value,
+                description: document.getElementById('description').value,
+                Dienstleistung: (() => {
+                    const updatedDLArray = new Array(allServices.length).fill("0");
+                    updatedDLArray[0] = "1";
+                    document.querySelectorAll('#appointmentServicesCheckboxContainer .appointment-service-checkbox:checked')
+                        .forEach(cb => {
+                            updatedDLArray[parseInt(cb.dataset.serviceIndex, 10)] = "1";
+                        });
+                    return JSON.stringify(updatedDLArray);
+                })(),
+                projektId: document.getElementById('projektId').value || null,
+                verrechnungsTyp: document.getElementById('verrechnungsTyp').value,
+                erbringungsStatus: document.getElementById('erbringungsStatus').value,
+                fakturaBemerkung: document.getElementById('fakturaBemerkung').value,
+                fakturaNummer: document.getElementById('fakturaNummer').value,
+                rechnungsEmpfaengerNummer: document.getElementById('RechnungsempfaengerNummerDisplay').textContent || null
             };
 
-            // ---------------------------------------------
-            //    c) Neues Appointment anlegen (POST)
-            // ---------------------------------------------
+            console.log("[DEBUG] Sende an Backend:", newAppointment);
+
             const response = await fetch(`${BACKEND_URL}/appointments`, {
                 method: 'POST',
                 headers: {
@@ -876,51 +820,31 @@ async function editAppointmentRequest(requestId, appointmentRequests) {
                 body: JSON.stringify(newAppointment)
             });
 
-            if (!response.ok) {
-                throw new Error('Fehler beim Hinzufügen des bearbeiteten Termins');
-            }
+            if (!response.ok) throw new Error(`HTTP-Error: ${response.status}`);
 
-            // ---------------------------------------------
-            //    d) Wenn erfolgreich -> Request löschen
-            // ---------------------------------------------
-            // Request per DELETE entfernen
-            const deleteRes = await fetch(`${BACKEND_URL}/appointmentrequests/${requestId}`, {
+            // Request löschen
+            await fetch(`${BACKEND_URL}/appointmentrequests/${requestId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
-            if (!deleteRes.ok) {
-                throw new Error(`Fehler beim Entfernen des ursprünglichen Requests`);
-            }
 
-            // Auch lokal aus dem Array entfernen
             const idx = appointmentRequests.findIndex(r => r._id === requestId);
-            if (idx !== -1) {
-                appointmentRequests.splice(idx, 1);
-            }
-
-            // ---------------------------------------------
-            //    e) UI anpassen: Formular schließen + Liste neu laden
-            // ---------------------------------------------
+            if (idx !== -1) appointmentRequests.splice(idx, 1);
+            
+            displayAppointmentRequests(appointmentRequests);
             loadAppointments();
             renderCalendarWithDelay();
-            alert('Bearbeiteter Termin erfolgreich gespeichert und Request entfernt!');
-
-            // Formular ausblenden
-            hideAppointmentForm();  // Deine Funktion zum Schließen/Verstecken des Formulars
-
-            // Requests (oder Appointments) neu laden oder neu rendern
-            // Je nachdem, was du in deinem Code machst
-            displayAppointmentRequests(appointmentRequests); 
-            // oder loadAppointments();
-
+            hideAppointmentForm();
+            alert('Termin erfolgreich freigegeben!');
         } catch (err) {
-            console.error(err);
-            alert('Fehler: ' + err.message);
+            console.error("[DEBUG] Fehler bei der Terminfreigabe:", err);
+            alert(`Fehler: ${err.message}`);
         }
     });
 }
+
 
 
     //====================================================================================================================================
