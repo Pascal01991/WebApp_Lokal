@@ -532,37 +532,43 @@ function initStep4() {
  * 5) ZUSAMMENFASSUNG & POST
  ***********************************************************/
 function goToStep5() {
-    document.getElementById('step4').style.display = 'none';
-    document.getElementById('step5').style.display = 'block';
-  
-    const summaryContainer = document.getElementById('summaryContainer');
-    summaryContainer.innerHTML = "";
-  
-    const chosen = getChosenServices(); // array
-    const totalPrice = chosen.reduce((acc, s) => acc + (s.chosen === "1" ? s.servicePrice : 0), 0);
-    const totalDuration = chosen.reduce((acc, s) => acc + (s.chosen === "1" ? s.serviceDuration : 0), 0);
-  
-    // StartTime (+1h Anzeige)
-    const localDate = offsetByOneHour(selectedSlot.startDateTime);
-    const dateStr = localDate.toISOString().replace('T', ' ').substring(0, 16);
-  
-    // Liste der Dienstleistungen im Format "ServiceName (ServicePrice CHF)"
-    const servicesText = chosen
-      .filter(s => s.chosen === "1") // Nur ausgewählte Dienstleistungen anzeigen
-      .map(s => `${s.serviceName} (${s.servicePrice} CHF)`); // Formatierung
-  
-    const html = `
-      <p><strong>Datum/Uhrzeit:</strong> ${dateStr}</p>
-      <p><strong>Mitarbeiter:</strong> ${selectedUser?.publicName || ''}</p>
-      <p><strong>Name:</strong> ${personalData.firstName} ${personalData.lastName}</p>
-      <p><strong>Email:</strong> ${personalData.email}</p>
-      <p><strong>Dienstleistungen:</strong> ${servicesText.join(', ')}</p>
-      <p><strong>Gesamtpreis:</strong> ${totalPrice} CHF</p>
-      <p><strong>Geschätzte Dauer:</strong> ca. ${totalDuration} Minuten</p>
-    `;
-    summaryContainer.innerHTML = html;
-  }
+  document.getElementById('step4').style.display = 'none';
+  document.getElementById('step5').style.display = 'block';
 
+  const summaryContainer = document.getElementById('summaryContainer');
+  summaryContainer.innerHTML = "";
+
+  const chosen = getChosenServices(); // array
+  const totalPrice = chosen.reduce((acc, s) => acc + (s.chosen === "1" ? s.servicePrice : 0), 0);
+  const totalDuration = chosen.reduce((acc, s) => acc + (s.chosen === "1" ? s.serviceDuration : 0), 0);
+
+  // StartTime (+1h Anzeige)
+  const localDate = offsetByOneHour(selectedSlot.startDateTime);
+  // ISO String holen und in Teile zerlegen
+  const isoStr = localDate.toISOString();
+  // Format YYYY-MM-DD zu DD.MM.YYYY ändern
+  const [year, month, day] = isoStr.substring(0, 10).split('-');
+  // Zeit extrahieren (ist bereits in der richtigen Zeitzone durch offsetByOneHour)
+  const time = isoStr.substring(11, 16);
+  // Neues Format zusammensetzen
+  const formattedDate = `${day}.${month}.${year} ${time}`;
+
+  // Liste der Dienstleistungen im Format "ServiceName (ServicePrice CHF)"
+  const servicesText = chosen
+    .filter(s => s.chosen === "1" && s.serviceID !== 0) // Nur ausgewählte Dienstleistungen außer ID=0 anzeigen
+    .map(s => `${s.serviceName} (${s.servicePrice} CHF)`); // Formatierung
+
+  const html = `
+    <p><strong>Datum/Uhrzeit:</strong> ${formattedDate}</p>
+    <p><strong>Mitarbeiter:</strong> ${selectedUser?.publicName || ''}</p>
+    <p><strong>Name:</strong> ${personalData.firstName} ${personalData.lastName}</p>
+    <p><strong>Email:</strong> ${personalData.email}</p>
+    <p><strong>Dienstleistungen:</strong> ${servicesText.join(', ')}</p>
+    <p><strong>Gesamtpreis:</strong> ${totalPrice} CHF</p>
+    <p><strong>Geschätzte Dauer:</strong> ca. ${totalDuration} Minuten</p>
+  `;
+  summaryContainer.innerHTML = html;
+}
 function confirmBooking() {
   const chosen = getChosenServices();
   const totalPrice = chosen.reduce((acc, s) => acc + (s.chosen==="1"? s.servicePrice:0), 0);
